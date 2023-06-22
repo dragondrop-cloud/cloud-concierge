@@ -1,0 +1,41 @@
+version: "3.8"
+
+services:
+  cloud-concierge:
+    build: ./pkg/
+    working_dir: /pkg/
+    environment:
+      - "DRAGONDROP_APIPATH=$DRAGONDROP_APIPath"
+      - "DRAGONDROP_DIVISIONCLOUDCREDENTIALS=$DRAGONDROP_DivisionCloudCredentials"
+      - "DRAGONDROP_INFRACOSTAPITOKEN=$DRAGONDROP_InfracostAPIToken"
+      - "DRAGONDROP_JOBID=$DRAGONDROP_JobID"
+      - "DRAGONDROP_ORGTOKEN=$DRAGONDROP_OrgToken"
+      - "DRAGONDROP_MIGRATIONHISTORYSTORAGE=$DRAGONDROP_MigrationHistoryStorage"
+      - "DRAGONDROP_PROVIDERS=$DRAGONDROP_Providers"
+      - "DRAGONDROP_STATEBACKEND=$DRAGONDROP_StateBackend"
+      - "DRAGONDROP_TERRAFORMCLOUDORGANIZATION=$DRAGONDROP_TerraformCloudOrganization"
+      - "DRAGONDROP_TERRAFORMCLOUDTOKEN=$DRAGONDROP_TerraformCloudToken"
+      - "DRAGONDROP_TERRAFORMVERSION=$DRAGONDROP_TerraformVersion"
+      - "DRAGONDROP_VCSBASEBRANCH=$DRAGONDROP_VCSBaseBranch"
+      - "DRAGONDROP_VCSSYSTEM=$DRAGONDROP_VCSSystem"
+      - "DRAGONDROP_VCSREPO=$DRAGONDROP_VCSRepo"
+      - "DRAGONDROP_VCSTOKEN=$DRAGONDROP_VCSToken"
+      - "DRAGONDROP_VCSUSER=$DRAGONDROP_VCSUser"
+      - "DRAGONDROP_PULLREVIEWERS=$DRAGONDROP_PullReviewers"
+      - "DRAGONDROP_RESOURCESWHITELIST=$DRAGONDROP_ResourcesWhiteList"
+      - "DRAGONDROP_WORKSPACEDIRECTORIES=$DRAGONDROP_WorkspaceDirectories"
+    networks:
+      - network
+    volumes:
+      - cloud-concierge:/cloud-concierge
+
+networks:
+  network:
+    driver: bridge
+
+volumes:
+  db:
+    driver: local
+
+  cloud-concierge:
+    driver: local
