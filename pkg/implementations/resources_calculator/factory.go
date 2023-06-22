@@ -1,0 +1,43 @@
+package resourcesCalculator
+
+import (
+	"context"
+
+	"github.com/dragondrop-cloud/driftmitigation/documentize"
+	terraformValueObjects "github.com/dragondrop-cloud/driftmitigation/implementations/terraform_value_objects"
+	"github.com/dragondrop-cloud/driftmitigation/interfaces"
+	"github.com/dragondrop-cloud/driftmitigation/pkg/pyscriptexec"
+)
+
+// Factory is a struct that generates implementations of interfaces.ResourcesCalculator.
+type Factory struct {
+}
+
+// Instantiate returns an implementation of interfaces.ResourcesCalculator depending on the passed
+// environment specification.
+func (f *Factory) Instantiate(
+	ctx context.Context, environment string, dragonDrop interfaces.DragonDrop,
+	divisionToProvider map[terraformValueObjects.Division]terraformValueObjects.Provider,
+) (interfaces.ResourcesCalculator, error) {
+	switch environment {
+	case "isolated":
+		return new(IsolatedResourcesCalculator), nil
+	default:
+		return f.bootstrappedResourceCalculator(ctx, dragonDrop, divisionToProvider)
+	}
+}
+
+// bootstrappedResourceCalculator creates a complete implementation of the interfaces.ResourcesCalculator interface with
+// configuration specified via environment variables.
+func (f *Factory) bootstrappedResourceCalculator(
+	ctx context.Context, dragonDrop interfaces.DragonDrop,
+	divisionToProvider map[terraformValueObjects.Division]terraformValueObjects.Provider,
+) (interfaces.ResourcesCalculator, error) {
+	doc, _ := documentize.NewDocumentize(divisionToProvider)
+
+	dragonDrop.PostLog(ctx, "Created Documentize client.")
+
+	pyScriptExec := pyscriptexec.NewPyScriptExec()
+
+	return NewTerraformResourcesCalculator(&doc, pyScriptExec, dragonDrop), nil
+}

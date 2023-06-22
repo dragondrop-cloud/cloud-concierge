@@ -1,0 +1,13 @@
+FROM python:3.10.1-slim-buster
+RUN pip3 install --upgrade pip
+
+COPY driftmitigation/python_scripts/requirements.txt driftmitigation/python_scripts/requirements.txt
+RUN pip3 install -r driftmitigation/python_scripts/requirements.txt
+
+COPY driftmitigation/python_scripts driftmitigation/python_scripts
+COPY driftmitigation/__init__.py driftmitigation/__init__.py
+COPY driftmitigation/python_scripts/__init__.py driftmitigation/python_scripts/__init__.py
+
+WORKDIR /driftmitigation/
+EXPOSE 5000
+CMD ["coverage", "run", "-m", "pytest", "--cov", "./",  "--cov-branch", "--cov-report", "term-missing", "--cov-config=./python_scripts/tests/.coveragerc"]
