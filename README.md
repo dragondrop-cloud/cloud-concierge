@@ -17,7 +17,7 @@ when wanting to self-host runners or access the most desired features like drift
 ## Why Cloud Concierge?
 Cloud Concierge is an open-sourced container that integrates with your existing Terraform management stack to provide:
 - Cloud codification
-- Drift Detection
+- Drift detection
 - Flag accounts creating changes outside your Terraform workflow
 - Whole-cloud-level cost estimation, powered by Infracost
 - Whole-cloud-level security scanning, powered by tfsec (checkov integration coming soon)
@@ -45,7 +45,7 @@ within the [dragondrop.cloud platform](https://app.dragondrop.cloud/env-var-vali
 
 4) Run the container with the following command:
 ```bash
-docker run --env-file <path to env file> dragondrop-cloud/cloud-concierge:latest  # TODO: Volume specification needed
+docker run --env-file <path to env file> dragondrop-cloud/cloud-concierge:latest
 ```
 
 5) If using Terraform >= 1.5, Cloud Concierge generates [import blocks](https://medium.com/@hello_9187/terraform-1-5-xs-new-import-block-b8607c51287f) for newly codified resources directly.

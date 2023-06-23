@@ -42,12 +42,10 @@ help provide feedback so that the path from Pull Request to Merge is as smooth a
 We will review your Pull Request as soon as possible (step 0. above will help expedite this process).
 
 ## Release Process
-**NOTE: We cannot guarantee that the default branch `@dev` is stable. You should always use published releases for your production use.**
-
-- After unit test, linter and code review requirements are met, pull requests are merged to the default `dev` branch. 
-- We run additional end-to-end tests on this branch to ensure new features do not break existing functionality.
-- Once we are ready we tag the latest branch and perform a release on it.
-- Tagged releases are published as images to [DockerHub](). These images should be used in production.
+**NOTE: We cannot guarantee that the default branch, `dev`, is stable. You should always use published releases for your production use.**
+- After unit test, linter and code review requirements are met, pull requests are merged to the default `dev` branch.
+- We tag and deploy a beta release image off of the updated dev branch, and run additional end-to-end tests on this branch to ensure new features do not break existing functionality.
+- Once validated, we merge the `dev` branch to the `prod` branch, and tag and deploy a release image off of the `prod` branch to [DockerHub](https://hub.docker.com/r/dragondropcloud/cloud-concierge). These images should be used in production.
 
 ## Code of Conduct
 We expect all contributors to follow our [Code of Conduct](https://www.contributor-covenant.org/version/2/1/code_of_conduct/) when participating in our community. Please review prior to contributing.
