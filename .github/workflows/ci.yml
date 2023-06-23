@@ -21,7 +21,7 @@ jobs:
       - name: Run linter
         uses: golangci/golangci-lint-action@v3
         with:
-          working-directory: pkg
+          working-directory: main
           version: v1.46.2
 
   test-go-binary:
@@ -39,7 +39,7 @@ jobs:
 
       - name: Run unit tests
         run: |
-          cd pkg/
+          cd main/
           go mod tidy
           go test ./...
 
@@ -55,6 +55,6 @@ jobs:
 
       - name: Install dependencies & run tests
         run: |
-          cd pkg/
+          cd main/
           pip3 install -r python_scripts/requirements.txt
           coverage run -m pytest --cov ./  --cov-branch --cov-report term-missing --cov-config=./python_scripts/tests/.coveragerc
