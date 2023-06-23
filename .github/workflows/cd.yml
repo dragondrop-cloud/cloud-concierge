@@ -22,7 +22,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Release version
+      - name: Release version dev
         if: ${{ github.ref_name == 'dev'}}
         uses: "marvinpinto/action-automatic-releases@latest"
         with:
@@ -40,7 +40,7 @@ jobs:
             dragondropcloud/cloud-concierge-dev:latest
             dragondropcloud/cloud-concierge-dev:${{ github.ref_name }}
 
-      - name: Release version
+      - name: Release version prod
         if: ${{ github.ref_name == 'prod'}}
         uses: "marvinpinto/action-automatic-releases@latest"
         with:
