@@ -16,7 +16,7 @@ jobs:
       - name: Install golang
         uses: actions/setup-go@v3
         with:
-          go-version-file: 'pkg/.go-version'
+          go-version-file: 'main/.go-version'
 
       - name: Run linter
         uses: golangci/golangci-lint-action@v3
@@ -35,7 +35,7 @@ jobs:
       - name: Install golang
         uses: actions/setup-go@v3
         with:
-          go-version-file: 'pkg/.go-version'
+          go-version-file: 'main/.go-version'
 
       - name: Run unit tests
         run: |
@@ -55,6 +55,6 @@ jobs:
 
       - name: Install dependencies & run tests
         run: |
-          cd main/
+          cd main/internal/
           pip3 install -r python_scripts/requirements.txt
           coverage run -m pytest --cov ./  --cov-branch --cov-report term-missing --cov-config=./python_scripts/tests/.coveragerc
