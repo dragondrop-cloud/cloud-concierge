@@ -1,0 +1,60 @@
+name: cloud-concierge continuous integration (CI)
+on:
+  push:
+    paths:
+      - pkg/**
+
+jobs:
+  golangci-lint:
+    runs-on: ubuntu-latest
+
+    timeout-minutes: 3
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v3
+
+      - name: Install golang
+        uses: actions/setup-go@v3
+        with:
+          go-version-file: 'pkg/.go-version'
+
+      - name: Run linter
+        uses: golangci/golangci-lint-action@v3
+        with:
+          working-directory: pkg
+          version: v1.46.2
+
+  test-go-binary:
+    runs-on: ubuntu-latest
+
+    timeout-minutes: 3
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v3
+
+      - name: Install golang
+        uses: actions/setup-go@v3
+        with:
+          go-version-file: 'pkg/.go-version'
+
+      - name: Run unit tests
+        run: |
+          cd pkg/
+          go mod tidy
+          go test ./...
+
+  test-python-scripts:
+    runs-on: ubuntu-latest
+    container: python:3.10.1-slim-buster
+
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v3
+
+      - name: Install dependencies & run tests
+        run: |
+          cd pkg/
+          pip3 install -r python_scripts/requirements.txt
+          coverage run -m pytest --cov ./  --cov-branch --cov-report term-missing --cov-config=./python_scripts/tests/.coveragerc

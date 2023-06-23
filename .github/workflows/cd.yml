@@ -1,0 +1,59 @@
+name: cloud-concierge continuous deployment (CD)
+on:
+  push:
+    branches:
+      - dev
+      - prod
+    tags:
+      - v*.*.*
+
+jobs:
+  cloud-concierge-to-dockerhub:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v3
+
+      - name: Log-in to docker hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Release version
+        if: ${{ github.ref_name == 'dev'}}
+        uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          automatic_release_tag: ${{ github.ref_name + '-beta' }}
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          prerelease: true
+
+      - name: Build and push Docker image if dev
+        if: ${{ github.ref_name == 'dev'}}
+        uses: docker/build-push-action@v3
+        with:
+          context: ./pkg/
+          push: true
+          tags: |
+            dragondropcloud/cloud-concierge-dev:latest
+            dragondropcloud/cloud-concierge-dev:${{ github.ref_name }}
+
+      - name: Release version
+        if: ${{ github.ref_name == 'prod'}}
+        uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          automatic_release_tag: ${{ github.ref_name }}
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          prerelease: false
+
+      - name: Build and push Docker image if prod
+        if: ${{ github.ref_name == 'prod'}}
+        uses: docker/build-push-action@v3
+        with:
+          context: ./pkg/
+          push: true
+          tags: |
+            dragondropcloud/cloud-concierge:latest
+            dragondropcloud/cloud-concierge:${{ github.ref_name }}

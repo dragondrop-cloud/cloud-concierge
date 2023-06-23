@@ -45,9 +45,8 @@ We will review your Pull Request as soon as possible (step 0. above will help ex
 **NOTE: We cannot guarantee that the default branch `@dev` is stable. You should always use published releases for your production use.**
 
 - After unit test, linter and code review requirements are met, pull requests are merged to the default `dev` branch. 
-- We create a pre-release branch for an upcoming release with the pattern `prerelease-MajorV.MinorV.xx`.
 - We run additional end-to-end tests on this branch to ensure new features do not break existing functionality.
-- Once we are ready we tag the head of our release branch and perform a release on it.
+- Once we are ready we tag the latest branch and perform a release on it.
 - Tagged releases are published as images to [DockerHub](). These images should be used in production.
 
 ## Code of Conduct

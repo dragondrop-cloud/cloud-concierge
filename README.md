@@ -1,13 +1,14 @@
 # cloud-concierge
-![cloud concierge logo](images/cloud-concierge-logo.png)
-
+<p align="center">
+<img width="500" src=./images/cloud-concierge-logo.png>
+</p>
 <h2 align="center">
 <a href="https://docs.cloudconcierge.io" target="_blank">Docs</a> |
 <a href="https://https://www.youtube.com/watch?v=y8OSfQQMEL0&t=12s" target="_blank"> Managed Demo </a>
 </h2>
 
 Many teams build their own Terraform management "stacks" using major cloud provider state backends
-and tools like Digger or Atlantis for running `plan` and `apply` and state-locking. 
+and tools like Atlantis for running `plan` and `apply` and state-locking. 
 
 For more sophisticated tooling, some may turn to tools like Terraform Cloud,
 Scalr, Spacelift and Firefly. We find, however, that these tool's pricing can become particularly onerous
@@ -70,3 +71,4 @@ Contributions in any form are highly encouraged. Check out our [contributing gui
 - [Slack]()
 - [Terraform Learning Resources](https://dragondrop.cloud/learn/terraform/)
 - [Medium Blog](https://medium.com/@hello_9187)
+- [Managed Offering](https://dragondrop.cloud/how-it-works/)
