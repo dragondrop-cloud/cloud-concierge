@@ -1,4 +1,4 @@
-name: cloud-concierge continuous integration (CI)
+name: continuous integration (CI)
 on:
   push:
     paths:

@@ -1,4 +1,4 @@
-name: cloud-concierge continuous deployment (CD)
+name: continuous deployment (CD)
 on:
   push:
     tags:
@@ -19,7 +19,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       # Dev release and image deployment to DockerHub
-      - name: Checkout branch dev
+      - name: Checkout branch - dev
         uses: actions/checkout@v3
         if: ${{ contains(github.ref_name, '-beta' ) }}
         ref: dev
