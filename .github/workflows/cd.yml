@@ -2,7 +2,7 @@ name: cloud-concierge continuous deployment (CD)
 on:
   push:
     tags:
-      - v*.*.*
+      - v*.*.**
 
 jobs:
   cloud-concierge-to-dockerhub:
