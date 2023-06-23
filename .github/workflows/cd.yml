@@ -34,7 +34,7 @@ jobs:
         if: ${{ github.ref_name == 'dev'}}
         uses: docker/build-push-action@v3
         with:
-          context: pkg/.
+          context: main/.
           push: true
           tags: |
             dragondropcloud/cloud-concierge-dev:latest
@@ -52,7 +52,7 @@ jobs:
         if: ${{ github.ref_name == 'prod'}}
         uses: docker/build-push-action@v3
         with:
-          context: pkg/.
+          context: main/.
           push: true
           tags: |
             dragondropcloud/cloud-concierge:latest

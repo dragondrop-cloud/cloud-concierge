@@ -2,7 +2,7 @@
 Unit tests for helpers in security scanning formatting.
 """
 import pandas as pd
-from pkg.python_scripts.state_of_cloud_report.helpers.security_scanning import (
+from main.internal.python_scripts.state_of_cloud_report.helpers.security_scanning import (
     _security_scan_to_df,
 )
 

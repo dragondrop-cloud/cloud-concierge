@@ -4,7 +4,7 @@ Unit tests for functions within the backend/nlpengine/main.py file.
 from unittest import TestCase
 from random import seed
 
-from pkg.python_scripts.nlpengine.main import (
+from main.internal.python_scripts.nlpengine.main import (
     _create_gold_dict,
     _doc_to_example_text_list,
     _join_text_components,

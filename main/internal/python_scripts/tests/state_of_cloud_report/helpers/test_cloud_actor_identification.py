@@ -5,7 +5,7 @@ from unittest import TestCase
 import pandas as pd
 from mdutils.mdutils import MdUtils
 
-from pkg.python_scripts.state_of_cloud_report.helpers.cloud_actor_identificaton import (
+from main.internal.python_scripts.state_of_cloud_report.helpers.cloud_actor_identificaton import (
     create_markdown_table_cloud_actor_summary,
     process_cloud_actor_actions,
 )

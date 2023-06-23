@@ -5,7 +5,7 @@ within the state of cloud report.
 from unittest import TestCase
 import pandas as pd
 from mdutils.mdutils import MdUtils
-from pkg.python_scripts.state_of_cloud_report.helpers.new_resources_and_cost_estimation import (
+from main.internal.python_scripts.state_of_cloud_report.helpers.new_resources_and_cost_estimation import (
     create_markdown_table_new_resources,
     process_new_resources,
     _calculate_aggregate_costs_across_scan,
