@@ -1,9 +1,9 @@
 # This dockerfile performs a multi-stage build.
-# Stage 1) Creates a reference to the latest tfswitch binary.
-# Stage 2) Creates a reference to the latest infracost binary.
-# Stage 3) Builds the gcloud image and adds gcloud config-connector.
+# Stage 1) Creates a reference to the tfswitch binary.
+# Stage 2) Creates a reference to the infracost binary.
+# Stage 3) Creates a reference to the gcloud image.
 # Stage 4) References the terraformer image.
-# Stage 5) Builds an executable binary out of the driftmitigation go-code.
+# Stage 5) Builds an executable binary out of the cloud-concierge go-code.
 # Stage 6) Places binaries within the gcloud container from stage 2 and executes
 ###################################################################################################
 # 1) Reference to tfswitch binary
