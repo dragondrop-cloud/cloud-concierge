@@ -18,6 +18,10 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: debugging
+        run:
+            echo ${{ github.ref_name }}
+
       # Dev release and image deployment to DockerHub
       - name: Checkout branch - dev
         uses: actions/checkout@v3

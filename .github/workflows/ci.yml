@@ -2,7 +2,7 @@ name: continuous integration (CI)
 on:
   push:
     paths:
-      - pkg/**
+      - main/**
 
 jobs:
   golangci-lint:
