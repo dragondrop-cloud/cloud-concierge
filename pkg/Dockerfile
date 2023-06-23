@@ -49,7 +49,7 @@ COPY .. .
 # Compiling the cloud-concierge executable
 RUN  CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
      go build -ldflags='-w -s -extldflags "-static"' -a \
-     -o /go/bin/driftmitigation .
+     -o /go/bin/cloud-concierge .
 
 ###################################################################################################
 # 8) Creating the final light-weight container that contains only the executables from previous steps.
