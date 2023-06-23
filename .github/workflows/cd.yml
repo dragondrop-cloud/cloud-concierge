@@ -48,7 +48,7 @@ jobs:
         ref: prod
 
       - name: Release version prod
-        if: !${{ !contains(github.ref_name, '-beta' ) }}
+        if: ${{ !contains(github.ref_name, '-beta' ) }}
         uses: "marvinpinto/action-automatic-releases@latest"
         with:
           automatic_release_tag: ${{ github.ref_name }}
