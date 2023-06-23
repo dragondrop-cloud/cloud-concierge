@@ -26,7 +26,8 @@ jobs:
       - name: Checkout branch - dev
         uses: actions/checkout@v3
         if: ${{ contains(github.ref_name, '-beta' ) }}
-        ref: dev
+        with:
+          ref: dev
 
       - name: Release version dev
         if: ${{ contains(github.ref_name, '-beta' ) }}
@@ -50,7 +51,8 @@ jobs:
       - name: Checkout branch - prod
         uses: actions/checkout@v3
         if: ${{ !contains(github.ref_name, '-beta' ) }}
-        ref: prod
+        with:
+          ref: prod
 
       - name: Release version prod
         if: ${{ !contains(github.ref_name, '-beta' ) }}
