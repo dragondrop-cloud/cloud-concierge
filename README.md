@@ -48,7 +48,7 @@ within the [dragondrop.cloud platform](https://app.dragondrop.cloud/env-var-vali
 
 4) Run the container with the following command:
 ```bash
-docker run --env-file <path to env file> dragondrop-cloud/cloud-concierge:latest
+docker run --env-file ./path/to/my/env-file.env -v main:/main -w /main  dragondropcloud/cloud-concierge:latest
 ```
 
 5) If using Terraform >= 1.5, Cloud Concierge generates [import blocks](https://medium.com/@hello_9187/terraform-1-5-xs-new-import-block-b8607c51287f) for newly codified resources directly.
@@ -67,6 +67,14 @@ can be viewed [here](pkg/implementations/dragon_drop/http_dragondrop_managed_exe
 
 ## Contributing
 Contributions in any form are highly encouraged. Check out our [contributing guide](CONTRIBUTING.md) to get started.
+
+## Using at Scale w/dragondrop.cloud
+The cloud-concierge container is easy to manage in a single configuration.
+If you are looking to use cloud-concierge at scale, however, the [dragondrop.cloud](https://dragondrop.cloud/how-it-works) management platform allows you to:
+- Manage multiple cloud-concierge configurations through a user interface
+- Manage different cron jobs for executing each configuration at desired intervals
+- Consolidate visibility across all cloud-concierge executions into visualizations of drift, uncodified resources, cloud costs, and security risks.
+- Continue to self-host cloud-concierge instances within your cloud using [serverless infrastructure](https://registry.terraform.io/namespaces/dragondrop-cloud).
 
 ## Other Resources
 - [Documentation](https://docs.cloudconcierge.io)
