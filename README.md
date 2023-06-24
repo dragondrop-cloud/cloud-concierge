@@ -25,6 +25,9 @@ Cloud Concierge is an open-sourced container that integrates with your existing 
 All results and codified resources are output in a digestible Pull Request to a repository of your choice, providing you with a "State of Cloud"
 report in a GitOps manner.
 
+### Our Roadmap
+We are just getting started, and have a lot of exciting features on our roadmap. More details can be found [here](https://github.com/dragondrop-cloud/cloud-concierge/wiki/Roadmap).
+
 ## How does it work?
 1) Cloud Concierge creates a representation of your cloud infrastructure as Terraform
 2) This representation is compared against your state files to detect drift, and identify resources outside of Terraform control
@@ -34,9 +37,9 @@ report in a GitOps manner.
 ## Getting Started
 0) Retrieve an organization token from the dragondrop.cloud management platform [here](https://app.dragondrop.cloud).
 1) Configure your environment variable file. This determines the execution behavior of the container. We provide example env configuration files for:
-   - [AWS]()
-   - [GCP]()
-   - [Azure]()
+   - [AWS](./examples/environments/aws-example.env)
+   - [GCP](./examples/environments/gcp-example.env)
+   - [Azure](./examples/environments/azure-example.env)
 
 Documentation on environment variables needed can be found [here]().
 
@@ -67,8 +70,8 @@ Contributions in any form are highly encouraged. Check out our [contributing gui
 
 ## Other Resources
 - [Documentation](https://docs.cloudconcierge.io)
-- [Free Code Walk Through (low stakes and no pressure!)]()
-- [Slack]()
+- [Slack](https://cloud-concierge.slack.com/join/shared_invite/zt-1xx3sqsb6-cekIXs2whccZvbU81Xn5qg#/shared-invite/email)
+- [Tool Walk Through + Use Case (low stakes and no pressure!)](https://calendly.com/dragondrop-cloud/cloud-concierge-walk-through)
 - [Terraform Learning Resources](https://dragondrop.cloud/learn/terraform/)
 - [Medium Blog](https://medium.com/@hello_9187)
 - [Managed Offering](https://dragondrop.cloud/how-it-works/)

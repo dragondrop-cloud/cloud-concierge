@@ -1,0 +1,28 @@
+name: cloud-concierge daily execution
+on:
+  schedule:
+    - cron: 0 0 * * *
+
+jobs:
+  cloud-concierge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Run cloud-concierge
+        uses: dragondropcloud/cloud-concierge:latest
+        env:
+          DRAGONDROP_DIVISIONCLOUDCREDENTIALS: ${{ secrets.DRAGONDROP_DIVISIONCLOUDCREDENTIALS }}
+          DRAGONDROP_PROVIDERS: ${{ secrets.DRAGONDROP_PROVIDERS }}
+          DRAGONDROP_TERRAFORMVERSION: ${{ secrets.DRAGONDROP_TERRAFORMVERSION }}
+          DRAGONDROP_WORKSPACEDIRECTORIES: ${{ secrets.DRAGONDROP_WORKSPACEDIRECTORIES }}
+          DRAGONDROP_RESOURCEWHITELIST: ${{ secrets.DRAGONDROP_RESOURCEWHITELIST }}
+          DRAGONDROP_STATEBACKEND: ${{ secrets.DRAGONDROP_STATEBACKEND }}
+          DRAGONDROP_VCSTOKEN: ${{ secrets.DRAGONDROP_VCSTOKEN }}
+          DRAGONDROP_VCSUSER: ${{ secrets.DRAGONDROP_VCSUSER }}
+          DRAGONDROP_VCSREPO: ${{ secrets.DRAGONDROP_VCSREPO }}
+          DRAGONDROP_VCSSYSTEM: ${{ secrets.DRAGONDROP_VCSSYSTEM }}
+          DRAGONDROP_VCSBASEBRANCH: ${{ secrets.DRAGONDROP_VCSBASEBRANCH }}
+          DRAGONDROP_PULLREVIEWERS: ${{ secrets.DRAGONDROP_PULLREVIEWERS }}
+          DRAGONDROP_INFRACOSTAPITOKEN: ${{ secrets.DRAGONDROP_INFRACOSTAPITOKEN }}
+          DRAGONDROP_ORGTOKEN: ${{ secrets.DRAGONDROP_ORGTOKEN }}
