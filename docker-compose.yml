@@ -2,8 +2,8 @@ version: "3.8"
 
 services:
   cloud-concierge:
-    build: ./pkg/
-    working_dir: /pkg/
+    build: ./main/
+    working_dir: /main/
     environment:
       - "DRAGONDROP_APIPATH=$DRAGONDROP_APIPath"
       - "DRAGONDROP_DIVISIONCLOUDCREDENTIALS=$DRAGONDROP_DivisionCloudCredentials"
@@ -27,15 +27,14 @@ services:
     networks:
       - network
     volumes:
-      - cloud-concierge:/cloud-concierge
+      - main:/main
 
 networks:
   network:
+    name: cloud-concierge
     driver: bridge
 
 volumes:
-  db:
-    driver: local
-
-  cloud-concierge:
+  main:
+    name: main
     driver: local

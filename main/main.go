@@ -46,10 +46,10 @@ func main() {
 
 // RemoveSubDirectories removes all subdirectories within the container's volume prior to container startup
 func RemoveSubDirectories() error {
-	if _, err := os.Stat("/cloud-concierge/"); err == nil {
-		d, err := os.Open("/cloud-concierge/")
+	if _, err := os.Stat("/main/"); err == nil {
+		d, err := os.Open("/main/")
 		if err != nil {
-			return fmt.Errorf("[os.Open('/cloud-concierge/)]%v", err)
+			return fmt.Errorf("[os.Open('/main/)]%v", err)
 		}
 		defer d.Close()
 
@@ -60,9 +60,9 @@ func RemoveSubDirectories() error {
 		fmt.Printf("All sub directories identified:\n%v\n", names)
 
 		for _, name := range names {
-			err = os.RemoveAll(filepath.Join("/cloud-concierge/", name))
+			err = os.RemoveAll(filepath.Join("/main/", name))
 			if err != nil {
-				return fmt.Errorf("[os.RemoveAll(/cloud-concierge/%v)]%v", name, err)
+				return fmt.Errorf("[os.RemoveAll(/main/%v)]%v", name, err)
 			}
 		}
 	}

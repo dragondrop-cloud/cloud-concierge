@@ -82,10 +82,10 @@ func (i *TerraformImportMigrationGenerator) writeResourcesMap(resourceImportMapJ
 
 	for _, f := range files {
 		fmt.Println(f.Name())
-		if f.Name() == "cloud-concierge" {
-			err = os.Chdir("/cloud-concierge")
+		if f.Name() == "main" {
+			err = os.Chdir("/main")
 			if err != nil {
-				return fmt.Errorf("[map_resources][os.Chdir(/cloud-concierge)]%w", err)
+				return fmt.Errorf("[map_resources][os.Chdir(/main)]%w", err)
 			}
 			break
 		}
