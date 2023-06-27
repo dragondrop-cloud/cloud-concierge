@@ -17,6 +17,7 @@
 # Go workspace file
 go.work
 
+test.env
 .env
 .tfstate
 .idea/
