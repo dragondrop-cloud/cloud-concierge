@@ -228,7 +228,7 @@ func (j *Job) Run(ctx context.Context) error {
 // and configures by pulling in environment variables.
 func InitializeJobDependencies(ctx context.Context, env string) (*Job, error) {
 	var jobConfig JobConfig
-	err := envconfig.Process("DRAGONDROP", &jobConfig)
+	err := envconfig.Process("CLOUDCONCIERGE", &jobConfig)
 	if err != nil {
 		log.Errorf("[cannot create job config]%s", err.Error())
 		return nil, fmt.Errorf("[cannot create job config]%w", err)

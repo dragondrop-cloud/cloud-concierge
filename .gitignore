@@ -18,6 +18,7 @@
 go.work
 
 test.env
+local.env
 .env
 .tfstate
 .idea/

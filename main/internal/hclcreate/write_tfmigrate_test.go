@@ -91,7 +91,7 @@ func TestIndividualTFMigrateConfigS3(t *testing.T) {
 		},
 	}
 
-	expectedOutput := "tfmigrate {\n  migration_dir              = \"./dragondrop/tfmigrate/\"\n  " +
+	expectedOutput := "tfmigrate {\n  migration_dir              = \"./cloud-concierge/tfmigrate/\"\n  " +
 		"is_backend_terraform_cloud = true\n  " +
 		"history {\n    storage \"s3\" {\n      bucket = \"example-bucket\"\n      " +
 		"key    = \"exampleWorkspace/history.json\"\n      region = \"us-east1\"\n    }\n  }\n}\n"
@@ -125,7 +125,7 @@ func TestIndividualTFMigrateConfigGCS(t *testing.T) {
 		},
 	}
 
-	expectedOutput := "tfmigrate {\n  migration_dir              = \"./dragondrop/tfmigrate/\"\n  is_backend_terraform_cloud = true\n  " +
+	expectedOutput := "tfmigrate {\n  migration_dir              = \"./cloud-concierge/tfmigrate/\"\n  is_backend_terraform_cloud = true\n  " +
 		"history {\n    storage \"gcs\" {\n      bucket = \"example-bucket\"\n      " +
 		"name   = \"exampleWorkspace/history.json\"\n    }\n  }\n}\n"
 	output, err := h.individualTFMigrateConfig(
