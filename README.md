@@ -41,7 +41,7 @@ We are just getting started, and have a lot of exciting features on our roadmap.
    - [GCP](./examples/environments/gcp-example.env)
    - [Azure](./examples/environments/azure-example.env)
 
-Documentation on environment variables needed can be found [here]().
+Detailed documentation on environment variables needed can be found [here](https://docs.cloudconcierge.io/running-cloud-concierge/environment-variables).
 
 While Cloud Concierge validates environment variable formats upon start-up, we provide a UI for client-side validation of env vars
 within the [dragondrop.cloud platform](https://app.dragondrop.cloud/env-var-validator) should faster iteration be desired.
@@ -57,7 +57,7 @@ or programmatically in a `plan` and `apply` manner using our [GitHub Action](htt
 
 ### Running on a schedule
 A common use case is to want to regularly scan for drift and un-codified resources. Cloud Concierge can easily be run
-on a cron schedule using GitHub Actions. See our [example workflow]().
+on a cron schedule using GitHub Actions. See our [example workflow](https://github.com/dragondrop-cloud/cloud-concierge/blob/dev/examples/github_action.yml).
 
 ### Telemetry
 For OSS usage, Cloud Concierge only logs whenever a container execution is started. This method can be viewed [here](pkg/implementations/dragon_drop/http_dragondrop_oss_methods.go).
