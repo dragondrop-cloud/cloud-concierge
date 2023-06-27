@@ -32,7 +32,7 @@ We are just getting started, and have a lot of exciting features on our roadmap.
 1) Cloud Concierge creates a representation of your cloud infrastructure as Terraform
 2) This representation is compared against your state files to detect drift, and identify resources outside of Terraform control
 3) Static security scans and cost estimation is performed on the Terraform representation
-4) Results and code are summarized in a Pull Request within the repository of your choice
+4) Results and code are summarized in a [Pull Request](https://docs.cloudconcierge.io/how-it-works/pull-request-output) within the repository of your choice
 
 ## Getting Started
 0) Retrieve an organization token from the dragondrop.cloud management platform [here](https://app.dragondrop.cloud).
