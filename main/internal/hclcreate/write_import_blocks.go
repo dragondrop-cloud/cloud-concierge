@@ -53,12 +53,12 @@ func (h *hclCreate) WriteImportBlocks(uniqueID string, workspaceToDirectory map[
 			return fmt.Errorf("[h.generateImportBlockFile]%v", err)
 		}
 
-		err = os.MkdirAll(fmt.Sprintf("repo%vdragondrop/imports", directory), 0400)
+		err = os.MkdirAll(fmt.Sprintf("repo%vcloud-concierge/imports", directory), 0400)
 		if err != nil {
 			return fmt.Errorf("[os.MkdirAll] error making directory: %v", err)
 		}
 		// outputting the file
-		outputPath := fmt.Sprintf("repo%vdragondrop/imports/%v_imports.tf", directory, uniqueID)
+		outputPath := fmt.Sprintf("repo%vcloud-concierge/imports/%v_imports.tf", directory, uniqueID)
 		err = os.WriteFile(outputPath, importBlockFileBytes, 0400)
 		if err != nil {
 			return fmt.Errorf("[os.WriteFile] Error writing %v: %v", outputPath, err)

@@ -58,12 +58,12 @@ func (h *hclCreate) CreateTFMigrate(uniqueID string, workspaceToDirectory map[st
 // CreateTFMigrateConfiguration saves HCL which defines TFMigrate configuration.
 func (h *hclCreate) CreateTFMigrateConfiguration(workspaceToDirectory map[string]string) error {
 	for workspace, directory := range workspaceToDirectory {
-		err := os.MkdirAll(fmt.Sprintf("repo%vdragondrop/tfmigrate", directory), 0400)
+		err := os.MkdirAll(fmt.Sprintf("repo%vcloud-concierge/tfmigrate", directory), 0400)
 		if err != nil {
-			return fmt.Errorf("[os.MkdirAll] dragondrop/tfmigrate within %v: %v", directory, err)
+			return fmt.Errorf("[os.MkdirAll] cloud-concierge/tfmigrate within %v: %v", directory, err)
 		}
 
-		newFilePath := fmt.Sprintf("repo%vdragondrop/tfmigrate/.tfmigrate.hcl", directory)
+		newFilePath := fmt.Sprintf("repo%vcloud-concierge/tfmigrate/.tfmigrate.hcl", directory)
 
 		currentTfMigrateConfig, err := h.individualTFMigrateConfig(workspace)
 		if err != nil {
@@ -88,7 +88,7 @@ func (h *hclCreate) individualTFMigrateConfig(workspace string) ([]byte, error) 
 
 	tfmigrateBlockBody := tfmigrateBlock.Body()
 
-	tfmigrateBlockBody.SetAttributeValue("migration_dir", cty.StringVal("./dragondrop/tfmigrate/"))
+	tfmigrateBlockBody.SetAttributeValue("migration_dir", cty.StringVal("./cloud-concierge/tfmigrate/"))
 	tfmigrateBlockBody.SetAttributeValue("is_backend_terraform_cloud", cty.BoolVal(true))
 
 	historyBlock := tfmigrateBlockBody.AppendNewBlock("history", nil)
@@ -143,7 +143,7 @@ func (h *hclCreate) CreateTFMigrateMigration(
 		}
 
 		// outputting the file
-		outputPath := fmt.Sprintf("repo%vdragondrop/tfmigrate/%v_migrations.hcl", directory, uniqueID)
+		outputPath := fmt.Sprintf("repo%vcloud-concierge/tfmigrate/%v_migrations.hcl", directory, uniqueID)
 		err = os.WriteFile(outputPath, migrationFileBytes, 0400)
 		if err != nil {
 			return fmt.Errorf("[os.WriteFile] Error writing %v: %v", outputPath, err)
