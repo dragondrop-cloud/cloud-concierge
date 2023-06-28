@@ -163,12 +163,12 @@ func (w *TerraformResourceWriter) checkoutNewBranch(ctx context.Context) error {
 
 func (w *TerraformResourceWriter) writeDummyFile(ctx context.Context, workspaceToDirectory map[string]string) error {
 	for _, directory := range workspaceToDirectory {
-		err := os.MkdirAll(fmt.Sprintf("repo%vdragondrop/placeholder", directory), 0400)
+		err := os.MkdirAll(fmt.Sprintf("repo%vcloud-concierge/placeholder", directory), 0400)
 		if err != nil {
 			return fmt.Errorf("error creating placeholder folder %v: %v", directory, err)
 		}
 
-		newFilePath := fmt.Sprintf("repo%vdragondrop/placeholder/dragondrop_placeholder.txt", directory)
+		newFilePath := fmt.Sprintf("repo%vcloud-concierge/placeholder/dragondrop_placeholder.txt", directory)
 
 		err = os.WriteFile(newFilePath, []byte("Placeholder file for opening a PR"), 0400)
 		if err != nil {

@@ -22,7 +22,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	env := os.Getenv("DRAGONDROP_EXECUTION_ENVIRONMENT")
+	env := os.Getenv("CLOUDCONCIERGE_EXECUTION_ENVIRONMENT")
 	job, err := InitializeJobDependencies(ctx, env)
 	if err != nil {
 		log.Errorf("Error creating job: %s", err.Error())

@@ -288,13 +288,13 @@ func (h *hclCreate) writeNewResourceFiles(
 		subDirectory := workspaceToDirectoryMap[workspace]
 
 		if string(fileContent) != "" {
-			filePath := fmt.Sprintf("repo%vdragondrop-new-resources.tf", subDirectory)
+			filePath := fmt.Sprintf("repo%vnew-resources.tf", subDirectory)
 
 			err := os.WriteFile(filePath, fileContent, 0400)
 
 			if err != nil {
 				return fmt.Errorf(
-					"[os.WriteFile] Error for repo%vdragondrop-new-resources.tf:  %v",
+					"[os.WriteFile] Error for repo%vnew-resources.tf:  %v",
 					subDirectory,
 					err,
 				)

@@ -25,7 +25,7 @@ FROM infracost/infracost:0.10.19 as infracost
 ###################################################################################################
 # 4) Building the gcloud cli with config-connector
 ###################################################################################################
-FROM gcr.io/google.com/cloudsdktool/google-cloud-cli:431.0.0-slim as gcloud
+FROM --platform=linux/amd64 gcr.io/google.com/cloudsdktool/google-cloud-cli:436.0.0-slim as gcloud
 
 ###################################################################################################
 # 5) Reference to terraformer binary
