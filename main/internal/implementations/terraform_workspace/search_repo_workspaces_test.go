@@ -2,7 +2,6 @@ package terraformWorkspace
 
 import (
 	"context"
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -58,7 +57,6 @@ func TestExtractBackendDetails(t *testing.T) {
 	// Given
 	ctx := context.Background()
 
-	filePath := "test.tfstate"
 	fileContent := []byte(`
 			terraform {
 			  backend "gcs" {
@@ -67,17 +65,15 @@ func TestExtractBackendDetails(t *testing.T) {
 			  }
 			}
 		`)
-	err := os.WriteFile(filePath, fileContent, 0600)
-	require.NoError(t, err)
 
 	// When
 	backendType := "gcs"
-	backendDetails, err := extractBackendDetails(ctx, filePath, fileContent, backendType)
+	backend, err := extractBackendDetails(ctx, fileContent, backendType)
 
 	// Then
 	require.NoError(t, err, "Unexpected error: %v", err)
 
-	gcsBackend, ok := backendDetails.(BackendGCS)
+	gcsBackend, ok := backend.(GCSBackendBlock)
 
 	assert.True(t, ok, "Failed to cast backendDetails to BackendGCS")
 	assert.NotEmpty(t, gcsBackend.Bucket, "Failed to extract backend bucket for GCS")
@@ -114,7 +110,7 @@ func TestExtractTFCloudWorkspaceNameIfExists(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// When
-			got, err := extractTFCloudWorkspaceNameIfExists(ctx, tt.filePath, tt.fileContent)
+			got, err := extractTFCloudWorkspaceNameIfExists(ctx, tt.fileContent)
 
 			// Then
 			if tt.wantErr {

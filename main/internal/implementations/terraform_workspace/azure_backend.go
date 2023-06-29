@@ -61,7 +61,7 @@ func (b *AzureBlobBackend) DownloadWorkspaceState(ctx context.Context, workspace
 // getWorkspaceStateByTestingAllAzureCredentials downloads the state file for the given workspace from the Azure Blob Storage backend.
 func (b *AzureBlobBackend) getWorkspaceStateByTestingAllAzureCredentials(ctx context.Context, workspaceName string) error {
 	for _, credential := range b.config.DivisionCloudCredentials {
-		serviceURL, err := b.configureAzureBlobURL(ctx, credential, b.workspaceToBackendDetails[workspaceName].(BackendAzure))
+		serviceURL, err := b.configureAzureBlobURL(ctx, credential, b.workspaceToBackendDetails[workspaceName].(AzureBackendBlock))
 		if err != nil {
 			continue
 		}
@@ -95,7 +95,7 @@ type AzureCredentials struct {
 }
 
 // configureAzureBlobURL configures the Azure Blob Storage URL.
-func (b *AzureBlobBackend) configureAzureBlobURL(ctx context.Context, credential terraformValueObjects.Credential, backendAzure BackendAzure) (azblob.ServiceURL, error) {
+func (b *AzureBlobBackend) configureAzureBlobURL(ctx context.Context, credential terraformValueObjects.Credential, backendAzure AzureBackendBlock) (azblob.ServiceURL, error) {
 	azureCredentials := new(AzureCredentials)
 	err := json.Unmarshal([]byte(credential), &azureCredentials)
 	if err != nil {

@@ -99,13 +99,13 @@ func getWorkspaceByFile(ctx context.Context, directory string, fileName string, 
 	}
 
 	// checking to see if a Terraform Cloud workspace configuration exists, and if so, extracting the workspace data.
-	workspace, err := extractTFCloudWorkspaceNameIfExists(ctx, filePath, fileContent)
+	workspace, err := extractTFCloudWorkspaceNameIfExists(ctx, fileContent)
 	if err != nil && workspace == "" {
 		return "", nil, false
 	}
 
 	// checking to see if a major-cloud-provider hosted Terraform backend configuration exists, and if so, extracting the configuration data.
-	details, err := extractBackendDetails(ctx, filePath, fileContent, backendType)
+	details, err := extractBackendDetails(ctx, fileContent, backendType)
 	if err != nil {
 		return "", nil, false
 	}
@@ -113,7 +113,8 @@ func getWorkspaceByFile(ctx context.Context, directory string, fileName string, 
 	return workspace, details, true
 }
 
-// TerraformCloudFile is a struct representation of a terraform versions.tf file.
+// TODO: This needs to be updated to support the correct gohcl decode syntax
+// TerraformCloudFile is a struct representation of a terraform block
 type TerraformCloudFile struct {
 	Cloud struct {
 		Organization string
@@ -124,10 +125,10 @@ type TerraformCloudFile struct {
 	} `hcl:"cloud,block"`
 }
 
-// extractTFCloudWorkspaceNameIfExists extracts the workspace name from a terraform versions.tf file if exits.
-func extractTFCloudWorkspaceNameIfExists(ctx context.Context, filePath string, fileContent []byte) (string, error) {
+// extractTFCloudWorkspaceNameIfExists extracts the workspace name from a Terraform versions.tf file if exits.
+func extractTFCloudWorkspaceNameIfExists(ctx context.Context, fileContent []byte) (string, error) {
 	var config TerraformCloudFile
-	err := hclsimple.Decode(filePath, fileContent, nil, &config)
+	err := hclsimple.Decode("placeholder.hcl", fileContent, nil, &config)
 	if err != nil {
 		return "", err
 	}
@@ -135,69 +136,90 @@ func extractTFCloudWorkspaceNameIfExists(ctx context.Context, filePath string, f
 	return config.Cloud.Workspaces.Name, nil
 }
 
-// TerraformBackendS3 is a struct representation of a terraform backend.tf file for aws provider.
-type TerraformBackendS3 struct {
-	BackendS3 BackendS3 `hcl:"backend,s3"`
+// S3 Related backend configuration parsing
+// S3TerraformBackend is a struct representation of a terraform backend file for s3
+type S3TerraformBackend struct {
+	TerraformBlock S3TerraformBlock `hcl:"terraform,block"`
 }
 
-// BackendS3 is a struct representation of a terraform backend.tf file for s3 backend.
-type BackendS3 struct {
-	Bucket string `hcl:"bucket,optional"`
-	Key    string `hcl:"key,optional"`
-	Region string `hcl:"region,optional"`
+// S3TerraformBlock is a struct representation of a terraform block for s3
+type S3TerraformBlock struct {
+	Backend S3BackendBlock `hcl:"backend,s3"`
 }
 
-// TerraformBackendAzure is a struct representation of a terraform backend.tf file for azure provider.
-type TerraformBackendAzure struct {
-	BackendAzure BackendAzure `hcl:"backend,azurerm"`
+// S3BackendBlock is a struct representation of a terraform backend block for s3
+type S3BackendBlock struct {
+	Bucket string `hcl:"bucket,attr"`
+	Key    string `hcl:"key,attr"`
+	Region string `hcl:"region,attr"`
 }
 
-// BackendAzure is a struct representation of a terraform backend.tf file for azure blob storage.
-type BackendAzure struct {
-	ResourceGroupName  string `hcl:"resource_group_name,optional"`
-	StorageAccountName string `hcl:"storage_account_name,optional"`
-	ContainerName      string `hcl:"container_name,optional"`
-	Key                string `hcl:"key,optional"`
+// Azurerm Related backend configuration parsing
+// AzurermTerraformBackend is a struct representation of a terraform backend file for azurerm
+type AzurermTerraformBackend struct {
+	TerraformBlock AzurermTerraformBlock `hcl:"terraform,block"`
 }
 
-// TerraformBackendGoogle is a struct representation of a terraform backend.tf file for google provider.
-type TerraformBackendGoogle struct {
-	BackendGCS BackendGCS `hcl:"backend,gcs"`
+// AzurermTerraformBlock is a struct representation of a terraform block for azurerm
+type AzurermTerraformBlock struct {
+	Backend AzureBackendBlock `hcl:"backend,block"`
 }
 
-// BackendGCS is a struct representation of a terraform backend.tf file for gcs.
-type BackendGCS struct {
-	Bucket string `hcl:"bucket,optional"`
-	Prefix string `hcl:"prefix,optional"`
+// AzureBackendBlock is a struct representation of a terraform backend block for azurerm
+type AzureBackendBlock struct {
+	ResourceGroupName  string `hcl:"resource_group_name,attr"`
+	StorageAccountName string `hcl:"storage_account_name,attr"`
+	ContainerName      string `hcl:"container_name,attr"`
+	Key                string `hcl:"key,attr"`
+}
+
+// GCS Related backend configuration parsing
+// GCSTerraformBackend is a struct representation of a terraform backend file for gcs.
+type GCSTerraformBackend struct {
+	TerraformBlock GCSTerraformBlock `hcl:"terraform,block"`
+}
+
+// GCSTerraformBlock parses the "terraform" block for GCS
+type GCSTerraformBlock struct {
+	Backend GCSBackendBlock `hcl:"backend,block"`
+}
+
+// GCSBackendBlock parses the backend block for GCS
+type GCSBackendBlock struct {
+	Name   string `hcl:"name,label"`
+	Bucket string `hcl:"bucket,attr"`
+	Prefix string `hcl:"prefix,attr"`
 }
 
 // extractBackendDetails extracts the backend details from a .tf file if it exists.
-func extractBackendDetails(ctx context.Context, filePath string, fileContent []byte, backendType string) (interface{}, error) {
+func extractBackendDetails(ctx context.Context, fileContent []byte, backendType string) (interface{}, error) {
+	filePath := "backend.hcl"
+
 	switch backendType {
 	case "s3":
-		var config TerraformBackendS3
+		var config S3TerraformBackend
 		err := hclsimple.Decode(filePath, fileContent, nil, &config)
 		if err != nil {
 			return "", err
 		}
 
-		return config.BackendS3, nil
+		return config.TerraformBlock.Backend, nil
 	case "azurerm":
-		var config TerraformBackendAzure
+		var config AzurermTerraformBackend
 		err := hclsimple.Decode(filePath, fileContent, nil, &config)
 		if err != nil {
 			return "", err
 		}
 
-		return config.BackendAzure, nil
+		return config.TerraformBlock.Backend, nil
 	case "gcs":
-		var config TerraformBackendGoogle
+		var config GCSTerraformBackend
 		err := hclsimple.Decode(filePath, fileContent, nil, &config)
 		if err != nil {
 			return "", err
 		}
 
-		return config.BackendGCS, nil
+		return config.TerraformBlock.Backend, nil
 	default:
 		return "Not yet supported", nil
 	}
