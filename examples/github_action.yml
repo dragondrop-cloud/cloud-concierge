@@ -10,7 +10,7 @@ jobs:
 
     steps:
       - name: Run cloud-concierge
-        uses: dragondropcloud/cloud-concierge:latest
+        uses: docker://dragondropcloud/cloud-concierge:latest
         env:
           CLOUDCONCIERGE_DIVISIONCLOUDCREDENTIALS: ${{ secrets.CLOUDCONCIERGE_DIVISIONCLOUDCREDENTIALS }}
           CLOUDCONCIERGE_PROVIDERS: ${{ secrets.CLOUDCONCIERGE_PROVIDERS }}
