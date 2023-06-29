@@ -113,16 +113,21 @@ func getWorkspaceByFile(ctx context.Context, directory string, fileName string, 
 	return workspace, details, true
 }
 
-// TODO: This needs to be updated to support the correct gohcl decode syntax
 // TerraformCloudFile is a struct representation of a terraform block
 type TerraformCloudFile struct {
-	Cloud struct {
-		Organization string
-		Workspaces   struct {
-			Name string   `hcl:"name,optional"`
-			Tags []string `hcl:"tags,optional"`
-		} `hcl:"workspaces,block"`
-	} `hcl:"cloud,block"`
+	Cloud CloudBlock `hcl:"terraform,block"`
+}
+
+type CloudBlock struct {
+	Workspace WorkspaceBlock `hcl:"cloud,block"`
+}
+
+type WorkspaceBlock struct {
+	Details WorkspaceDetails `hcl:"workspaces,block"`
+}
+
+type WorkspaceDetails struct {
+	Name string `hcl:"name,attr"`
 }
 
 // extractTFCloudWorkspaceNameIfExists extracts the workspace name from a Terraform versions.tf file if exits.
@@ -133,7 +138,7 @@ func extractTFCloudWorkspaceNameIfExists(ctx context.Context, fileContent []byte
 		return "", err
 	}
 
-	return config.Cloud.Workspaces.Name, nil
+	return config.Cloud.Workspace.Details.Name, nil
 }
 
 // S3 Related backend configuration parsing
@@ -144,11 +149,12 @@ type S3TerraformBackend struct {
 
 // S3TerraformBlock is a struct representation of a terraform block for s3
 type S3TerraformBlock struct {
-	Backend S3BackendBlock `hcl:"backend,s3"`
+	Backend S3BackendBlock `hcl:"backend,block"`
 }
 
 // S3BackendBlock is a struct representation of a terraform backend block for s3
 type S3BackendBlock struct {
+	Name   string `hcl:"name,label"`
 	Bucket string `hcl:"bucket,attr"`
 	Key    string `hcl:"key,attr"`
 	Region string `hcl:"region,attr"`
@@ -167,6 +173,7 @@ type AzurermTerraformBlock struct {
 
 // AzureBackendBlock is a struct representation of a terraform backend block for azurerm
 type AzureBackendBlock struct {
+	Name               string `hcl:"name,label"`
 	ResourceGroupName  string `hcl:"resource_group_name,attr"`
 	StorageAccountName string `hcl:"storage_account_name,attr"`
 	ContainerName      string `hcl:"container_name,attr"`
