@@ -58,7 +58,13 @@ func TestExtractBackendDetails_GCS(t *testing.T) {
 	ctx := context.Background()
 
 	fileContent := []byte(`
+			provider "google" {
+			  region = var.region
+			}
+			
 			terraform {
+			  required_version = "~> 1.2.6"
+
 			  backend "gcs" {
 				bucket  = "my-gcs-terraform-backend-bucket"
 				prefix  = "terraform/state"
@@ -88,7 +94,12 @@ func TestExtractBackendDetails_S3(t *testing.T) {
 	ctx := context.Background()
 
 	fileContent := []byte(`
+			provider "aws" {
+			  region = var.region
+			}
+			
 			terraform {
+			  required_version = "~> 1.2.6"
 			  backend "s3" {
 				bucket = "state-management-bucket"
 				key    = "files/test.tfstate"
@@ -121,7 +132,13 @@ func TestExtractBackendDetails_Azurerm(t *testing.T) {
 	ctx := context.Background()
 
 	fileContent := []byte(`
+			provider "azurerm" {
+			  region = var.region
+			}
+			
 			terraform {
+			  required_version = "~> 1.2.6"
+
 			  backend "azurerm" {
 				resource_group_name  = "dragondrop-dev"
 				storage_account_name = "dragondropstoragedev"
@@ -165,70 +182,70 @@ func TestExtractTFCloudWorkspaceNameIfExists(t *testing.T) {
 		{
 			name: "Valid case",
 			fileContent: []byte(`
-terraform {
-	cloud {
-		workspaces {
-			name = "test" 
-		}
-	}
-}
-`),
+			terraform {
+				cloud {
+					workspaces {
+						name = "test" 
+					}
+				}
+			}
+			`),
 			want:    "test",
 			wantErr: false,
 		},
 		{
 			name: "Valid case with full block specification",
 			fileContent: []byte(`
-terraform {
-  required_version = "~> 1.2.6"
-
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "4.59.0"
-    }
-  }
-
-  cloud {
-    organization = "my-org"
-
-    workspaces {
-      name = "workspace"
-    }
-  }
-}`),
+				terraform {
+				  required_version = "~> 1.2.6"
+				
+				  required_providers {
+					aws = {
+					  source  = "hashicorp/aws"
+					  version = "4.59.0"
+					}
+				  }
+				
+				  cloud {
+					organization = "my-org"
+				
+					workspaces {
+					  name = "workspace"
+					}
+				  }
+				}`),
 			want:    "workspace",
 			wantErr: false,
 		},
 		{
 			name: "Valid case with full file specification",
 			fileContent: []byte(`
-provider "aws" {
-  region = var.region
-}
-
-terraform {
-  required_version = "~> 1.2.6"
-
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "4.59.0"
-    }
-  }
-
-  cloud {
-    organization = "my-org"
-
-    workspaces {
-      name = "workspace"
-    }
-  }
-}
-
-provider "tfe" {
-  token = var.tfe_token
-}`),
+				provider "aws" {
+				  region = var.region
+				}
+				
+				terraform {
+				  required_version = "~> 1.2.6"
+				
+				  required_providers {
+					aws = {
+					  source  = "hashicorp/aws"
+					  version = "4.59.0"
+					}
+				  }
+				
+				  cloud {
+					organization = "my-org"
+				
+					workspaces {
+					  name = "workspace"
+					}
+				  }
+				}
+				
+				provider "tfe" {
+				  token = var.tfe_token
+				}`),
 			want:    "workspace",
 			wantErr: false,
 		},

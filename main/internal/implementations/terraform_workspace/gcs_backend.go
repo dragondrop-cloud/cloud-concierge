@@ -74,7 +74,8 @@ func (b *GCSBackend) getWorkspaceStateByTestingAllGoogleCredentials(ctx context.
 			continue
 		}
 
-		bucket := client.Bucket(b.config.ContainerName)
+		gcsBackendDetails := b.workspaceToBackendDetails[workspaceName].(GCSBackendBlock)
+		bucket := client.Bucket(gcsBackendDetails.Bucket)
 		rc, err := bucket.Object(stateFileName).NewReader(ctx)
 		if err != nil {
 			outFile.Close()

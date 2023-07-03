@@ -118,8 +118,9 @@ func (s *S3Backend) getWorkspaceStateByTestingAllS3Credentials(ctx context.Conte
 			return fmt.Errorf("[get_workspace_state][error creating file]%w", err)
 		}
 
+		s3BackendDetails := s.workspaceToBackendDetails[workspaceName].(S3BackendBlock)
 		downloadInput := &s3.GetObjectInput{
-			Bucket: aws.String(s.config.ContainerName),
+			Bucket: aws.String(s3BackendDetails.Bucket),
 			Key:    aws.String(stateFileName),
 		}
 

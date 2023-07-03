@@ -75,7 +75,8 @@ func (b *AzureBlobBackend) getWorkspaceStateByTestingAllAzureCredentials(ctx con
 			continue
 		}
 
-		blobURL := serviceURL.NewContainerURL(b.config.ContainerName).NewBlobURL(stateFileName)
+		azureBackendDetails := b.workspaceToBackendDetails[workspaceName].(AzureBackendBlock)
+		blobURL := serviceURL.NewContainerURL(azureBackendDetails.ContainerName).NewBlobURL(stateFileName)
 
 		err = azblob.DownloadBlobToFile(ctx, blobURL, 0, azblob.CountToEnd, outFile, azblob.DownloadFromBlobOptions{})
 		if err != nil {

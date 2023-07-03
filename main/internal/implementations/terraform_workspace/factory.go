@@ -29,7 +29,7 @@ func (f *Factory) Instantiate(ctx context.Context, environment string, dragonDro
 // configuration specified via environment variables.
 func (f *Factory) bootstrappedTerraformWorkspace(ctx context.Context, dragonDrop interfaces.DragonDrop, config TerraformCloudConfig) (interfaces.TerraformWorkspace, error) {
 	var backendConfig ContainerBackendConfig
-	err := envconfig.Process("DRAGONDROP", &backendConfig)
+	err := envconfig.Process("CLOUDCONCIERGE", &backendConfig)
 	if err != nil {
 		log.Errorf("[cannot create terraform workspace config]%s", err.Error())
 		return nil, fmt.Errorf("[cannot create terraform workspace config]%w", err)

@@ -4,9 +4,11 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
 
-	"github.com/hashicorp/hcl/v2/hclsimple"
+	"github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/hcl/v2/hclwrite"
 	log "github.com/sirupsen/logrus"
 
 	terraformValueObjects "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_value_objects"
@@ -19,9 +21,6 @@ type ContainerBackendConfig struct {
 
 	// WorkspaceDirectories is a slice of directories that contains terraform workspaces within the user repo.
 	WorkspaceDirectories WorkspaceDirectoriesDecoder `required:"true"`
-
-	// ContainerName is the name of the S3 bucket that contains the state files.
-	ContainerName string `required:"true"`
 
 	// DivisionCloudCredentials is a map between a Division and request cloud credentials.
 	DivisionCloudCredentials terraformValueObjects.DivisionCloudCredentialDecoder `required:"true"`
@@ -113,121 +112,122 @@ func getWorkspaceByFile(ctx context.Context, directory string, fileName string, 
 	return workspace, details, true
 }
 
-// TerraformCloudFile is a struct representation of a terraform block
-type TerraformCloudFile struct {
-	Cloud CloudBlock `hcl:"terraform,block"`
-}
-
-type CloudBlock struct {
-	Workspace WorkspaceBlock `hcl:"cloud,block"`
-}
-
-type WorkspaceBlock struct {
-	Details WorkspaceDetails `hcl:"workspaces,block"`
-}
-
-type WorkspaceDetails struct {
-	Name string `hcl:"name,attr"`
-}
-
-// extractTFCloudWorkspaceNameIfExists extracts the workspace name from a Terraform versions.tf file if exits.
+// extractTFCloudWorkspaceNameIfExists extracts the workspace name from a Terraform file if it exists.
 func extractTFCloudWorkspaceNameIfExists(ctx context.Context, fileContent []byte) (string, error) {
-	var config TerraformCloudFile
-	err := hclsimple.Decode("placeholder.hcl", fileContent, nil, &config)
-	if err != nil {
-		return "", err
+	inputHCLFile, hclDiag := hclwrite.ParseConfig(
+		fileContent,
+		"placeholder.tf",
+		hcl.Pos{Line: 0, Column: 0, Byte: 0},
+	)
+	if hclDiag.HasErrors() {
+		return "", fmt.Errorf("error parsing HCL file: %s", hclDiag.Error())
 	}
 
-	return config.Cloud.Workspace.Details.Name, nil
-}
+	// checking to see if a Terraform Cloud workspace configuration exists, and if so, extracting the workspace name.
+	terraform := inputHCLFile.Body().FirstMatchingBlock("terraform", nil)
+	cloud := terraform.Body().FirstMatchingBlock("cloud", nil)
+	workspaces := cloud.Body().FirstMatchingBlock("workspaces", nil)
+	workspacesName := workspaces.Body().GetAttribute("name")
 
-// S3 Related backend configuration parsing
-// S3TerraformBackend is a struct representation of a terraform backend file for s3
-type S3TerraformBackend struct {
-	TerraformBlock S3TerraformBlock `hcl:"terraform,block"`
-}
+	workspaceNameTokens := string(workspacesName.BuildTokens(nil).Bytes())
 
-// S3TerraformBlock is a struct representation of a terraform block for s3
-type S3TerraformBlock struct {
-	Backend S3BackendBlock `hcl:"backend,block"`
+	re := regexp.MustCompile(`"(.*)"`)
+	matches := re.FindStringSubmatch(workspaceNameTokens)
+
+	if len(matches) < 2 {
+		return "", fmt.Errorf("error extracting workspace name from file")
+	}
+
+	return matches[1], nil
 }
 
 // S3BackendBlock is a struct representation of a terraform backend block for s3
 type S3BackendBlock struct {
-	Name   string `hcl:"name,label"`
-	Bucket string `hcl:"bucket,attr"`
-	Key    string `hcl:"key,attr"`
-	Region string `hcl:"region,attr"`
-}
-
-// Azurerm Related backend configuration parsing
-// AzurermTerraformBackend is a struct representation of a terraform backend file for azurerm
-type AzurermTerraformBackend struct {
-	TerraformBlock AzurermTerraformBlock `hcl:"terraform,block"`
-}
-
-// AzurermTerraformBlock is a struct representation of a terraform block for azurerm
-type AzurermTerraformBlock struct {
-	Backend AzureBackendBlock `hcl:"backend,block"`
+	Bucket string
+	Key    string
+	Region string
 }
 
 // AzureBackendBlock is a struct representation of a terraform backend block for azurerm
 type AzureBackendBlock struct {
-	Name               string `hcl:"name,label"`
-	ResourceGroupName  string `hcl:"resource_group_name,attr"`
-	StorageAccountName string `hcl:"storage_account_name,attr"`
-	ContainerName      string `hcl:"container_name,attr"`
-	Key                string `hcl:"key,attr"`
-}
-
-// GCS Related backend configuration parsing
-// GCSTerraformBackend is a struct representation of a terraform backend file for gcs.
-type GCSTerraformBackend struct {
-	TerraformBlock GCSTerraformBlock `hcl:"terraform,block"`
-}
-
-// GCSTerraformBlock parses the "terraform" block for GCS
-type GCSTerraformBlock struct {
-	Backend GCSBackendBlock `hcl:"backend,block"`
+	ResourceGroupName  string
+	StorageAccountName string
+	ContainerName      string
+	Key                string
 }
 
 // GCSBackendBlock parses the backend block for GCS
 type GCSBackendBlock struct {
-	Name   string `hcl:"name,label"`
-	Bucket string `hcl:"bucket,attr"`
-	Prefix string `hcl:"prefix,attr"`
+	Bucket string
+	Prefix string
 }
 
 // extractBackendDetails extracts the backend details from a .tf file if it exists.
 func extractBackendDetails(ctx context.Context, fileContent []byte, backendType string) (interface{}, error) {
-	filePath := "backend.hcl"
-
 	switch backendType {
 	case "s3":
-		var config S3TerraformBackend
-		err := hclsimple.Decode(filePath, fileContent, nil, &config)
-		if err != nil {
-			return "", err
-		}
-
-		return config.TerraformBlock.Backend, nil
+		return extractAttributesFromBackendDetails(fileContent, "s3", []string{"bucket", "key", "region"},
+			func(attributesMap map[string]string) interface{} {
+				return S3BackendBlock{
+					Region: attributesMap["region"],
+					Key:    attributesMap["key"],
+					Bucket: attributesMap["bucket"],
+				}
+			})
 	case "azurerm":
-		var config AzurermTerraformBackend
-		err := hclsimple.Decode(filePath, fileContent, nil, &config)
-		if err != nil {
-			return "", err
-		}
-
-		return config.TerraformBlock.Backend, nil
+		return extractAttributesFromBackendDetails(fileContent, "azurerm",
+			[]string{"resource_group_name", "storage_account_name", "container_name", "key"},
+			func(attributesMap map[string]string) interface{} {
+				return AzureBackendBlock{
+					ResourceGroupName:  attributesMap["resource_group_name"],
+					StorageAccountName: attributesMap["storage_account_name"],
+					ContainerName:      attributesMap["container_name"],
+					Key:                attributesMap["key"],
+				}
+			},
+		)
 	case "gcs":
-		var config GCSTerraformBackend
-		err := hclsimple.Decode(filePath, fileContent, nil, &config)
-		if err != nil {
-			return "", err
-		}
-
-		return config.TerraformBlock.Backend, nil
+		return extractAttributesFromBackendDetails(fileContent, "gcs", []string{"bucket", "prefix"},
+			func(attributesMap map[string]string) interface{} {
+				return GCSBackendBlock{
+					Bucket: attributesMap["bucket"],
+					Prefix: attributesMap["prefix"],
+				}
+			})
 	default:
 		return "Not yet supported", nil
 	}
+}
+
+// extractAttributesFromBackendDetails extracts the backend details from a .tf file if it exists.
+func extractAttributesFromBackendDetails(fileContent []byte, provider string, attributes []string, deserializer func(map[string]string) interface{}) (interface{}, error) {
+	inputHCLFile, hclDiag := hclwrite.ParseConfig(
+		fileContent,
+		"placeholder.tf",
+		hcl.Pos{Line: 0, Column: 0, Byte: 0},
+	)
+	if hclDiag.HasErrors() {
+		return "", fmt.Errorf("error parsing HCL file: %s", hclDiag.Error())
+	}
+
+	// checking to see if a Terraform Cloud workspace configuration exists, and if so, extracting the workspace name.
+	terraform := inputHCLFile.Body().FirstMatchingBlock("terraform", nil)
+	backend := terraform.Body().FirstMatchingBlock("backend", []string{provider})
+
+	attributesMap := make(map[string]string)
+	for _, attribute := range attributes {
+		attributeExpression := backend.Body().GetAttribute(attribute)
+		attributeTokenBytes := string(attributeExpression.BuildTokens(nil).Bytes())
+
+		re := regexp.MustCompile(`"(.*)"`)
+		matches := re.FindStringSubmatch(attributeTokenBytes)
+
+		if len(matches) < 2 {
+			return "", fmt.Errorf("error extracting attribute %s for %s provider", attributes, provider)
+		}
+
+		attributesMap[attribute] = matches[1]
+	}
+
+	return deserializer(attributesMap), nil
 }
