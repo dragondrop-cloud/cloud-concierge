@@ -234,6 +234,11 @@ func InitializeJobDependencies(ctx context.Context, env string) (*Job, error) {
 		return nil, fmt.Errorf("[cannot create job config]%w", err)
 	}
 
+	err = validateJobConfig(jobConfig)
+	if err != nil {
+		return nil, fmt.Errorf("[invalid job config]%w", err)
+	}
+
 	inferredData, err := getInferredData(jobConfig)
 	if err != nil {
 		log.Errorf("[cannot create job config]%s", err.Error())
