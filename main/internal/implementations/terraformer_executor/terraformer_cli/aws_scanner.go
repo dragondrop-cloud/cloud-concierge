@@ -8,20 +8,27 @@ import (
 	terraformValueObjects "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_value_objects"
 )
 
+var defaultAwsRegions = []string{"us-east-1"}
+
 // AWSScanner implements the Scanner interface for use with AWS cloud environments.
 type AWSScanner struct {
 	// Config is the needed configuration of a mapping between Division name and the corresponding
 	// Credential needed to access that environment.
 	config map[terraformValueObjects.Division]terraformValueObjects.Credential
 
+	// terraformer is the TerraformerCLI interface used to scan the AWS cloud environment.
 	terraformer TerraformerCLI
+
+	// CloudRegions represents the list of cloud regions that will be considered for inclusion in the import statement.
+	CloudRegions []terraformValueObjects.CloudRegion `required:"true"`
 }
 
 // NewAWSScanner creates and returns a new instance of AWSScanner.
-func NewAWSScanner(config map[terraformValueObjects.Division]terraformValueObjects.Credential, cliConfig Config) (Scanner, error) {
+func NewAWSScanner(config map[terraformValueObjects.Division]terraformValueObjects.Credential, cliConfig Config, cloudRegions []terraformValueObjects.CloudRegion) (Scanner, error) {
 	return &AWSScanner{
-		config:      config,
-		terraformer: newTerraformerCLI(cliConfig),
+		CloudRegions: cloudRegions,
+		config:       config,
+		terraformer:  newTerraformerCLI(cliConfig),
 	}, nil
 }
 
@@ -37,7 +44,7 @@ func (awsScanner *AWSScanner) Scan(project terraformValueObjects.Division, crede
 		Division:       project,
 		Resources:      []string{},
 		AdditionalArgs: []string{"--profile="},
-		Regions:        []string{"us-east-1"},
+		Regions:        getValidRegions(awsScanner.CloudRegions, terraformValueObjects.AwsRegions, defaultAwsRegions),
 		IsCompact:      true,
 	})
 

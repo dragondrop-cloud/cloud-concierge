@@ -131,6 +131,7 @@ func TestGetTerraformerConfig(t *testing.T) {
 		DivisionCloudCredentials: jobConfig.DivisionCloudCredentials,
 		Providers:                jobConfig.Providers,
 		TerraformVersion:         terraformValueObjects.Version(jobConfig.TerraformVersion),
+		CloudRegions:             jobConfig.CloudRegions,
 	}
 
 	assert.Equal(t, want, got, "TerraformerExecutorConfig should be equal")

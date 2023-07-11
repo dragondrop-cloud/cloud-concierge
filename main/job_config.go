@@ -87,6 +87,9 @@ type JobConfig struct {
 
 	// ResourcesBlackList represents the list of resource names that will be excluded from consideration for inclusion in the import statement.
 	ResourcesBlackList terraformValueObjects.ResourceNameList
+
+	// CloudRegions represents the list of cloud regions that will be considered for inclusion in the import statement.
+	CloudRegions terraformValueObjects.CloudRegionsDecoder
 }
 
 // validateJobConfig validates the JobConfig struct with the values as expected.
@@ -143,6 +146,7 @@ func (c JobConfig) getTerraformerConfig() terraformerCli.TerraformerExecutorConf
 		DivisionCloudCredentials: c.DivisionCloudCredentials,
 		Providers:                c.Providers,
 		TerraformVersion:         terraformValueObjects.Version(c.TerraformVersion),
+		CloudRegions:             c.CloudRegions,
 	}
 }
 
