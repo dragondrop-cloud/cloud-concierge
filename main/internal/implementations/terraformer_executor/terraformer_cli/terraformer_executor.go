@@ -25,6 +25,9 @@ type TerraformerExecutorConfig struct {
 
 	// TerraformVersion is the version of Terraform used.
 	TerraformVersion terraformValueObjects.Version `required:"true"`
+
+	// CloudRegions represents the list of cloud regions that will be considered for inclusion in the import statement.
+	CloudRegions terraformValueObjects.CloudRegionsDecoder `required:"true"`
 }
 
 // TerraformerExecutor is a struct that implements interfaces.TerraformerExecutor
@@ -65,7 +68,7 @@ func getScanners(config TerraformerExecutorConfig, cliConfig Config, divisionToP
 		switch p {
 		case "google":
 			googleScannerConfig := subsetMapOfDivisionToCredentials(config.DivisionCloudCredentials, divisionToProvider, p)
-			googleScanner, err := NewGoogleScanner(googleScannerConfig, cliConfig)
+			googleScanner, err := NewGoogleScanner(googleScannerConfig, cliConfig, config.CloudRegions)
 
 			if err != nil {
 				log.Errorf("[NewTerraformerExec] Error in NewGoogleScanner(): %s", err.Error())
@@ -75,7 +78,7 @@ func getScanners(config TerraformerExecutorConfig, cliConfig Config, divisionToP
 			scanners[p] = googleScanner
 		case "aws":
 			awsScannerConfig := subsetMapOfDivisionToCredentials(config.DivisionCloudCredentials, divisionToProvider, p)
-			awsScanner, err := NewAWSScanner(awsScannerConfig, cliConfig)
+			awsScanner, err := NewAWSScanner(awsScannerConfig, cliConfig, config.CloudRegions)
 
 			if err != nil {
 				log.Errorf("[NewTerraformerExec] Error in NewAWSScanner(): %s", err.Error())
@@ -85,7 +88,7 @@ func getScanners(config TerraformerExecutorConfig, cliConfig Config, divisionToP
 			scanners[p] = awsScanner
 		case "azurerm":
 			azureScannerConfig := subsetMapOfDivisionToCredentials(config.DivisionCloudCredentials, divisionToProvider, p)
-			azureScanner, err := NewAzureScanner(azureScannerConfig, cliConfig)
+			azureScanner, err := NewAzureScanner(azureScannerConfig, cliConfig, config.CloudRegions)
 
 			if err != nil {
 				log.Errorf("[NewTerraformerExec] Error in NewAzureScanner(): %s", err.Error())
