@@ -1,7 +1,11 @@
 package main
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/dragondrop-cloud/cloud-concierge/main/internal/hclcreate"
+
 	costEstimation "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/cost_estimation"
 	dragonDrop "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/dragon_drop"
 	identifyCloudActors "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/identify_cloud_actors"
@@ -46,10 +50,10 @@ type JobConfig struct {
 	StateBackend string `required:"true"`
 
 	// TerraformCloudOrganization is the name of the organization within Terraform Cloud
-	TerraformCloudOrganization string `required:"true"`
+	TerraformCloudOrganization string
 
 	// TerraformCloudToken is the auth token to access Terraform Cloud programmatically.
-	TerraformCloudToken string `required:"false"`
+	TerraformCloudToken string
 
 	// WorkspaceDirectories is a slice of directories that contains terraform workspaces within the user repo.
 	WorkspaceDirectories terraformWorkspace.WorkspaceDirectoriesDecoder `required:"true"`
@@ -83,6 +87,22 @@ type JobConfig struct {
 
 	// ResourcesBlackList represents the list of resource names that will be excluded from consideration for inclusion in the import statement.
 	ResourcesBlackList terraformValueObjects.ResourceNameList
+
+	// CloudRegions represents the list of cloud regions that will be considered for inclusion in the import statement.
+	CloudRegions terraformValueObjects.CloudRegionsDecoder
+}
+
+// validateJobConfig validates the JobConfig struct with the values as expected.
+func validateJobConfig(config JobConfig) error {
+	if strings.ToLower(config.StateBackend) == "terraformcloud" {
+		if config.TerraformCloudOrganization == "" {
+			return fmt.Errorf("[terraform cloud organization is required when using terraform cloud as state backend]")
+		}
+		if config.TerraformCloudToken == "" {
+			return fmt.Errorf("[terraform cloud token is required when using terraform cloud as state backend]")
+		}
+	}
+	return nil
 }
 
 // getDragonDropConfig returns the configuration for the DragonDrop client.
@@ -126,6 +146,7 @@ func (c JobConfig) getTerraformerConfig() terraformerCli.TerraformerExecutorConf
 		DivisionCloudCredentials: c.DivisionCloudCredentials,
 		Providers:                c.Providers,
 		TerraformVersion:         terraformValueObjects.Version(c.TerraformVersion),
+		CloudRegions:             c.CloudRegions,
 	}
 }
 

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math"
 	"net/http"
@@ -16,7 +17,10 @@ import (
 	resourcesCalculator "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/resources_calculator"
 	driftDetector "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_managed_resources_drift_detector/drift_detector"
 	terraformValueObjects "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_value_objects"
+	log "github.com/sirupsen/logrus"
 )
+
+var ErrNoCloudTrailEvents = errors.New("no events found")
 
 // AWSLogQuerier implements the LogQuerier interface for AWS.
 type AWSLogQuerier struct {
@@ -141,7 +145,11 @@ func (alc *AWSLogQuerier) QueryForResourcesInDivision(ctx context.Context, divis
 		for _, driftedResource := range currentUniqueDriftedResources {
 			resourceActions, err := alc.cloudTrailEventHistorySearch(ctx, driftedResource.ResourceType, driftedResource.InstanceID, driftedResource.Region, false)
 			if err != nil {
-				return divisionResourceActions, fmt.Errorf("[alc.cloudTrailEventHistory]%v", err)
+				if err != ErrNoCloudTrailEvents {
+					return nil, fmt.Errorf("[alc.cloudTrailEventHistorySearch]%v", err)
+				}
+				log.Errorf("[no cloud trail events found for resource %v]", driftedResource)
+				continue
 			}
 
 			currentResourceName := uniqueDriftedResourceToName(driftedResource)
@@ -168,7 +176,11 @@ func (alc *AWSLogQuerier) QueryForResourcesInDivision(ctx context.Context, divis
 		for id, resource := range currentNewResources {
 			resourceActions, err := alc.cloudTrailEventHistorySearch(ctx, resource.ResourceType, string(id), resource.Region, true)
 			if err != nil {
-				return divisionResourceActions, fmt.Errorf("[alc.cloudTrailEventHistory]%v", err)
+				if err != ErrNoCloudTrailEvents {
+					return nil, fmt.Errorf("[alc.cloudTrailEventHistorySearch]%v", err)
+				}
+				log.Errorf("[no cloud trail events found for resource %v]", resource)
+				continue
 			}
 
 			currentResourceName := terraformValueObjects.ResourceName(
@@ -226,6 +238,10 @@ func (alc *AWSLogQuerier) ExtractDataFromResourceResult(resourceResult []byte, r
 	if err := json.Unmarshal(resourceResult, &cloudTrailEvents); err != nil {
 		return resourceActions, fmt.Errorf("failed to parse resource results to cloudTrailEvents struct: %v", err)
 	}
+	if len(cloudTrailEvents.Events) == 0 {
+		return resourceActions, ErrNoCloudTrailEvents
+	}
+
 	resourceType = string(alc.resourceToCloudTrailType[resourceType])
 
 	isComplete := false

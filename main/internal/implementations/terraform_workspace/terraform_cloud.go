@@ -6,7 +6,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"regexp"
 	"strings"
 
 	"github.com/Jeffail/gabs/v2"
@@ -34,10 +33,10 @@ type TerraformCloudConfig struct {
 	// StateBackend is the name of the backend used for storing State.
 	StateBackend string `required:"true"`
 
-	// TerraformCloudOrganization is the name of the organization within Terraform Cloud
+	// TerraformCloudOrganization is the name of the organization within TerraformCloudFile Cloud
 	TerraformCloudOrganization string `required:"true"`
 
-	// TerraformCloudToken is the auth token to access Terraform Cloud programmatically.
+	// TerraformCloudToken is the auth token to access TerraformCloudFile Cloud programmatically.
 	TerraformCloudToken string `required:"true"`
 
 	// WorkspaceDirectories is a slice of directories that contains terraform workspaces within the user repo.
@@ -80,12 +79,12 @@ func (c *TerraformCloud) FindTerraformWorkspaces(ctx context.Context) (map[strin
 
 // searchDirectoryForWorkspaceName searches a directory for a terraform workspace name.
 func (c *TerraformCloud) searchDirectoryForWorkspaceName(ctx context.Context, directory string) (string, error) {
-	directory = c.cleanDirectoryName(directory)
+	directory = cleanDirectoryName(directory)
 	tfFiles := []string{"versions.tf", "main.tf"}
-	tfFiles = append(tfFiles, c.getAllTFFiles(ctx, directory)...)
+	tfFiles = append(tfFiles, getAllTFFiles(ctx, directory)...)
 
 	for _, tfFile := range tfFiles {
-		workspace, found := c.getWorkspaceByFile(ctx, directory, tfFile)
+		workspace, _, found := getWorkspaceByFile(ctx, directory, tfFile, "terraform")
 		if found {
 			log.Debug(fmt.Sprintf("[search_directory_for_workspace_name][found workspace %s]", workspace))
 			return workspace, nil
@@ -95,61 +94,7 @@ func (c *TerraformCloud) searchDirectoryForWorkspaceName(ctx context.Context, di
 	return "", fmt.Errorf("[search_directory_for_workspace_name][error searching directory %s]", directory)
 }
 
-// getAllTFFiles searches a directory for all terraform files.
-func (c *TerraformCloud) getAllTFFiles(ctx context.Context, directory string) []string {
-	files, err := os.ReadDir(fmt.Sprintf("repo/%s", directory))
-	if err != nil {
-		return make([]string, 0)
-	}
-
-	tfFiles := make([]string, 0)
-	for _, file := range files {
-		if file.IsDir() {
-			continue
-		}
-
-		if strings.HasSuffix(file.Name(), ".tf") {
-			tfFiles = append(tfFiles, file.Name())
-		}
-	}
-
-	return tfFiles
-}
-
-// cleanDirectoryName removes any leading or trailing slashes from a directory name.
-func (c *TerraformCloud) cleanDirectoryName(directory string) string {
-	directory = strings.Trim(directory, " ")
-	directory = strings.Trim(directory, "/")
-	return directory
-}
-
-// getWorkspaceByFile searches a directory for a terraform workspace name by a given file name.
-func (c *TerraformCloud) getWorkspaceByFile(ctx context.Context, directory string, fileName string) (string, bool) {
-	versionsFile, err := os.ReadFile(fmt.Sprintf("repo/%s/%s", directory, fileName))
-	if err != nil {
-		return "", false
-	}
-
-	workspace, err := c.extractWorkspaceName(ctx, versionsFile)
-	if err != nil && workspace == "" {
-		return "", false
-	}
-
-	return workspace, true
-}
-
-// extractWorkspaceName extracts the workspace name from the versions.tf file.
-func (c *TerraformCloud) extractWorkspaceName(ctx context.Context, versionsFile []byte) (string, error) {
-	re := regexp.MustCompile(`workspaces\s*{\s*name\s*=\s*"([^"]+)"`)
-	match := re.FindStringSubmatch(string(versionsFile))
-	if len(match) == 0 {
-		return "", fmt.Errorf("[extract_workspace_name][error extracting workspace name]")
-	}
-
-	return match[1], nil
-}
-
-// DownloadWorkspaceState downloads from the remote Terraform backend the latest state file
+// DownloadWorkspaceState downloads from the remote TerraformCloudFile backend the latest state file
 // for each "workspace".
 func (c *TerraformCloud) DownloadWorkspaceState(ctx context.Context, WorkspaceToDirectory map[string]string) error {
 	c.dragonDrop.PostLog(ctx, "Beginning download of state files to local memory.")
@@ -166,7 +111,7 @@ func (c *TerraformCloud) DownloadWorkspaceState(ctx context.Context, WorkspaceTo
 	return nil
 }
 
-// getWorkspaceState downloads from the remote Terraform backend a single "workspace"'s latest
+// getWorkspaceState downloads from the remote TerraformCloudFile backend a single "workspace"'s latest
 // state file.
 func (c *TerraformCloud) getWorkspaceState(ctx context.Context, workspaceName string) error {
 	workspaceID, err := c.getWorkspaceID(ctx, workspaceName)
@@ -174,7 +119,7 @@ func (c *TerraformCloud) getWorkspaceState(ctx context.Context, workspaceName st
 		return err
 	}
 
-	requestName := "getWorkspaceState"
+	requestName := "getWorkspaceStateByTestingAllS3Credentials"
 	requestPath := fmt.Sprintf("https://app.terraform.io/api/v2/workspaces/%v/current-state-version", workspaceID)
 
 	request, err := c.buildTFCloudHTTPRequest(ctx, requestName, "GET", requestPath)
@@ -212,7 +157,7 @@ func (c *TerraformCloud) getWorkspaceState(ctx context.Context, workspaceName st
 	return nil
 }
 
-// getWorkspaceID calls the Terraform Cloud API and gets the workspace ID for the
+// getWorkspaceID calls the TerraformCloudFile Cloud API and gets the workspace ID for the
 // relevant workspace name in the relevant organization.
 func (c *TerraformCloud) getWorkspaceID(ctx context.Context, workspaceName string) (string, error) {
 	requestName := "getWorkspaceID"
@@ -233,7 +178,7 @@ func (c *TerraformCloud) getWorkspaceID(ctx context.Context, workspaceName strin
 	return c.extractWorkspaceID(jsonResponseBytes)
 }
 
-// buildTFCloudHTTPRequest structures a request to the Terraform Cloud api.
+// buildTFCloudHTTPRequest structures a request to the TerraformCloudFile Cloud api.
 func (c *TerraformCloud) buildTFCloudHTTPRequest(ctx context.Context, requestName string, method string, requestPath string) (*http.Request, error) {
 	request, err := http.NewRequestWithContext(ctx, method, requestPath, nil)
 	if err != nil {
@@ -248,13 +193,13 @@ func (c *TerraformCloud) buildTFCloudHTTPRequest(ctx context.Context, requestNam
 	return request, nil
 }
 
-// terraformCloudRequest build, executes, and processes an API call to the Terraform Cloud API.
+// terraformCloudRequest build, executes, and processes an API call to the TerraformCloudFile Cloud API.
 func (c *TerraformCloud) terraformCloudRequest(request *http.Request, requestName string) ([]byte, error) {
 
 	response, err := c.httpClient.Do(request)
 
 	if err != nil {
-		return nil, fmt.Errorf("[terraform_cloud_request][error in http GET request to Terraform cloud: %s]%w", requestName, err)
+		return nil, fmt.Errorf("[terraform_cloud_request][error in http GET request to TerraformCloudFile cloud: %s]%w", requestName, err)
 	}
 
 	defer response.Body.Close()
@@ -273,7 +218,7 @@ func (c *TerraformCloud) terraformCloudRequest(request *http.Request, requestNam
 }
 
 // extractRawStateURL is a helper function that uses the gabs library to pull out the raw state URL
-// from a Terraform Cloud API response of the current workspace.
+// from a TerraformCloudFile Cloud API response of the current workspace.
 func (c *TerraformCloud) extractRawStateURL(jsonBytes []byte) (string, error) {
 	jsonParsed, err := gabs.ParseJSON(jsonBytes)
 	if err != nil {
@@ -289,7 +234,7 @@ func (c *TerraformCloud) extractRawStateURL(jsonBytes []byte) (string, error) {
 }
 
 // extractWorkspaceID is a helper function that uses the gabs library to pull out the workspace ID
-// from a Terraform Cloud API response.
+// from a TerraformCloudFile Cloud API response.
 func (c *TerraformCloud) extractWorkspaceID(jsonBytes []byte) (string, error) {
 	jsonParsed, err := gabs.ParseJSON(jsonBytes)
 	if err != nil {

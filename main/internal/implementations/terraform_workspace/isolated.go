@@ -16,7 +16,7 @@ func NewIsolatedTerraformWorkspace() *IsolatedTerraformWorkspace {
 	return &IsolatedTerraformWorkspace{}
 }
 
-// DownloadWorkspaceState downloads from the remote Terraform backend the latest state file
+// DownloadWorkspaceState downloads from the remote TerraformCloudFile backend the latest state file
 // for each "workspace".
 func (v *IsolatedTerraformWorkspace) DownloadWorkspaceState(ctx context.Context, WorkspaceToDirectory map[string]string) error {
 	log.Debug("Downloading terraform workspace state")
