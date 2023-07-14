@@ -7,20 +7,27 @@ import (
 	terraformValueObjects "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_value_objects"
 )
 
+var defaultGoogleRegions = []string{"us-east4"}
+
 // GoogleScanner implements the Scanner interface for use with GCP cloud environments.
 type GoogleScanner struct {
 	// Config is the needed configuration of a mapping between Division name and the corresponding
 	// Credential needed to access that environment.
 	config map[terraformValueObjects.Division]terraformValueObjects.Credential
 
+	// terraformer is the TerraformerCLI interface used to scan the GCP cloud environment.
 	terraformer TerraformerCLI
+
+	// CloudRegions represents the list of cloud regions that will be considered for inclusion in the import statement.
+	CloudRegions []terraformValueObjects.CloudRegion `required:"true"`
 }
 
 // NewGoogleScanner creates and returns a new instance of GCPScanner.
-func NewGoogleScanner(config map[terraformValueObjects.Division]terraformValueObjects.Credential, cliConfig Config) (Scanner, error) {
+func NewGoogleScanner(config map[terraformValueObjects.Division]terraformValueObjects.Credential, cliConfig Config, cloudRegions []terraformValueObjects.CloudRegion) (Scanner, error) {
 	return &GoogleScanner{
-		config:      config,
-		terraformer: newTerraformerCLI(cliConfig),
+		CloudRegions: cloudRegions,
+		config:       config,
+		terraformer:  newTerraformerCLI(cliConfig),
 	}, nil
 }
 
@@ -45,7 +52,7 @@ func (gcpScan *GoogleScanner) Scan(project terraformValueObjects.Division, crede
 		Provider:       "google",
 		Division:       project,
 		Regions:        []string{"us-east4", "global"},
-		Resources:      []string{},
+		Resources:      getValidRegions(gcpScan.CloudRegions, terraformValueObjects.GoogleRegions, defaultGoogleRegions),
 		AdditionalArgs: []string{projectsFlag},
 		IsCompact:      true,
 	})

@@ -8,20 +8,27 @@ import (
 	terraformValueObjects "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_value_objects"
 )
 
+var defaultAzureRegions = []string{"eastus"}
+
 // AzureScanner implements the Scanner interface for use with Azure cloud environments.
 type AzureScanner struct {
 	// Config is the needed configuration of a mapping between Division name and the corresponding
 	// Credential needed to access that environment.
 	config map[terraformValueObjects.Division]terraformValueObjects.Credential
 
+	// terraformer is the TerraformerCLI interface used to scan the Azure cloud environment.
 	terraformer TerraformerCLI
+
+	// CloudRegions represents the list of cloud regions that will be considered for inclusion in the import statement.
+	CloudRegions []terraformValueObjects.CloudRegion `required:"true"`
 }
 
 // NewAzureScanner creates and returns a new instance of AzureScanner.
-func NewAzureScanner(config map[terraformValueObjects.Division]terraformValueObjects.Credential, cliConfig Config) (Scanner, error) {
+func NewAzureScanner(config map[terraformValueObjects.Division]terraformValueObjects.Credential, cliConfig Config, cloudRegions []terraformValueObjects.CloudRegion) (Scanner, error) {
 	return &AzureScanner{
-		config:      config,
-		terraformer: newTerraformerCLI(cliConfig),
+		CloudRegions: cloudRegions,
+		config:       config,
+		terraformer:  newTerraformerCLI(cliConfig),
 	}, nil
 }
 

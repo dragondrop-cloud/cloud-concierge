@@ -66,12 +66,12 @@ Detailed documentation on environment variables needed can be found [here](https
 While Cloud Concierge validates environment variable formats upon start-up, we provide a UI for client-side validation of env vars
 within the [dragondrop.cloud platform](https://app.dragondrop.cloud/env-var-validator) should faster iteration be desired.
 
-4) Run the container with the following command:
+2) Run the container with the following command:
 ```bash
 docker run --env-file ./path/to/my/env-file.env -v main:/main -w /main  dragondropcloud/cloud-concierge:latest
 ```
 
-5) If using Terraform >= 1.5, Cloud Concierge generates [import blocks](https://medium.com/@hello_9187/terraform-1-5-xs-new-import-block-b8607c51287f) for newly codified resources directly.
+3) If using Terraform >= 1.5, Cloud Concierge generates [import blocks](https://medium.com/@hello_9187/terraform-1-5-xs-new-import-block-b8607c51287f) for newly codified resources directly.
 If using Terraform < 1.5, we generate a `terraform import` command for each resource. These commands can be run manually,
 or programmatically in a `plan` and `apply` manner using our [GitHub Action](https://github.com/dragondrop-cloud/github-action-tfstate-migration). 
 
