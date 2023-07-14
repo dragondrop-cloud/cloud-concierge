@@ -7,6 +7,7 @@
 <a href="https://https://www.youtube.com/watch?v=y8OSfQQMEL0&t=12s" target="_blank"> Managed Demo </a>
 </h2>
 
+## Motivation
 Many teams build their own Terraform management "stacks" using major cloud provider state backends
 and tools like Atlantis for running `plan` and `apply` and state-locking. 
 
@@ -15,18 +16,37 @@ Scalr, Spacelift and Firefly. We find, however, that these tool's pricing can be
 when wanting to self-host runners or access the most desired features like drift detection, security scanning, etc.
 
 ## Why Cloud Concierge?
-Cloud Concierge is an open-sourced container that integrates with your existing Terraform management stack to provide:
-- Cloud codification
-- Drift detection
-- Flag accounts creating changes outside your Terraform workflow
-- Whole-cloud-level cost estimation, powered by Infracost
-- Whole-cloud-level security scanning, powered by tfsec (checkov integration coming soon)
-
+Cloud Concierge is an open-sourced container that integrates with your existing Terraform management stack.
 All results and codified resources are output in a digestible Pull Request to a repository of your choice, providing you with a "State of Cloud"
-report in a GitOps manner.
+report in a GitOps manner. It provides:
+- Cloud codification, identify un-managed resources and generate corresponding Terraform code and import statements/import blocks
+<p align="center">
+<img width="650" src=./images/tool-screenshots/generated_resources.png alt="generated_resources">
+</p>
 
-### Our Roadmap
-We are just getting started, and have a lot of exciting features on our roadmap. More details can be found [here](https://github.com/dragondrop-cloud/cloud-concierge/wiki/Roadmap).
+- Drift detection
+<p align="center">
+<img width="650" src=./images/tool-screenshots/drift_detection.png alt="drift_detection">
+</p>
+
+- Flag accounts creating changes outside your Terraform workflow
+<p align="center">
+<img width="650" src=./images/tool-screenshots/cloud_actors.png alt="cloud_actor_identification">
+</p>
+
+- Whole-cloud cost estimation, powered by Infracost
+<p align="center">
+<img width="650" src=./images/tool-screenshots/costs_I.png alt="cost_estimations_aggregate">
+</p>
+
+<p align="center">
+<img width="650" src=./images/tool-screenshots/costs_II.png alt="cost_estimations_individual">
+</p>
+
+- Whole-cloud security scanning, powered by tfsec (checkov integration coming soon)
+<p align="center">
+<img width="650" src=./images/tool-screenshots/security_risk_id.png alt="security_risks">
+</p>
 
 ## How does it work?
 1) Cloud Concierge creates a representation of your cloud infrastructure as Terraform
@@ -64,6 +84,9 @@ For OSS usage, Cloud Concierge only logs whenever a container execution is start
  
 Jobs managed by the [dragondrop platform](https://dragondrop.cloud) log statuses over the course of the job execution and anonymized data for cloud visualizations. These methods
 can be viewed [here](pkg/implementations/dragon_drop/http_dragondrop_managed_execution.go) and [here]([here](pkg/implementations/dragon_drop/http_dragondrop_managed_execution.go)).
+
+## Our Roadmap
+We are just getting started, and have a lot of exciting features on our roadmap. More details can be found [here](https://github.com/dragondrop-cloud/cloud-concierge/wiki/Roadmap).
 
 ## Contributing
 Contributions in any form are highly encouraged. Check out our [contributing guide](CONTRIBUTING.md) to get started.
