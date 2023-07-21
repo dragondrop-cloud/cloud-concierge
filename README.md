@@ -16,8 +16,8 @@ Scalr, Spacelift and Firefly. We find, however, that these tool's pricing can be
 when wanting to self-host runners or access the most desired features like drift detection, security scanning, etc.
 
 ## Why Cloud Concierge?
-Cloud Concierge is an open-sourced container that integrates with your existing Terraform management stack.
-All results and codified resources are output in a digestible Pull Request to a repository of your choice, providing you with a "State of Cloud"
+cloud-concierge is a container that integrates with your existing Terraform management stack.
+All results and codified resources are output via a digestible Pull Request to a repository of your choice, providing you with a "State of Cloud"
 report in a GitOps manner. It provides:
 - Cloud codification, identify un-managed resources and generate corresponding Terraform code and import statements/import blocks
 <p align="center">
@@ -49,7 +49,7 @@ report in a GitOps manner. It provides:
 </p>
 
 ## How does it work?
-1) Cloud Concierge creates a representation of your cloud infrastructure as Terraform
+1) cloud-concierge creates a representation of your cloud infrastructure as Terraform. Only read-only access should be given to cloud-concierge.
 2) This representation is compared against your state files to detect drift, and identify resources outside of Terraform control
 3) Static security scans and cost estimation is performed on the Terraform representation
 4) Results and code are summarized in a [Pull Request](https://docs.cloudconcierge.io/how-it-works/pull-request-output) within the repository of your choice
@@ -80,10 +80,11 @@ A common use case is to want to regularly scan for drift and un-codified resourc
 on a cron schedule using GitHub Actions. See our [example workflow](https://github.com/dragondrop-cloud/cloud-concierge/blob/dev/examples/github_action.yml).
 
 ### Telemetry
-For OSS usage, Cloud Concierge only logs whenever a container execution is started. This method can be viewed [here](pkg/implementations/dragon_drop/http_dragondrop_oss_methods.go).
+For OSS usage, Cloud Concierge only logs data to the dragondrop API whenever a container execution is started. This method can be viewed [here](pkg/implementations/dragon_drop/http_dragondrop_oss_methods.go).
  
-Jobs managed by the [dragondrop platform](https://dragondrop.cloud) log statuses over the course of the job execution and anonymized data for cloud visualizations. These methods
-can be viewed [here](pkg/implementations/dragon_drop/http_dragondrop_managed_execution.go) and [here]([here](pkg/implementations/dragon_drop/http_dragondrop_managed_execution.go)).
+Jobs managed by the [dragondrop platform](https://dragondrop.cloud) log statuses over the course of the job execution and anonymized data for cloud visualizations to the dragondrop API. These methods
+can be viewed [here](https://github.com/dragondrop-cloud/cloud-concierge/blob/dev/main/internal/implementations/dragon_drop/http_dragondrop_managed_execution.go) and
+[here](https://github.com/dragondrop-cloud/cloud-concierge/blob/dev/main/internal/implementations/dragon_drop/http_dragondrop_managed_visualization.go).
 
 ## Our Roadmap
 We are just getting started, and have a lot of exciting features on our roadmap. More details can be found [here](https://github.com/dragondrop-cloud/cloud-concierge/wiki/Roadmap).
