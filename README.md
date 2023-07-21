@@ -4,7 +4,7 @@
 </p>
 <h2 align="center">
 <a href="https://docs.cloudconcierge.io" target="_blank">Docs</a> |
-<a href="https://https://www.youtube.com/watch?v=y8OSfQQMEL0&t=12s" target="_blank"> Managed Demo </a>
+<a href="https://www.youtube.com/watch?v=y8OSfQQMEL0" target="_blank"> Recorded Managed Demo </a>
 </h2>
 
 ## Motivation
