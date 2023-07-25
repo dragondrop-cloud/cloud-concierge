@@ -19,40 +19,15 @@ when wanting to self-host runners or access the most desired features like drift
 cloud-concierge is a container that integrates with your existing Terraform management stack.
 All results and codified resources are output via a digestible Pull Request to a repository of your choice, providing you with a "State of Cloud"
 report in a GitOps manner. It provides:
-- Cloud codification, identify un-managed resources and generate corresponding Terraform code and import statements/import blocks
-<p align="center">
-<img width="650" src=./images/tool-screenshots/generated_resources.png alt="generated_resources">
-</p>
+- &#9989; Cloud codification, identify un-managed resources and generate corresponding Terraform code and import statements/import blocks
 
-- Drift detection
-<p align="center">
-<img width="650" src=./images/tool-screenshots/drift_detection.png alt="drift_detection">
-</p>
+- &#9989; Drift detection
 
-- Flag accounts creating changes outside your Terraform workflow
-<p align="center">
-<img width="650" src=./images/tool-screenshots/cloud_actors.png alt="cloud_actor_identification">
-</p>
+- &#9989; Flag accounts creating changes outside your Terraform workflow
 
-- Whole-cloud cost estimation, powered by Infracost
-<p align="center">
-<img width="650" src=./images/tool-screenshots/costs_I.png alt="cost_estimations_aggregate">
-</p>
+- &#9989; Whole-cloud cost estimation, powered by Infracost
 
-<p align="center">
-<img width="650" src=./images/tool-screenshots/costs_II.png alt="cost_estimations_individual">
-</p>
-
-- Whole-cloud security scanning, powered by tfsec (checkov integration coming soon)
-<p align="center">
-<img width="650" src=./images/tool-screenshots/security_risk_id.png alt="security_risks">
-</p>
-
-## How does it work?
-1) cloud-concierge creates a representation of your cloud infrastructure as Terraform. Only read-only access should be given to cloud-concierge.
-2) This representation is compared against your state files to detect drift, and identify resources outside of Terraform control
-3) Static security scans and cost estimation is performed on the Terraform representation
-4) Results and code are summarized in a [Pull Request](https://docs.cloudconcierge.io/how-it-works/pull-request-output) within the repository of your choice
+- &#9989; Whole-cloud security scanning, powered by tfsec (checkov integration coming soon)
 
 ## Getting Started
 0) Retrieve an organization token from the dragondrop.cloud management platform [here](https://app.dragondrop.cloud).
@@ -78,6 +53,12 @@ or programmatically in a `plan` and `apply` manner using our [GitHub Action](htt
 ### Running on a schedule
 A common use case is to want to regularly scan for drift and un-codified resources. Cloud Concierge can easily be run
 on a cron schedule using GitHub Actions. See our [example workflow](https://github.com/dragondrop-cloud/cloud-concierge/blob/dev/examples/github_action.yml).
+
+## How does it work?
+1) cloud-concierge creates a representation of your cloud infrastructure as Terraform. Only read-only access should be given to cloud-concierge.
+2) This representation is compared against your state files to detect drift, and identify resources outside of Terraform control
+3) Static security scans and cost estimation is performed on the Terraform representation
+4) Results and code are summarized in a [Pull Request](https://docs.cloudconcierge.io/how-it-works/pull-request-output) within the repository of your choice
 
 ### Telemetry
 For OSS usage, Cloud Concierge only logs data to the dragondrop API whenever a container execution is started. This method can be viewed [here](pkg/implementations/dragon_drop/http_dragondrop_oss_methods.go).
