@@ -8,7 +8,7 @@
 ###################################################################################################
 # 1) Reference to tfswitch binary
 ###################################################################################################
-FROM golang:1.18.2-alpine3.15 as tfswitch
+FROM golang:1.20-alpine3.18 as tfswitch
 RUN apk update && apk add --no-cache bash curl git make
 RUN curl -L https://raw.githubusercontent.com/warrensbox/terraform-switcher/release/install.sh | bash
 
@@ -35,7 +35,7 @@ FROM dragondropcloud/terraformer:latest as terraformer
 ###################################################################################################
 # 6) Building the cloud-concierge executable
 ###################################################################################################
-FROM golang:1.18.2-alpine3.15 as cloud-concierge
+FROM golang:1.20-alpine3.18 as cloud-concierge
 RUN apk update && apk add --no-cache bash git make
 
 # Beginning to build the cloud-concierge executable
