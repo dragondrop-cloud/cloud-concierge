@@ -87,7 +87,7 @@ func (c *HTTPDragonDropClient) InformNoResourcesFound(ctx context.Context) error
 
 // postJobStatus sends a job status to the dragondrop API.
 func (c *HTTPDragonDropClient) postJobStatus(ctx context.Context, status string) error {
-	if c.config.JobID == "empty" {
+	if c.config.JobID == "empty" || c.config.JobID == "" {
 		return nil
 	}
 
@@ -153,7 +153,7 @@ func (c *HTTPDragonDropClient) PostLog(ctx context.Context, log string) {
 
 // postLog is a private method that sends a log to the dragondrop API.
 func (c *HTTPDragonDropClient) postLog(ctx context.Context, log string, isAlert bool) error {
-	if c.config.JobID == "empty" {
+	if c.config.JobID == "empty" || c.config.JobID == "" {
 		return nil
 	}
 
@@ -196,7 +196,7 @@ func (c *HTTPDragonDropClient) postLog(ctx context.Context, log string, isAlert 
 
 // PutJobPullRequestURL sends the job url to the dragondrop API
 func (c *HTTPDragonDropClient) PutJobPullRequestURL(ctx context.Context, prURL string) error {
-	if c.config.JobID == "empty" {
+	if c.config.JobID == "empty" || c.config.JobID == "" {
 		return nil
 	}
 

@@ -3,8 +3,9 @@
 <img width="500" src=./images/cloud-concierge-logo.png>
 </p>
 <h2 align="center">
+<a href="https://github.com/dragondrop-cloud/cloud-concierge-example/pull/2" target="_blank">Example Output</a> |
 <a href="https://docs.cloudconcierge.io" target="_blank">Docs</a> |
-<a href="https://www.youtube.com/watch?v=y8OSfQQMEL0" target="_blank"> Recorded Managed Demo </a>
+<a href="https://www.youtube.com/watch?v=y8OSfQQMEL0" target="_blank"> Recorded Demo </a>
 </h2>
 
 ## Motivation
@@ -17,7 +18,7 @@ when wanting to self-host runners or access the most desired features like drift
 
 ## Why Cloud Concierge?
 cloud-concierge is a container that integrates with your existing Terraform management stack.
-All results and codified resources are output via a digestible Pull Request to a repository of your choice, providing you with a "State of Cloud"
+All results and codified resources are output via a digestible [Pull Request](https://github.com/dragondrop-cloud/cloud-concierge-example/pull/2) to a repository of your choice, providing you with a "State of Cloud"
 report in a GitOps manner. It provides:
 - &#9989; Cloud codification, identify un-managed resources and generate corresponding Terraform code and import statements/import blocks
 
@@ -83,6 +84,7 @@ If you are looking to use cloud-concierge at scale, however, the [dragondrop.clo
 
 ## Other Resources
 - [Documentation](https://docs.cloudconcierge.io)
+- [Example Output](https://github.com/dragondrop-cloud/cloud-concierge-example/pull/2)
 - [Slack](https://cloud-concierge.slack.com/join/shared_invite/zt-1xx3sqsb6-cekIXs2whccZvbU81Xn5qg#/shared-invite/email)
 - [Tool Walk Through + Use Case (low stakes and no pressure!)](https://calendly.com/dragondrop-cloud/cloud-concierge-walk-through)
 - [Terraform Learning Resources](https://dragondrop.cloud/learn/terraform/)

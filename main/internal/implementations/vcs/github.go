@@ -22,7 +22,7 @@ import (
 // GitHub struct implements the VCS interface.
 type GitHub struct {
 	// ID is a string which is a random, 10 character unique identifier
-	// for a dragondrop built commit/pull request
+	// for a cloud-concierge built commit/pull request
 	ID string
 
 	// authBasic is the authentication information needed to perform generic git operations via
@@ -73,7 +73,7 @@ func NewGitHub(ctx context.Context, dragonDrop interfaces.DragonDrop, config Con
 }
 
 // GetID returns a string which is a random, 10 character unique identifier
-// for a dragondrop built commit/pull request
+// for a cloud-concierge built commit/pull request
 func (g *GitHub) GetID() (string, error) {
 	if strings.Trim(g.ID, "") == "" {
 		return "", errors.New("[vcs][get_id][id not generated]")
@@ -130,7 +130,7 @@ func (g *GitHub) Checkout(jobName string) error {
 	branchUniqueID := time.Now().Format("2006-01-02-15-04")
 
 	newBranchName := fmt.Sprintf(
-		"feature/dragondrop_changes_%v_%v",
+		"feature/cloud_concierge_%v_%v",
 		cleanJobName,
 		branchUniqueID,
 	)
@@ -173,7 +173,7 @@ func (g *GitHub) Commit() error {
 		},
 	}
 
-	commitHash, err := g.workTree.Commit("build: dragondrop terraform resource recommendations", commitOptions)
+	commitHash, err := g.workTree.Commit("build: cloud-concierge results", commitOptions)
 
 	if err != nil {
 		return fmt.Errorf("[vcs][commit][error in worktree.AddWithOptions]%w", err)

@@ -126,6 +126,10 @@ func NewHCLCreate(config Config, divisionToProvider map[terraformValueObjects.Di
 func (mhd *MigrationHistory) Decode(value string) error {
 	var currentMap MigrationHistory
 
+	if value == "" {
+		return nil
+	}
+
 	err := json.Unmarshal([]byte(value), &currentMap)
 	if err != nil {
 		return fmt.Errorf("Error parsing specified json string: %v", err)

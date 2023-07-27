@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 
 	driftDetector "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_managed_resources_drift_detector/drift_detector"
 	terraformValueObjects "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_value_objects"
@@ -169,6 +170,7 @@ func (s *TFSec) writeResultsToMappingFile(results TFSecResultsPerDivision) error
 	return os.WriteFile("mappings/division-to-security-scan.json", differencesJSON, 0400)
 }
 
+// addIDToResources takes the results grouped by division and adds the id of the resource
 func (s *TFSec) addIDToResources(resultsPerDivision TFSecResultsPerDivision) (TFSecResultsPerDivision, error) {
 	mergedResults := map[terraformValueObjects.Division][]Result{}
 
@@ -197,7 +199,17 @@ func (s *TFSec) addIDToResources(resultsPerDivision TFSecResultsPerDivision) (TF
 func (s *TFSec) mapResourceIDsFromStateFile(file driftDetector.TerraformerStateFile) map[driftDetector.ResourceIdentifier]string {
 	resourcesMap := map[driftDetector.ResourceIdentifier]string{}
 	for _, resource := range file.Resources {
-		resourcesMap[driftDetector.ResourceIdentifier(fmt.Sprintf("%s.%s", resource.Type, resource.Name))] = resource.Instances[0].AttributesFlat["id"]
+		resourceKey := fmt.Sprintf("%s.%s", resource.Type, resource.Name)
+
+		// check if "arn" attribute exists within AttributesFlat
+		resourceIDValue, okay := resource.Instances[0].AttributesFlat["arn"]
+
+		// check if the resource instance has an "arn" attribute
+		if !okay {
+			resourceIDValue = resource.Instances[0].AttributesFlat["id"]
+		}
+
+		resourcesMap[driftDetector.ResourceIdentifier(resourceKey)] = resourceIDValue
 	}
 	return resourcesMap
 }
@@ -206,7 +218,12 @@ func (s *TFSec) mapResourceIDsFromStateFile(file driftDetector.TerraformerStateF
 func (s *TFSec) getResultsWithResourceID(results []Result, resources map[driftDetector.ResourceIdentifier]string) []Result {
 	resultsWithID := make([]Result, 0)
 	for _, result := range results {
-		result.ID = resources[driftDetector.ResourceIdentifier(result.Resource)]
+
+		// split tfSecResourceName by "." and join the first two elements by "."
+		// to match what is in the state file
+		tfSecResourceName := strings.Join(strings.Split(result.Resource, ".")[:2], ".")
+
+		result.ID = resources[driftDetector.ResourceIdentifier(tfSecResourceName)]
 		resultsWithID = append(resultsWithID, result)
 	}
 	return resultsWithID

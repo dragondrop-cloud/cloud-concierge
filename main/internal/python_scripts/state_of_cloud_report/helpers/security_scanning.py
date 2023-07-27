@@ -74,7 +74,7 @@ def create_markdown_table_security_scans(
                             record["rule_description"],
                             record["severity"],
                             record["resolution"],
-                            f'[Rule]({record["links"][0]}), [Tf Doc]({record["links"][1]})',
+                            f'[Rule]({record["links"][0]}), [Tf Doc]({record["links"][1]})' if len(record["links"]) > 1 else f'[Rule]({record["links"][0]})'
                         ]
                     )
 
