@@ -95,7 +95,7 @@ type Job struct {
 // API.
 func (j *Job) Authorize(ctx context.Context) error {
 	// For a Job managed by the dragondrop platform, we authorize and update the job name
-	if j.config.JobID != "empty" {
+	if j.config.JobID != "empty" && j.config.JobID != "" {
 		err := j.dragonDrop.CheckLoggerAndToken(ctx)
 		if err != nil {
 			return fmt.Errorf("[create_job][error checking logger and token][%w]", err)
@@ -230,7 +230,6 @@ func InitializeJobDependencies(ctx context.Context, env string) (*Job, error) {
 	var jobConfig JobConfig
 	err := envconfig.Process("CLOUDCONCIERGE", &jobConfig)
 	if err != nil {
-		log.Errorf("[cannot create job config]%s", err.Error())
 		return nil, fmt.Errorf("[cannot create job config]%w", err)
 	}
 

@@ -23,6 +23,7 @@ jobs:
         with:
           working-directory: main
           version: v1.46.2
+          args: --timeout=2m
 
   test-go-binary:
     runs-on: ubuntu-latest
