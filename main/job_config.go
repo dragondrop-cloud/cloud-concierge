@@ -41,7 +41,7 @@ type JobConfig struct {
 
 	// MigrationHistoryStorage is a map containing information needed for specifying tfmigrate
 	// history storage appropriately.
-	MigrationHistoryStorage hclcreate.MigrationHistory `default:"{'storageType':'placeholder','bucket':'placeholder','region':'placeholder'}"`
+	MigrationHistoryStorage hclcreate.MigrationHistory
 
 	// TerraformVersion is the version of Terraform used.
 	TerraformVersion string `required:"true"`

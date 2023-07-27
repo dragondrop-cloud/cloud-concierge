@@ -184,7 +184,7 @@ def create_markdown_table_cost_by_resource_type(
             "# Resources",
             "Cost Components",
             "Monthly Cost",
-            "Usage Based",
+            "Usage Based*",
         ]
 
         output_df = current_by_type_df.merge(
