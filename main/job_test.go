@@ -31,7 +31,8 @@ func TestAuthorize_Success(t *testing.T) {
 	// When
 	dragonDrop.On("CheckLoggerAndToken", ctx).Return(nil)
 	dragonDrop.On("InformStarted", ctx).Return(nil)
-	dragonDrop.On("AuthorizeManagedJob", ctx).Return("job_name", nil)
+	dragonDrop.On("AuthorizeJob", ctx).Return(nil)
+	dragonDrop.On("AuthorizeManagedJob", ctx).Return("xyz", nil)
 
 	job := Job{
 		costEstimator:                     costEstimator,
@@ -45,6 +46,13 @@ func TestAuthorize_Success(t *testing.T) {
 		vcs:                               vcs,
 	}
 	err := job.Authorize(ctx)
+
+	// Then
+	assert.Nil(t, err)
+	assert.NotNil(t, job)
+
+	job.config.JobID = "1234567890"
+	err = job.Authorize(ctx)
 
 	// Then
 	assert.Nil(t, err)
@@ -80,6 +88,7 @@ func TestNotCreateJob_WithInvalidToken(t *testing.T) {
 		terraformWorkspace:                terraformWorkspace,
 		vcs:                               vcs,
 	}
+	job.config.JobID = "123"
 	err := job.Authorize(ctx)
 
 	// Then
@@ -117,6 +126,7 @@ func TestNotCreateJob_CannotInformStarted(t *testing.T) {
 		terraformWorkspace:                terraformWorkspace,
 		vcs:                               vcs,
 	}
+	job.config.JobID = "123"
 	err := job.Authorize(ctx)
 
 	// Then
@@ -143,7 +153,7 @@ func TestNotCreateJob_UnauthorizedJob(t *testing.T) {
 	// When
 	dragonDrop.On("CheckLoggerAndToken", ctx).Return(nil)
 	dragonDrop.On("InformStarted", ctx).Return(nil)
-	dragonDrop.On("AuthorizeManagedJob", ctx).Return("job_name", authJobErr)
+	dragonDrop.On("AuthorizeManagedJob", ctx).Return("name", authJobErr)
 
 	job := Job{
 		costEstimator:                     costEstimator,
@@ -156,6 +166,7 @@ func TestNotCreateJob_UnauthorizedJob(t *testing.T) {
 		terraformWorkspace:                terraformWorkspace,
 		vcs:                               vcs,
 	}
+	job.config.JobID = "123"
 	err := job.Authorize(ctx)
 
 	// Then
@@ -193,7 +204,7 @@ func createValidJob(t *testing.T) (*JobDependenciesMock, *Job) {
 	ctx := context.Background()
 	dragonDrop.On("CheckLoggerAndToken", ctx).Return(nil)
 	dragonDrop.On("InformStarted", ctx).Return(nil)
-	dragonDrop.On("AuthorizeManagedJob", ctx).Return("job_name", nil)
+	dragonDrop.On("AuthorizeJob", ctx).Return(nil)
 	dragonDrop.On("InformRepositoryCloned", ctx).Return(nil)
 	job := &Job{
 		costEstimator:                     costEstimator,
