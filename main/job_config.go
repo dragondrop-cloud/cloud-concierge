@@ -21,8 +21,8 @@ type JobConfig struct {
 	// IsManagedDriftOnly represents the option for the user to only scan drifted resources and not new resources
 	IsManagedDriftOnly bool `default:"false"`
 
-	// DivisionCloudCredentials is a map between a division and request cloud credentials to infer the division to provider.
-	DivisionCloudCredentials terraformValueObjects.DivisionCloudCredentialDecoder `required:"true"`
+	// CloudCredential is a cloud credential from which to infer the division to provider.
+	CloudCredential terraformValueObjects.Credential `required:"true"`
 
 	// InfracostAPIToken is the token for accessing Infracost's API.
 	InfracostAPIToken string `required:"true"`
@@ -143,10 +143,10 @@ func (c JobConfig) getHCLCreateConfig() hclcreate.Config {
 
 func (c JobConfig) getTerraformerConfig() terraformerCli.TerraformerExecutorConfig {
 	return terraformerCli.TerraformerExecutorConfig{
-		DivisionCloudCredentials: c.DivisionCloudCredentials,
-		Providers:                c.Providers,
-		TerraformVersion:         terraformValueObjects.Version(c.TerraformVersion),
-		CloudRegions:             c.CloudRegions,
+		CloudCredential:  c.CloudCredential,
+		Providers:        c.Providers,
+		TerraformVersion: terraformValueObjects.Version(c.TerraformVersion),
+		CloudRegions:     c.CloudRegions,
 	}
 }
 
@@ -159,19 +159,19 @@ func (c JobConfig) getTerraformerCLIConfig() terraformerCli.Config {
 
 func (c JobConfig) getTerraformImportMigrationGeneratorConfig() terraformImportMigrationGenerator.Config {
 	return terraformImportMigrationGenerator.Config{
-		DivisionCloudCredentials: c.DivisionCloudCredentials,
+		CloudCredential: c.CloudCredential,
 	}
 }
 
 func (c JobConfig) getCostEstimationConfig() costEstimation.CostEstimatorConfig {
 	return costEstimation.CostEstimatorConfig{
-		InfracostAPIToken:        c.InfracostAPIToken,
-		DivisionCloudCredentials: c.DivisionCloudCredentials,
+		InfracostAPIToken: c.InfracostAPIToken,
+		CloudCredential:   c.CloudCredential,
 	}
 }
 
 func (c JobConfig) getIdentifyCloudActorsConfig() identifyCloudActors.Config {
 	return identifyCloudActors.Config{
-		DivisionCloudCredentials: c.DivisionCloudCredentials,
+		CloudCredential: c.CloudCredential,
 	}
 }

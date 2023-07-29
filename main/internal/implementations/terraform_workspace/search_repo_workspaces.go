@@ -22,8 +22,8 @@ type ContainerBackendConfig struct {
 	// WorkspaceDirectories is a slice of directories that contains terraform workspaces within the user repo.
 	WorkspaceDirectories WorkspaceDirectoriesDecoder `required:"true"`
 
-	// DivisionCloudCredentials is a map between a Division and request cloud credentials.
-	DivisionCloudCredentials terraformValueObjects.DivisionCloudCredentialDecoder `required:"true"`
+	// CloudCredential is a cloud credential with read-only access to a cloud division and, if applicable, access to read Terraform state files.
+	CloudCredential terraformValueObjects.Credential `required:"true"`
 }
 
 // findTerraformWorkspaces searches a repo for terraform workspaces.

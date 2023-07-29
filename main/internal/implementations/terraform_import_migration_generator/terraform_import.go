@@ -13,8 +13,8 @@ import (
 
 // Config is a struct for variables that determine the specific behavior of the TerraformImportMigrationGenerator struct.
 type Config struct {
-	// DivisionCloudCredentials is a map between a Division and request cloud credentials.
-	DivisionCloudCredentials terraformValueObjects.DivisionCloudCredentialDecoder `required:"true"`
+	// CloudCredential is a cloud credential with read-only access to a cloud division and, if applicable, access to read Terraform state files.
+	CloudCredential terraformValueObjects.Credential `required:"true"`
 }
 
 // TerraformImportMigrationGenerator is a struct that implements the interfaces.TerraformImportMigrationGenerator interface.

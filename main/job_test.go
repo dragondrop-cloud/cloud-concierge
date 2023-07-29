@@ -880,7 +880,7 @@ func Test_getProviderByCredential(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := getProviderByCredential(tt.args.credential)
+			got, err := getProviderFromCredential(tt.args.credential)
 
 			if tt.wantErr {
 				require.Error(t, err)
@@ -906,37 +906,23 @@ func Test_getInferredData(t *testing.T) {
 			name: "single provider aws",
 			args: args{config: JobConfig{
 				IsManagedDriftOnly: false,
-				DivisionCloudCredentials: map[terraformValueObjects.Division]terraformValueObjects.Credential{
-					terraformValueObjects.Division("division-1"): terraformValueObjects.Credential(
-						`{"awsAccessKeyID": "AWS123", "awsSecretAccessKey": "DUGFVGBHAJ213"}`,
-					),
-				},
-			}},
+				CloudCredential:    terraformValueObjects.Credential(`{"awsAccessKeyID": "AWS123", "awsSecretAccessKey": "DUGFVGBHAJ213"}`),
+			},
+			},
 			want: InferredData{
-				DivisionToProvider: map[terraformValueObjects.Division]terraformValueObjects.Provider{
-					"division-1": "aws",
-				},
+				Provider: terraformValueObjects.Provider("aws"),
 			},
 			wantErr: false,
 		},
 		{
-			name: "two providers aws and azurerm",
+			name: "three providers azurerm",
 			args: args{config: JobConfig{
 				IsManagedDriftOnly: false,
-				DivisionCloudCredentials: map[terraformValueObjects.Division]terraformValueObjects.Credential{
-					terraformValueObjects.Division("division-1"): terraformValueObjects.Credential(
-						`{"awsAccessKeyID": "AWS123", "awsSecretAccessKey": "DUGFVGBHAJ213"}`,
-					),
-					terraformValueObjects.Division("division-2"): terraformValueObjects.Credential(
-						`{"client_id": "123", "client_secret": "secret", "tenant_id": "tenant", "subscription_id": "subscription1"}`,
-					),
-				},
-			}},
+				CloudCredential:    terraformValueObjects.Credential(`{"client_id": "123", "client_secret": "secret", "tenant_id": "tenant", "subscription_id": "subscription1"}`),
+			},
+			},
 			want: InferredData{
-				DivisionToProvider: map[terraformValueObjects.Division]terraformValueObjects.Provider{
-					"division-1": "aws",
-					"division-2": "azurerm",
-				},
+				Provider: terraformValueObjects.Provider("azurerm"),
 			},
 			wantErr: false,
 		},
@@ -944,49 +930,16 @@ func Test_getInferredData(t *testing.T) {
 			name: "three providers aws, azurerm and google",
 			args: args{config: JobConfig{
 				IsManagedDriftOnly: false,
-				DivisionCloudCredentials: map[terraformValueObjects.Division]terraformValueObjects.Credential{
-					terraformValueObjects.Division("division-1"): terraformValueObjects.Credential(
-						`{"awsAccessKeyID": "AWS123", "awsSecretAccessKey": "DUGFVGBHAJ213"}`,
-					),
-					terraformValueObjects.Division("division-2"): terraformValueObjects.Credential(
-						`{"client_id": "123", "client_secret": "secret", "tenant_id": "tenant", "subscription_id": "subscription1"}`,
-					),
-					terraformValueObjects.Division("division-3"): terraformValueObjects.Credential(
-						`{  "type": "service_account", "project_id": "project", "private_key_id": "123", "private_key": "key", 
+				CloudCredential: terraformValueObjects.Credential(
+					`{  "type": "service_account", "project_id": "project", "private_key_id": "123", "private_key": "key", 
 							"client_email": "example@dragondrop.cloud", "client_id": "123456", "auth_uri": "https://accounts.google.com/o/oauth2/auth",
 							"token_uri": "https://oauth2.googleapis.com/token", "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
 							"client_x509_cert_url": "https://localhost.com"
-						}`,
-					),
-				},
-			}},
-			want: InferredData{
-				DivisionToProvider: map[terraformValueObjects.Division]terraformValueObjects.Provider{
-					"division-1": "aws",
-					"division-2": "azurerm",
-					"division-3": "google",
-				},
+						}`),
 			},
-			wantErr: false,
-		},
-		{
-			name: "two repeated divisions to provider aws",
-			args: args{config: JobConfig{
-				IsManagedDriftOnly: false,
-				DivisionCloudCredentials: map[terraformValueObjects.Division]terraformValueObjects.Credential{
-					terraformValueObjects.Division("division-1"): terraformValueObjects.Credential(
-						`{"awsAccessKeyID": "AWS123", "awsSecretAccessKey": "DUGFVGBHAJ213"}`,
-					),
-					terraformValueObjects.Division("division-2"): terraformValueObjects.Credential(
-						`{"awsAccessKeyID": "AWS123", "awsSecretAccessKey": "DUGFVGBHAJ213"}`,
-					),
-				},
-			}},
+			},
 			want: InferredData{
-				DivisionToProvider: map[terraformValueObjects.Division]terraformValueObjects.Provider{
-					"division-1": "aws",
-					"division-2": "aws",
-				},
+				Provider: terraformValueObjects.Provider("google"),
 			},
 			wantErr: false,
 		},

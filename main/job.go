@@ -27,11 +27,8 @@ import (
 )
 
 type InferredData struct {
-	// DivisionToProvider is a map between the string representing a division and the corresponding
-	// cloud provider (aws, azurerm, google, etc.).
-	// For AWS, an account is the division, for GCP a project name is the division,
-	// and for azurerm a resource group is a division.
-	DivisionToProvider map[terraformValueObjects.Division]terraformValueObjects.Provider `required:"true"`
+	// Provider is the name of the cloud provider (aws, azurerm, google, etc.).
+	Provider terraformValueObjects.Provider `required:"true"`
 
 	// WorkspaceToDirectory is a map between a workspace and the directory that contains the terraform state file
 	WorkspaceToDirectory map[documentize.Workspace]documentize.Directory `required:"true"`
@@ -224,6 +221,7 @@ func (j *Job) Run(ctx context.Context) error {
 	return nil
 }
 
+// TODO: major refactor needed for each of the following factories
 // InitializeJobDependencies instantiates interface implementations for all needed interfaces
 // and configures by pulling in environment variables.
 func InitializeJobDependencies(ctx context.Context, env string) (*Job, error) {
@@ -256,37 +254,37 @@ func InitializeJobDependencies(ctx context.Context, env string) (*Job, error) {
 	if err != nil {
 		return nil, err
 	}
-	executor, err := (&terraformerExecutor.Factory{}).Instantiate(ctx, env, dragonDropInstance, inferredData.DivisionToProvider,
+	executor, err := (&terraformerExecutor.Factory{}).Instantiate(ctx, env, dragonDropInstance, inferredData.Provider,
 		jobConfig.getHCLCreateConfig(), jobConfig.getTerraformerConfig(), jobConfig.getTerraformerCLIConfig())
 	if err != nil {
 		return nil, err
 	}
-	instantiate, err := (&terraformImportMigrationGenerator.Factory{}).Instantiate(ctx, env, dragonDropInstance, inferredData.DivisionToProvider,
+	instantiate, err := (&terraformImportMigrationGenerator.Factory{}).Instantiate(ctx, env, dragonDropInstance, inferredData.Provider,
 		jobConfig.getTerraformImportMigrationGeneratorConfig())
 	if err != nil {
 		return nil, err
 	}
-	calculator, err := (&resourcesCalculator.Factory{}).Instantiate(ctx, env, dragonDropInstance, inferredData.DivisionToProvider)
+	calculator, err := (&resourcesCalculator.Factory{}).Instantiate(ctx, env, dragonDropInstance, inferredData.Provider)
 	if err != nil {
 		return nil, err
 	}
-	costEstimator, err := (&costEstimation.Factory{}).Instantiate(env, inferredData.DivisionToProvider, jobConfig.getCostEstimationConfig())
+	costEstimator, err := (&costEstimation.Factory{}).Instantiate(env, inferredData.Provider, jobConfig.getCostEstimationConfig())
 	if err != nil {
 		return nil, err
 	}
-	identifier, err := (&identifyCloudActors.Factory{}).Instantiate(ctx, env, dragonDropInstance, inferredData.DivisionToProvider, jobConfig.getIdentifyCloudActorsConfig())
+	identifier, err := (&identifyCloudActors.Factory{}).Instantiate(ctx, env, dragonDropInstance, inferredData.Provider, jobConfig.getIdentifyCloudActorsConfig())
 	if err != nil {
 		return nil, err
 	}
-	writer, err := (&resourcesWriter.Factory{}).Instantiate(ctx, env, vcsInstance, dragonDropInstance, inferredData.DivisionToProvider, jobConfig.getHCLCreateConfig())
+	writer, err := (&resourcesWriter.Factory{}).Instantiate(ctx, env, vcsInstance, dragonDropInstance, inferredData.Provider, jobConfig.getHCLCreateConfig())
 	if err != nil {
 		return nil, err
 	}
-	driftDetector, err := (&terraformManagedResourcesDriftDetector.Factory{}).Instantiate(ctx, env, inferredData.DivisionToProvider)
+	driftDetector, err := (&terraformManagedResourcesDriftDetector.Factory{}).Instantiate(ctx, env, inferredData.Provider)
 	if err != nil {
 		return nil, err
 	}
-	tfSec, err := (&terraformSecurity.Factory{}).Instantiate(ctx, env, inferredData.DivisionToProvider)
+	tfSec, err := (&terraformSecurity.Factory{}).Instantiate(ctx, env, inferredData.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -307,24 +305,20 @@ func InitializeJobDependencies(ctx context.Context, env string) (*Job, error) {
 	}, nil
 }
 
+// getInferredData calculates needed inferred data from the input job config
 func getInferredData(config JobConfig) (InferredData, error) {
-	divisionToProvider := make(map[terraformValueObjects.Division]terraformValueObjects.Provider)
-
-	for division, credential := range config.DivisionCloudCredentials {
-		provider, err := getProviderByCredential(credential)
-		if err != nil {
-			return InferredData{}, fmt.Errorf("[error getting the inferred data][%w]", err)
-		}
-
-		divisionToProvider[division] = provider
+	provider, err := getProviderFromCredential(config.CloudCredential)
+	if err != nil {
+		return InferredData{}, fmt.Errorf("[error getting the inferred data][%w]", err)
 	}
 
 	return InferredData{
-		DivisionToProvider: divisionToProvider,
+		Provider: provider,
 	}, nil
 }
 
-func getProviderByCredential(credential terraformValueObjects.Credential) (terraformValueObjects.Provider, error) {
+// getProviderFromCredential determines the provider from the input credential
+func getProviderFromCredential(credential terraformValueObjects.Credential) (terraformValueObjects.Provider, error) {
 	var credentialMapped map[string]string
 	err := json.Unmarshal([]byte(credential), &credentialMapped)
 	if err != nil {

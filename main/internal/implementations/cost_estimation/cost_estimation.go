@@ -16,8 +16,8 @@ import (
 // to envconfig's format expectations.
 type CostEstimatorConfig struct {
 
-	// DivisionCloudCredentials is a map between a division and request cloud credentials.
-	DivisionCloudCredentials terraformValueObjects.DivisionCloudCredentialDecoder `required:"true"`
+	// CloudCredential is a cloud credential with read-only access to a cloud division and, if applicable, access to read Terraform state files.
+	CloudCredential terraformValueObjects.Credential `required:"true"`
 
 	// InfracostAPIToken is the token for accessing Infracost's API.
 	InfracostAPIToken string `required:"true"`

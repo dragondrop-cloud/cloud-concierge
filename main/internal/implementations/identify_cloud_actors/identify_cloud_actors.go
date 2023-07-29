@@ -14,8 +14,8 @@ import (
 
 // Config is a collection of query_param_data that parameterizes a IdentifyCloudActors instance.
 type Config struct {
-	// DivisionCloudCredentials is a map between a division and request cloud credentials.
-	DivisionCloudCredentials terraformValueObjects.DivisionCloudCredentialDecoder `required:"true"`
+	// CloudCredential is a cloud credential with read-only access to a cloud division and, if applicable, access to read Terraform state files.
+	CloudCredential terraformValueObjects.Credential `required:"true"`
 }
 
 // IdentifyCloudActors implements the interfaces.IdentifyCloudActors interface.

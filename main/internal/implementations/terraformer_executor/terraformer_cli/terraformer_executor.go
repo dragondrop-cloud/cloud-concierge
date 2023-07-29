@@ -17,8 +17,8 @@ import (
 // TerraformerExecutorConfig is a struct containing the variables that determine the specific
 // behavior of the TerraformerExecutor.
 type TerraformerExecutorConfig struct {
-	// DivisionCloudCredentials is a map between a division and request cloud credentials.
-	DivisionCloudCredentials terraformValueObjects.DivisionCloudCredentialDecoder `required:"true"`
+	// CloudCredential is a cloud credential with read-only access to a cloud division and, if applicable, access to read Terraform state files.
+	CloudCredential terraformValueObjects.Credential `required:"true"`
 
 	// Providers is a map between a cloud provider and the version for that provider.
 	Providers map[terraformValueObjects.Provider]string `required:"true"`
