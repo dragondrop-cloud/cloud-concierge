@@ -65,6 +65,7 @@ type CostComponent struct {
 	monthlyCost string
 }
 
+// TODO: Major refactor needed here
 // FormatAllCostEstimates processes infracost-generated cost estimation data into a more concise format for
 // downstream usage for all cloud divisions.
 func (ce *CostEstimator) FormatAllCostEstimates() error {
@@ -74,8 +75,7 @@ func (ce *CostEstimator) FormatAllCostEstimates() error {
 			return fmt.Errorf("[ce.FormatCostEstimate for division %v]%v", division, err)
 		}
 
-		divisionFolderName := fmt.Sprintf("%v-%v", ce.divisionToProvider[division], division)
-		filePath := fmt.Sprintf("current_cloud/%v/infracost-formatted.json", divisionFolderName)
+		filePath := "current_cloud/infracost-formatted.json"
 
 		err = os.WriteFile(filePath, []byte(gabsJSONString), 0400)
 		if err != nil {
@@ -87,8 +87,7 @@ func (ce *CostEstimator) FormatAllCostEstimates() error {
 
 // FormatCostEstimate processes infracost-generated cost estimates.
 func (ce *CostEstimator) FormatCostEstimate(division terraformValueObjects.Division) (string, error) {
-	divisionFolderName := fmt.Sprintf("%v-%v", ce.divisionToProvider[division], division)
-	filePath := fmt.Sprintf("current_cloud/%v/infracost.json", divisionFolderName)
+	filePath := "current_cloud/infracost.json"
 
 	fileBytes, err := os.ReadFile(filePath)
 	if err != nil {

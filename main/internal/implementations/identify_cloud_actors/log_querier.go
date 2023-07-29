@@ -125,11 +125,11 @@ func loadDriftResourcesDifferences() ([]driftDetector.AttributeDifference, error
 // resourcesCalculator.DivisionToNewResources struct.
 func loadDivisionToNewResources() (resourcesCalculator.DivisionToNewResources, error) {
 	newResources := resourcesCalculator.DivisionToNewResources{}
-	if _, err := os.Stat("mappings/division-to-new-resources.json"); errors.Is(err, os.ErrNotExist) {
+	if _, err := os.Stat("mappings/new-resources.json"); errors.Is(err, os.ErrNotExist) {
 		return newResources, nil
 	}
 
-	fileContent, err := os.ReadFile("mappings/division-to-new-resources.json")
+	fileContent, err := os.ReadFile("mappings/new-resources.json")
 	if err != nil {
 		return newResources, fmt.Errorf("[os.ReadFile]%v", err)
 	}

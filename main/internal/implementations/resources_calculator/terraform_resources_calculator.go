@@ -131,86 +131,76 @@ func (c *TerraformResourcesCalculator) createNewResourceDocuments(ctx context.Co
 		return fmt.Errorf("[create_new_resource_documents][write mappings/new-resources-to-documents.json] Error: %v", err)
 	}
 
-	gabsContainer, divisionToTerraformerBytes, err := c.createDivisionToTerraformerStateMap(resourceDocsJSON)
+	gabsContainer, terraformerBytes, err := c.createDivisionToTerraformerStateMap(resourceDocsJSON)
 	if err != nil {
 		return fmt.Errorf("[createDivisionToTerraformerStateMap]%v", err)
 	}
 
-	divisionToNewResourceData, err := c.createDivisionToNewResourceData(gabsContainer, divisionToTerraformerBytes)
+	newResourceData, err := c.createNewResourceData(gabsContainer, terraformerBytes)
 	if err != nil {
 		return fmt.Errorf("[createDivisionToNewResourceData]%v", err)
 	}
 
-	divisionToNewResourceDataJSON, err := json.MarshalIndent(divisionToNewResourceData, "", "  ")
+	newResourceDataJSON, err := json.MarshalIndent(newResourceData, "", "  ")
 	if err != nil {
 		return fmt.Errorf("[json.MarshalIndent]%v", err)
 	}
 
-	err = os.WriteFile("mappings/division-to-new-resources.json", divisionToNewResourceDataJSON, 0400)
+	err = os.WriteFile("mappings/new-resources.json", newResourceDataJSON, 0400)
 	if err != nil {
-		return fmt.Errorf("[create_new_resource_documents][write mappings/division-to-new-resources.json] Error: %v", err)
+		return fmt.Errorf("[create_new_resource_documents][write mappings/new-resources.json] Error: %v", err)
 	}
 
 	c.dragonDrop.PostLog(ctx, "Done creating new resource documents.")
 	return nil
 }
 
-// createDivisionToNewResourceData creates a map of division to Terraformer state file bytes
+// createDivisionToNewResourceData loads Terraformer state file bytes
 // along with a gabs container of the resource to documents JSON.
 func (c *TerraformResourcesCalculator) createDivisionToTerraformerStateMap(resourceDocsJSON []byte) (
-	*gabs.Container, map[terraformValueObjects.Division]driftDetector.TerraformerStateFile, error,
+	*gabs.Container, driftDetector.TerraformerStateFile, error,
 ) {
-	divisionToTerraformerByteArray := map[terraformValueObjects.Division]driftDetector.TerraformerStateFile{}
+	divisionToTerraformerByteArray := driftDetector.TerraformerStateFile{}
 
 	container, err := gabs.ParseJSON(resourceDocsJSON)
 	if err != nil {
 		return nil, divisionToTerraformerByteArray, fmt.Errorf("[gabs.ParseJSON]%v", err)
 	}
 
-	for key := range container.ChildrenMap() {
-		divisionTypeNameSlice := strings.Split(key, ".")
-		divisionName := terraformValueObjects.Division(divisionTypeNameSlice[0])
-		terraformerContent, err := os.ReadFile(
-			fmt.Sprintf("current_cloud/%v/terraform.tfstate", divisionName),
-		)
-		if err != nil {
-			return nil, divisionToTerraformerByteArray, fmt.Errorf("[os.ReadFile]%v", err)
-		}
-
-		parsedStateFile, err := driftDetector.ParseTerraformerStateFile(terraformerContent)
-		if err != nil {
-			return nil, divisionToTerraformerByteArray, fmt.Errorf("[driftDetector.ParseTerraformerStateFile]%v", err)
-		}
-
-		divisionToTerraformerByteArray[divisionName] = parsedStateFile
-
+	terraformerContent, err := os.ReadFile(
+		fmt.Sprintf("current_cloud/terraform.tfstate"),
+	)
+	if err != nil {
+		return nil, divisionToTerraformerByteArray, fmt.Errorf("[os.ReadFile]%v", err)
 	}
 
-	return container, divisionToTerraformerByteArray, nil
+	parsedStateFile, err := driftDetector.ParseTerraformerStateFile(terraformerContent)
+	if err != nil {
+		return nil, divisionToTerraformerByteArray, fmt.Errorf("[driftDetector.ParseTerraformerStateFile]%v", err)
+	}
+
+	return container, parsedStateFile, nil
 }
 
-// createDivisionToNewResourceData converts the resourceDocsJSON to a DivisionToNewResources struct.
+// createNewResourceData converts the resourceDocsJSON to a newResources struct.
 // This data is saved in downstream operations for subsequent use with cloud actor identification.
-func (c *TerraformResourcesCalculator) createDivisionToNewResourceData(
+func (c *TerraformResourcesCalculator) createNewResourceData(
 	container *gabs.Container,
-	divisionToTerraformerStateFile map[terraformValueObjects.Division]driftDetector.TerraformerStateFile,
-) (DivisionToNewResources, error) {
+	terraformerStateFile driftDetector.TerraformerStateFile,
+) (map[ResourceID]NewResourceData, error) {
 	var err error
 
-	divisionToNewResources := DivisionToNewResources{}
+	newResources := map[ResourceID]NewResourceData{}
 
 	for key := range container.ChildrenMap() {
 		divisionTypeNameSlice := strings.Split(key, ".")
-		divisionName := terraformValueObjects.Division(divisionTypeNameSlice[0])
 		resourceType := divisionTypeNameSlice[1]
 		resourceName := divisionTypeNameSlice[2]
-
-		currentDivisionTerraformerData := divisionToTerraformerStateFile[divisionName]
 
 		resourceID := ""
 		region := ""
 
-		for _, resource := range currentDivisionTerraformerData.Resources {
+		for _, resource := range terraformerStateFile.Resources {
 			if resource.Type == resourceType && resource.Name == resourceName {
 				cloudProvider := strings.Split(resource.Type, "_")[0]
 				attributesFlat := resource.Instances[0].AttributesFlat
@@ -228,27 +218,15 @@ func (c *TerraformResourcesCalculator) createDivisionToNewResourceData(
 			}
 		}
 
-		if _, ok := divisionToNewResources[divisionName]; ok {
-			divisionToNewResources[divisionName][ResourceID(resourceID)] = NewResourceData{
-				ResourceType:            resourceType,
-				ResourceTerraformerName: resourceName,
-				Region:                  region,
-			}
-		} else {
-			divisionToNewResources[divisionName] = map[ResourceID]NewResourceData{
-				ResourceID(resourceID): {
-					ResourceType:            resourceType,
-					ResourceTerraformerName: resourceName,
-					Region:                  region,
-				},
-			}
+		newResources[ResourceID(resourceID)] = NewResourceData{
+			ResourceType:            resourceType,
+			ResourceTerraformerName: resourceName,
+			Region:                  region,
 		}
 	}
 
-	return divisionToNewResources, nil
+	return newResources, nil
 }
-
-// produceUniqueResourceID
 
 // identifyNewResources compares Terraformer output with workspace state files to determine which
 // cloud resources will be new to Terraform control.

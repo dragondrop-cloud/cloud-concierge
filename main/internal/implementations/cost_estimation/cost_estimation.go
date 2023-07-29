@@ -86,7 +86,7 @@ func (ce *CostEstimator) AggregateCostEstimates() error {
 	for division := range ce.config.DivisionCloudCredentials {
 		divisionFolderName := fmt.Sprintf("%v-%v", ce.divisionToProvider[division], division)
 
-		infracostJSONPath := fmt.Sprintf("./current_cloud/%v/infracost-formatted.json", divisionFolderName)
+		infracostJSONPath := fmt.Sprintf("./current_cloud/infracost-formatted.json", divisionFolderName)
 
 		divisionCosts, err := os.ReadFile(infracostJSONPath)
 		if err != nil {
@@ -123,13 +123,11 @@ func (ce *CostEstimator) GetAllCostEstimates() error {
 	return nil
 }
 
-// GetDivisionCostEstimate invokes the infracost CLI to generate cost estimates for identified resources
+// GetCostEstimate invokes the infracost CLI to generate cost estimates for identified resources
 // within a single, specified, cloud division.
-func (ce *CostEstimator) GetDivisionCostEstimate(division terraformValueObjects.Division) error {
-	divisionFolderName := fmt.Sprintf("%v-%v", ce.divisionToProvider[division], division)
-
-	infracostEstimationPath := fmt.Sprintf("./current_cloud/%v/", divisionFolderName)
-	infracostJSONPath := fmt.Sprintf("./current_cloud/%v/infracost.json", divisionFolderName)
+func (ce *CostEstimator) GetCostEstimate() error {
+	infracostEstimationPath := "./current_cloud/"
+	infracostJSONPath := "./current_cloud/infracost.json"
 
 	costEstimateArgs := []string{"breakdown", "--path", infracostEstimationPath, "--format", "json", "--out-file", infracostJSONPath}
 	_, err := executeCommand("infracost", costEstimateArgs...)

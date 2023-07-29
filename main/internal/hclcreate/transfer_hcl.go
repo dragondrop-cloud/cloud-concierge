@@ -53,7 +53,7 @@ func (h *hclCreate) ExtractResourceDefinitions(noNewResources bool, workspaceToD
 	for division, provider := range map[string]string{} {
 		fullDivisionName := fmt.Sprintf("%v-%v", provider, division)
 
-		hclBytes, err := os.ReadFile(fmt.Sprintf("current_cloud/%v/resources.tf", fullDivisionName))
+		hclBytes, err := os.ReadFile(fmt.Sprintf("current_cloud/resources.tf", fullDivisionName))
 
 		if err != nil {
 			return fmt.Errorf("[os.ReadFile()] Error reading in resources.tf for %v: %v", fullDivisionName, err)

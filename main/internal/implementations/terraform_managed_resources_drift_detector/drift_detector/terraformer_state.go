@@ -17,7 +17,6 @@ type TerraformerResourceIDToData map[string]TerraformerUniqueResourceData
 // TerraformerUniqueResourceData is a struct for storing the data definition of a single Terraform State resource instance generated
 // by terraformer.
 type TerraformerUniqueResourceData struct {
-	CloudDivision  string
 	Module         string
 	Type           string
 	Name           string
@@ -43,30 +42,23 @@ type TerraformerInstance struct {
 
 // loadAllTerraformerStateFiles loads from memory the terraformer state files
 func (m *ManagedResourcesDriftDetector) loadAllTerraformerStateFiles() (TerraformerResourceIDToData, error) {
-	fileNames := make([]string, 0)
-	for division, provider := range m.divisionToProvider {
-		fullDivisionName := fmt.Sprintf("%v-%v", provider, division)
-		fileNames = append(fileNames, fullDivisionName)
-	}
 
 	resources := TerraformerResourceIDToData{}
 
-	for _, divisionName := range fileNames {
-		fileContent, err := os.ReadFile(fmt.Sprintf("current_cloud/%v/terraform.tfstate", divisionName))
-		if err != nil {
-			return nil, fmt.Errorf("failed to read state file %s: %v", divisionName, err)
-		}
+	fileContent, err := os.ReadFile("current_cloud/terraform.tfstate")
+	if err != nil {
+		return nil, fmt.Errorf("failed to read state file: %v", err)
+	}
 
-		stateFile, err := ParseTerraformerStateFile(fileContent)
-		if err != nil {
-			return nil, fmt.Errorf("[ParseTerraformerStateFile]%v", err)
-		}
+	stateFile, err := ParseTerraformerStateFile(fileContent)
+	if err != nil {
+		return nil, fmt.Errorf("[ParseTerraformerStateFile]%v", err)
+	}
 
-		resourcesFromStateFile := m.extractUniqueResourceIDToData(divisionName, stateFile)
+	resourcesFromStateFile := m.extractUniqueResourceIDToData(stateFile)
 
-		for resourceID, resourceData := range resourcesFromStateFile {
-			resources[resourceID] = resourceData
-		}
+	for resourceID, resourceData := range resourcesFromStateFile {
+		resources[resourceID] = resourceData
 	}
 
 	return resources, nil
@@ -74,7 +66,7 @@ func (m *ManagedResourcesDriftDetector) loadAllTerraformerStateFiles() (Terrafor
 
 // extractUniqueResourceIDToData reformats resource data to pull out the attribute "id" as the unique
 // resource identifier.
-func (m *ManagedResourcesDriftDetector) extractUniqueResourceIDToData(divisionName string, stateFile TerraformerStateFile) TerraformerResourceIDToData {
+func (m *ManagedResourcesDriftDetector) extractUniqueResourceIDToData(stateFile TerraformerStateFile) TerraformerResourceIDToData {
 	outputIDToData := TerraformerResourceIDToData{}
 
 	for _, resource := range stateFile.Resources {
@@ -82,7 +74,6 @@ func (m *ManagedResourcesDriftDetector) extractUniqueResourceIDToData(divisionNa
 			id := fmt.Sprintf("%v.%v", resource.Type, instance.AttributesFlat["id"])
 
 			outputIDToData[id] = TerraformerUniqueResourceData{
-				CloudDivision:  divisionName,
 				Module:         resource.Module,
 				Type:           resource.Type,
 				Name:           resource.Name,
