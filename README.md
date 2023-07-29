@@ -62,7 +62,7 @@ on a cron schedule using GitHub Actions. See our [example workflow](https://gith
 4) Results and code are summarized in a [Pull Request](https://docs.cloudconcierge.io/how-it-works/pull-request-output) within the repository of your choice
 
 ### Telemetry
-For OSS usage, Cloud Concierge only logs data to the dragondrop API whenever a container execution is started. This method can be viewed [here](pkg/implementations/dragon_drop/http_dragondrop_oss_methods.go).
+For OSS usage, Cloud Concierge only logs data to the dragondrop API whenever a container execution is started. This method can be viewed [here](main/internal/implementations/dragon_drop/http_dragondrop_oss_methods.go).
  
 Jobs managed by the [dragondrop platform](https://dragondrop.cloud) log statuses over the course of the job execution and anonymized data for cloud visualizations to the dragondrop API. These methods
 can be viewed [here](https://github.com/dragondrop-cloud/cloud-concierge/blob/dev/main/internal/implementations/dragon_drop/http_dragondrop_managed_execution.go) and
