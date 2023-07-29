@@ -59,7 +59,7 @@ type Documentize interface {
 // documentize is a struct that implements the Documentize interface.
 type documentize struct {
 	// DivisionToProvider is a map between the division name and the provider name
-	divisionToProvider map[terraformValueObjects.Division]terraformValueObjects.Provider
+	provider terraformValueObjects.Provider
 
 	// resourceExtractors is a map between a provider name and the logic needed to extract
 	// resource information for the provider.
@@ -67,7 +67,7 @@ type documentize struct {
 }
 
 // NewDocumentize creates a new instance that implements the Documentize interface.
-func NewDocumentize(divisionToProvider map[terraformValueObjects.Division]terraformValueObjects.Provider) (Documentize, error) {
+func NewDocumentize(provider terraformValueObjects.Provider) (Documentize, error) {
 
 	resourceExtractors := map[terraformValueObjects.Provider]ResourceExtractor{
 		"aws":     NewAWSResourceExtractor(),
@@ -76,7 +76,7 @@ func NewDocumentize(divisionToProvider map[terraformValueObjects.Division]terraf
 	}
 
 	return &documentize{
-		divisionToProvider: divisionToProvider,
+		provider:           provider,
 		resourceExtractors: resourceExtractors,
 	}, nil
 }

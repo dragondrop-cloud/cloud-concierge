@@ -15,7 +15,4 @@ type Scanner interface {
 	// Scan uses the TerraformerCLI interface to scan a given division's cloud environment. Returns
 	// the name of the Division scanned, and the Stack of Terraformer output for that division.
 	Scan(division terraformValueObjects.Division, credential terraformValueObjects.Credential, options ...string) (terraformValueObjects.Path, error)
-
-	// ScanAll wraps Scan to scan each division for the provider.
-	ScanAll(options ...string) (*MultiScanResult, error)
 }

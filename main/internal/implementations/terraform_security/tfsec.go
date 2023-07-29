@@ -66,7 +66,7 @@ type TFSec struct {
 // NewTFSec generates a new instance from TFSec
 func NewTFSec(divisionToProvider map[terraformValueObjects.Division]terraformValueObjects.Provider) *TFSec {
 	return &TFSec{
-		divisionToProvider: divisionToProvider,
+		provider: provider,
 	}
 }
 

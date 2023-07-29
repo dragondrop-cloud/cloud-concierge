@@ -20,7 +20,7 @@ type ManagedResourcesDriftDetector struct {
 // NewManagedResourcesDriftDetector generated a terraformer instance from ManagedResourcesDriftDetector
 func NewManagedResourcesDriftDetector(divisionToProvider map[terraformValueObjects.Division]terraformValueObjects.Provider) *ManagedResourcesDriftDetector {
 	return &ManagedResourcesDriftDetector{
-		divisionToProvider: divisionToProvider,
+		provider: provider,
 	}
 }
 

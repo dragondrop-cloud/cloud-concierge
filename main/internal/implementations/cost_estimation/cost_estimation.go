@@ -33,14 +33,14 @@ type CostEstimator struct {
 	// cloud provider (aws, azurerm, google, etc.).
 	// For AWS, an account is the division, for GCP a project name is the division,
 	// and for azurerm a resource group is a division.
-	divisionToProvider map[terraformValueObjects.Division]terraformValueObjects.Provider `required:"true"`
+	provider terraformValueObjects.Provider `required:"true"`
 }
 
 // NewCostEstimator creates a new instance of CostEstimator a struct that implements interfaces.CostEstimation.
-func NewCostEstimator(config CostEstimatorConfig, divisionToProvider map[terraformValueObjects.Division]terraformValueObjects.Provider) interfaces.CostEstimation {
+func NewCostEstimator(config CostEstimatorConfig, provider terraformValueObjects.Provider) interfaces.CostEstimation {
 	return &CostEstimator{
-		config:             config,
-		divisionToProvider: divisionToProvider,
+		config:   config,
+		provider: provider,
 	}
 }
 

@@ -11,9 +11,8 @@ var defaultGoogleRegions = []string{"us-east4"}
 
 // GoogleScanner implements the Scanner interface for use with GCP cloud environments.
 type GoogleScanner struct {
-	// Config is the needed configuration of a mapping between Division name and the corresponding
-	// Credential needed to access that environment.
-	config map[terraformValueObjects.Division]terraformValueObjects.Credential
+	// credential is the credential needed to scan a GCP cloud environment.
+	credential terraformValueObjects.Credential
 
 	// terraformer is the TerraformerCLI interface used to scan the GCP cloud environment.
 	terraformer TerraformerCLI
@@ -23,10 +22,10 @@ type GoogleScanner struct {
 }
 
 // NewGoogleScanner creates and returns a new instance of GCPScanner.
-func NewGoogleScanner(config map[terraformValueObjects.Division]terraformValueObjects.Credential, cliConfig Config, cloudRegions []terraformValueObjects.CloudRegion) (Scanner, error) {
+func NewGoogleScanner(credential terraformValueObjects.Credential, cliConfig Config, cloudRegions []terraformValueObjects.CloudRegion) (Scanner, error) {
 	return &GoogleScanner{
 		CloudRegions: cloudRegions,
-		config:       config,
+		credential:   credential,
 		terraformer:  newTerraformerCLI(cliConfig),
 	}, nil
 }
@@ -51,8 +50,8 @@ func (gcpScan *GoogleScanner) Scan(project terraformValueObjects.Division, crede
 	path, err := gcpScan.terraformer.Import(TerraformImportMigrationGeneratorParams{
 		Provider:       "google",
 		Division:       project,
-		Regions:        []string{"us-east4", "global"},
-		Resources:      getValidRegions(gcpScan.CloudRegions, terraformValueObjects.GoogleRegions, defaultGoogleRegions),
+		Regions:        getValidRegions(gcpScan.CloudRegions, terraformValueObjects.GoogleRegions, defaultGoogleRegions),
+		Resources:      []string{"us-east4", "global"},
 		AdditionalArgs: []string{projectsFlag},
 		IsCompact:      true,
 	})
@@ -68,20 +67,4 @@ func (gcpScan *GoogleScanner) Scan(project terraformValueObjects.Division, crede
 	}
 
 	return path, nil
-}
-
-// ScanAll wraps Scan to scan each division for the provider.
-func (gcpScan *GoogleScanner) ScanAll(options ...string) (*MultiScanResult, error) {
-	fmt.Println("Scanning all specified GCP divisions.")
-	scanMap := make(map[terraformValueObjects.Division]terraformValueObjects.Path)
-
-	for div, credential := range gcpScan.config {
-		path, err := gcpScan.Scan(div, credential)
-		if err != nil {
-			return nil, fmt.Errorf("[ScanAll] Error in gcpScan.Scan: %v", err)
-		}
-		scanMap[div] = path
-	}
-
-	return &MultiScanResult{scanMap}, nil
 }

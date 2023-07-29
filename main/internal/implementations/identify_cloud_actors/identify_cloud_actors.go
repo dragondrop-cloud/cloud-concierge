@@ -33,11 +33,11 @@ type IdentifyCloudActors struct {
 	// cloud provider (aws, azurerm, google, etc.).
 	// For AWS, an account is the division, for GCP a project name is the division,
 	// and for azurerm a resource group is a division.
-	divisionToProvider map[terraformValueObjects.Division]terraformValueObjects.Provider `required:"true"`
+	provider terraformValueObjects.Provider `required:"true"`
 }
 
 // NewIdentifyCloudActors returns a new instance of IdentifyCloudActors.
-func NewIdentifyCloudActors(config Config, dragonDrop interfaces.DragonDrop, divisionToProvider map[terraformValueObjects.Division]terraformValueObjects.Provider) (interfaces.IdentifyCloudActors, error) {
+func NewIdentifyCloudActors(config Config, dragonDrop interfaces.DragonDrop, provider terraformValueObjects.Provider) (interfaces.IdentifyCloudActors, error) {
 	providerToLogQuerier, err := NewProviderToLogQuerierMap(config, divisionToProvider)
 	if err != nil {
 		return nil, fmt.Errorf("[NewProviderToLogQuerierMap]%w", err)

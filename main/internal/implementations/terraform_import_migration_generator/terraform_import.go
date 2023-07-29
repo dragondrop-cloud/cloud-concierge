@@ -15,6 +15,9 @@ import (
 type Config struct {
 	// CloudCredential is a cloud credential with read-only access to a cloud division and, if applicable, access to read Terraform state files.
 	CloudCredential terraformValueObjects.Credential `required:"true"`
+
+	// Division is the name of a cloud division.
+	Division terraformValueObjects.Division `required:"true"`
 }
 
 // TerraformImportMigrationGenerator is a struct that implements the interfaces.TerraformImportMigrationGenerator interface.
@@ -22,30 +25,27 @@ type TerraformImportMigrationGenerator struct {
 	// dragonDrop is needed to inform cloud resources mapped to state file
 	dragonDrop interfaces.DragonDrop
 
-	// DivisionToProvider is a map between the string representing a Division and the corresponding
-	// cloud Provider (aws, azurerm, google, etc.).
-	// For AWS, an account is the Division, for GCP a project name is the Division,
-	// and for azurerm a resource group is a Division.
-	divisionToProvider map[terraformValueObjects.Division]terraformValueObjects.Provider `required:"true"`
+	// provider is the name of a cloud provider
+	provider terraformValueObjects.Provider `required:"true"`
 
 	// config contains the variables that determine the specific behavior of the TerraformImportMigrationGenerator struct.
 	config Config
 }
 
 // NewTerraformImportMigrationGenerator creates and returns a new instance of TerraformImportMigrationGenerator
-func NewTerraformImportMigrationGenerator(ctx context.Context, config Config, dragonDrop interfaces.DragonDrop, divisionToProvider map[terraformValueObjects.Division]terraformValueObjects.Provider) interfaces.TerraformImportMigrationGenerator {
+func NewTerraformImportMigrationGenerator(ctx context.Context, config Config, dragonDrop interfaces.DragonDrop, provider terraformValueObjects.Provider) interfaces.TerraformImportMigrationGenerator {
 	dragonDrop.PostLog(ctx, "Created TFImport client.")
 
-	return &TerraformImportMigrationGenerator{config: config, dragonDrop: dragonDrop, divisionToProvider: divisionToProvider}
+	return &TerraformImportMigrationGenerator{config: config, dragonDrop: dragonDrop, provider: provider}
 }
 
 // Execute generates terraform state migration statements for identified resources.
 func (i *TerraformImportMigrationGenerator) Execute(ctx context.Context) error {
 	i.dragonDrop.PostLog(ctx, "Beginning to map resources to import location.")
 
-	providerToResourceImportMap, err := i.mapResourcesToImportLocation()
+	resourceImports, err := i.GenericResourcesToImportLocation(i.provider)
 	if err != nil {
-		return fmt.Errorf("[terraform_import_migration_generator][error mapping resources to import location]%w", err)
+		return fmt.Errorf("[terraform_import_migration_generator][error in GenericResourcesToImportLocation]%w", err)
 	}
 
 	err = i.dragonDrop.InformCloudResourcesMappedToStateFile(ctx)
@@ -53,7 +53,8 @@ func (i *TerraformImportMigrationGenerator) Execute(ctx context.Context) error {
 		return fmt.Errorf("[terraform_import_migration_generator][error informing resources mapped to import location]%w", err)
 	}
 
-	resourceImportMapJSON, err := i.convertProviderToResourceImportMapToJSON(providerToResourceImportMap)
+	// TODO: Major refactor needed here
+	resourceImportMapJSON, err := i.convertProviderToResourceImportMapToJSON(resourceImports)
 	if err != nil {
 		return fmt.Errorf("[terraform_import_migration_generator][error converting Provider to resource import]%w", err)
 	}
@@ -101,45 +102,18 @@ func (i *TerraformImportMigrationGenerator) writeResourcesMap(resourceImportMapJ
 }
 
 // convertProviderToResourceImportMapToJSON converts the importMap to a json formatted string.
-func (i *TerraformImportMigrationGenerator) convertProviderToResourceImportMapToJSON(importMap terraformValueObjects.ProviderToResourceImportMap) (string, error) {
+func (i *TerraformImportMigrationGenerator) convertProviderToResourceImportMapToJSON(importMap terraformValueObjects.ResourceImportMap) (string, error) {
 	jsonObj := gabs.New()
 
-	for provider, divisionToResourceImportMap := range importMap {
-		for division, resourceImportMap := range divisionToResourceImportMap {
-			for resourceName, importLocation := range resourceImportMap {
-				_, err := jsonObj.Set(
-					importLocation,
-					fmt.Sprintf("%v-%v", string(provider), string(division)),
-					string(resourceName),
-				)
-				if err != nil {
-					return "", fmt.Errorf("[convert_provider_to_resource_import][jsonObj.Set(%v, %v, %v, %v)]", importLocation, provider, division, resourceName)
-				}
-			}
+	for resourceName, importLocation := range importMap {
+		_, err := jsonObj.Set(
+			importLocation,
+			string(resourceName),
+		)
+		if err != nil {
+			return "", fmt.Errorf("[convert_provider_to_resource_import][jsonObj.Set(%v, %v, %v, %v)]", importLocation, i.provider, i.config.Division, resourceName)
 		}
 	}
 
 	return jsonObj.String(), nil
-}
-
-// TODO: Should try to write unit tests for this helper function if possible.
-// mapResourcesToImportLocation maps cloud resources to the appropriate Terraform import migration statement.
-func (i *TerraformImportMigrationGenerator) mapResourcesToImportLocation() (terraformValueObjects.ProviderToResourceImportMap, error) {
-	providerToResourceImportMap := terraformValueObjects.ProviderToResourceImportMap{}
-
-	for division, provider := range i.divisionToProvider {
-		divisionResourceImports, err := GenericResourcesToImportLocation(division, provider)
-		if err != nil {
-			return nil, fmt.Errorf("[map_resources_to_import_location][error in GenericResourcesToImportLocation]%w", err)
-		}
-
-		_, okay := providerToResourceImportMap[provider]
-		if !okay {
-			providerToResourceImportMap[provider] = map[terraformValueObjects.Division]terraformValueObjects.ResourceImportMap{}
-		}
-
-		providerToResourceImportMap[provider][division] = divisionResourceImports[division]
-	}
-
-	return providerToResourceImportMap, nil
 }

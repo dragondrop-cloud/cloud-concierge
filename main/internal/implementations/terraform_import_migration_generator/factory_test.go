@@ -17,10 +17,10 @@ func TestCreateIsolatedTerraformImportMigrationGenerator(t *testing.T) {
 	terraformImporterProvider := "isolated"
 	terraformImporterFactory := new(Factory)
 	dragonDrop := new(interfaces.DragonDropMock)
-	divisionToProvider := make(map[terraformValueObjects.Division]terraformValueObjects.Provider)
+	provider := terraformValueObjects.Provider("")
 
 	// When
-	terraformImporter, err := terraformImporterFactory.Instantiate(ctx, terraformImporterProvider, dragonDrop, divisionToProvider, config)
+	terraformImporter, err := terraformImporterFactory.Instantiate(ctx, terraformImporterProvider, dragonDrop, provider, config)
 
 	// Then
 	assert.Nil(t, err)

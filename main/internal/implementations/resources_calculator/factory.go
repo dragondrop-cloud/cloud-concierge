@@ -17,7 +17,7 @@ type Factory struct {
 // environment specification.
 func (f *Factory) Instantiate(
 	ctx context.Context, environment string, dragonDrop interfaces.DragonDrop,
-	divisionToProvider map[terraformValueObjects.Division]terraformValueObjects.Provider,
+	provider terraformValueObjects.Provider,
 ) (interfaces.ResourcesCalculator, error) {
 	switch environment {
 	case "isolated":
@@ -31,7 +31,7 @@ func (f *Factory) Instantiate(
 // configuration specified via environment variables.
 func (f *Factory) bootstrappedResourceCalculator(
 	ctx context.Context, dragonDrop interfaces.DragonDrop,
-	divisionToProvider map[terraformValueObjects.Division]terraformValueObjects.Provider,
+	provider terraformValueObjects.Provider,
 ) (interfaces.ResourcesCalculator, error) {
 	doc, _ := documentize.NewDocumentize(divisionToProvider)
 

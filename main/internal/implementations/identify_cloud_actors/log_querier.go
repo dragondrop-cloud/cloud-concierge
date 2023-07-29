@@ -45,7 +45,7 @@ type UniqueDriftedResource struct {
 
 // NewProviderToLogQuerierMap returns a map between cloud providers and an instantiated LogQuerier
 // implementation for that provider.
-func NewProviderToLogQuerierMap(globalConfig Config, divisionToProvider map[terraformValueObjects.Division]terraformValueObjects.Provider) (map[terraformValueObjects.Provider]LogQuerier, error) {
+func NewProviderToLogQuerierMap(globalConfig Config, provider terraformValueObjects.Provider) (map[terraformValueObjects.Provider]LogQuerier, error) {
 	providerToQuerier := map[terraformValueObjects.Provider]LogQuerier{}
 
 	gcpDivCredentials := filterDivisionCloudCredentialsForProvider("google", divisionToProvider, globalConfig)
@@ -70,7 +70,7 @@ func NewProviderToLogQuerierMap(globalConfig Config, divisionToProvider map[terr
 }
 
 // filterDivisionCloudCredentialsForProvider is the subset of cloud credentials for a particular cloud provider.
-func filterDivisionCloudCredentialsForProvider(providerName terraformValueObjects.Provider, divisionToProvider map[terraformValueObjects.Division]terraformValueObjects.Provider, globalConfig Config) terraformValueObjects.DivisionCloudCredentialDecoder {
+func filterDivisionCloudCredentialsForProvider(providerName terraformValueObjects.Provider, provider terraformValueObjects.Provider, globalConfig Config) terraformValueObjects.DivisionCloudCredentialDecoder {
 	filteredDivToCredential := terraformValueObjects.DivisionCloudCredentialDecoder{}
 
 	for division, provider := range divisionToProvider {

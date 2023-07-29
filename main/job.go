@@ -305,6 +305,7 @@ func InitializeJobDependencies(ctx context.Context, env string) (*Job, error) {
 	}, nil
 }
 
+// TODO: This will be dramatically simplified to just pulling the key from the provider-version string
 // getInferredData calculates needed inferred data from the input job config
 func getInferredData(config JobConfig) (InferredData, error) {
 	provider, err := getProviderFromCredential(config.CloudCredential)

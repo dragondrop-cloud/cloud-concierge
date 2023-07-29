@@ -111,14 +111,14 @@ type hclCreate struct {
 
 	// divisionToProvider is a mapping between a division and the provider that is responsible
 	// for that division.
-	divisionToProvider map[terraformValueObjects.Division]terraformValueObjects.Provider `required:"true"`
+	provider terraformValueObjects.Provider `required:"true"`
 }
 
 // NewHCLCreate creates and returns a struct which implements the HCLCreate interface.
-func NewHCLCreate(config Config, divisionToProvider map[terraformValueObjects.Division]terraformValueObjects.Provider) (HCLCreate, error) {
+func NewHCLCreate(config Config, provider terraformValueObjects.Provider) (HCLCreate, error) {
 	return &hclCreate{
-		config:             config,
-		divisionToProvider: divisionToProvider,
+		config:   config,
+		provider: provider,
 	}, nil
 }
 

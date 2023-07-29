@@ -24,6 +24,9 @@ type JobConfig struct {
 	// CloudCredential is a cloud credential from which to infer the division to provider.
 	CloudCredential terraformValueObjects.Credential `required:"true"`
 
+	// Division is the name of a cloud division. In AWS this is an account, in GCP this is a project name, and in Azure this is a subscription.
+	Division terraformValueObjects.Division `required:"true"`
+
 	// InfracostAPIToken is the token for accessing Infracost's API.
 	InfracostAPIToken string `required:"true"`
 
@@ -160,6 +163,7 @@ func (c JobConfig) getTerraformerCLIConfig() terraformerCli.Config {
 func (c JobConfig) getTerraformImportMigrationGeneratorConfig() terraformImportMigrationGenerator.Config {
 	return terraformImportMigrationGenerator.Config{
 		CloudCredential: c.CloudCredential,
+		Division:        c.Division,
 	}
 }
 

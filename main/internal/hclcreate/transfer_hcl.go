@@ -49,7 +49,8 @@ func (h *hclCreate) ExtractResourceDefinitions(noNewResources bool, workspaceToD
 		return fmt.Errorf("[gabsContainerToAllCostsStruct]%v", err)
 	}
 
-	for division, provider := range h.divisionToProvider {
+	// TODO: Major refactoring needed here
+	for division, provider := range map[string]string{} {
 		fullDivisionName := fmt.Sprintf("%v-%v", provider, division)
 
 		hclBytes, err := os.ReadFile(fmt.Sprintf("current_cloud/%v/resources.tf", fullDivisionName))

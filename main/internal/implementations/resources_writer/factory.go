@@ -18,7 +18,7 @@ type Factory struct {
 
 // Instantiate creates an instance that implements the ResourcesWriter interface, with the implementation
 // depending on the current environment.
-func (f *Factory) Instantiate(ctx context.Context, environment string, vcs interfaces.VCS, dragonDrop interfaces.DragonDrop, divisionToProvider map[terraformValueObjects.Division]terraformValueObjects.Provider, hclConfig hclcreate.Config) (interfaces.ResourcesWriter, error) {
+func (f *Factory) Instantiate(ctx context.Context, environment string, vcs interfaces.VCS, dragonDrop interfaces.DragonDrop, provider terraformValueObjects.Provider, hclConfig hclcreate.Config) (interfaces.ResourcesWriter, error) {
 	switch environment {
 	case "isolated":
 		return new(IsolatedResourcesWriter), nil
@@ -29,7 +29,7 @@ func (f *Factory) Instantiate(ctx context.Context, environment string, vcs inter
 
 // bootstrappedResourceWriter creates a complete implementation of the ResourcesWriter interface with
 // configuration specified via environment variables.
-func (f *Factory) bootstrappedResourceWriter(ctx context.Context, vcs interfaces.VCS, dragonDrop interfaces.DragonDrop, divisionToProvider map[terraformValueObjects.Division]terraformValueObjects.Provider, hclConfig hclcreate.Config) (interfaces.ResourcesWriter, error) {
+func (f *Factory) bootstrappedResourceWriter(ctx context.Context, vcs interfaces.VCS, dragonDrop interfaces.DragonDrop, provider terraformValueObjects.Provider, hclConfig hclcreate.Config) (interfaces.ResourcesWriter, error) {
 	hclCreate, err := hclcreate.NewHCLCreate(hclConfig, divisionToProvider)
 	if err != nil {
 		log.Errorf("[cannot instantiate hclCreate config]%s", err.Error())
