@@ -113,7 +113,7 @@ func (c *TerraformResourcesCalculator) getResourceToWorkspaceMapping(ctx context
 
 // createNewResourceDocuments defines documents out of new resources to be used in downstream processing
 // like NLP modeling and cloud actor action querying.
-func (c *TerraformResourcesCalculator) createNewResourceDocuments(ctx context.Context, docu documentize.Documentize, newResources map[terraformValueObjects.Division]map[documentize.ResourceData]bool) error {
+func (c *TerraformResourcesCalculator) createNewResourceDocuments(ctx context.Context, docu documentize.Documentize, newResources map[documentize.ResourceData]bool) error {
 	c.dragonDrop.PostLog(ctx, "Beginning to create new resource documents.")
 
 	newResourceDocs, err := docu.NewResourceDocuments(newResources)
@@ -231,7 +231,7 @@ func (c *TerraformResourcesCalculator) createNewResourceData(
 // identifyNewResources compares Terraformer output with workspace state files to determine which
 // cloud resources will be new to Terraform control.
 func (c *TerraformResourcesCalculator) identifyNewResources(ctx context.Context, docu documentize.Documentize, workspaceToDirectory map[string]string) (
-	map[terraformValueObjects.Division]map[documentize.ResourceData]bool, error) {
+	map[documentize.ResourceData]bool, error) {
 	c.dragonDrop.PostLog(ctx, "Beginning to identify new Resources.")
 
 	newResources, err := docu.IdentifyNewResources(workspaceToDirectory)

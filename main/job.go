@@ -268,6 +268,7 @@ func InitializeJobDependencies(ctx context.Context, env string) (*Job, error) {
 	if err != nil {
 		return nil, err
 	}
+	// TODO: Refactoring done through this point
 	costEstimator, err := (&costEstimation.Factory{}).Instantiate(env, inferredData.Provider, jobConfig.getCostEstimationConfig())
 	if err != nil {
 		return nil, err
