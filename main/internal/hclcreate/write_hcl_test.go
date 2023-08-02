@@ -3,8 +3,6 @@ package hclcreate
 import (
 	"strconv"
 	"testing"
-
-	terraformValueObjects "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_value_objects"
 )
 
 func TestCreateMainTF(t *testing.T) {
@@ -22,7 +20,7 @@ func TestCreateMainTF(t *testing.T) {
 		Config{
 			TerraformVersion: "~>1.2.4",
 		},
-		map[terraformValueObjects.Division]terraformValueObjects.Provider{},
+		"",
 	)
 	f, err := hclCreate.CreateMainTF(inputProvidersMap)
 

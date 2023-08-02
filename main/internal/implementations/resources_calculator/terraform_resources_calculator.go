@@ -11,7 +11,6 @@ import (
 	"github.com/Jeffail/gabs/v2"
 	"github.com/dragondrop-cloud/cloud-concierge/main/internal/documentize"
 	driftDetector "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_managed_resources_drift_detector/drift_detector"
-	terraformValueObjects "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_value_objects"
 	"github.com/dragondrop-cloud/cloud-concierge/main/internal/interfaces"
 	"github.com/dragondrop-cloud/cloud-concierge/main/internal/pyscriptexec"
 )
@@ -34,9 +33,8 @@ type TerraformResourcesCalculator struct {
 // ResourceID is a string that represents a resource id for a cloud resource within a terraform state file.
 type ResourceID string
 
-// DivisionToNewResources is a mapping of a division
-// to a map of resource ids to defining resource data.
-type DivisionToNewResources map[terraformValueObjects.Division]map[ResourceID]NewResourceData
+// NewResourceMap is a map of resource ids to defining resource data.
+type NewResourceMap map[ResourceID]NewResourceData
 
 // NewResourceData is a struct that contains key fields defining a Terraform resource.
 type NewResourceData struct {

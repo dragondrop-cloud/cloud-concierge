@@ -56,15 +56,12 @@ type Location struct {
 // TFSec is a struct that implements the interfaces.TerraformSecurity but
 // executing the tfsec command
 type TFSec struct {
-	// DivisionToProvider is a map between the string representing a division and the corresponding
-	// cloud provider (aws, azurerm, google, etc.).
-	// For AWS, an account is the division, for GCP a project name is the division,
-	// and for azurerm a resource group is a division.
-	divisionToProvider map[terraformValueObjects.Division]terraformValueObjects.Provider
+	// provider is a string of the current cloud provider (aws, azurerm, google, etc.).
+	provider terraformValueObjects.Provider
 }
 
 // NewTFSec generates a new instance from TFSec
-func NewTFSec(divisionToProvider map[terraformValueObjects.Division]terraformValueObjects.Provider) *TFSec {
+func NewTFSec(provider terraformValueObjects.Provider) *TFSec {
 	return &TFSec{
 		provider: provider,
 	}

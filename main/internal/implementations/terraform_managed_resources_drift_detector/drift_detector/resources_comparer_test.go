@@ -15,7 +15,6 @@ func TestGetExistentResourcesHaveChanged(t *testing.T) {
 	// Given
 	terraformerResourcesIDToData := TerraformerResourceIDToData{
 		"google_example.id_1": TerraformerUniqueResourceData{
-			CloudDivision:  "google-cloud-division",
 			Module:         "root",
 			Type:           "google_example",
 			Name:           "my_resource",
@@ -58,7 +57,6 @@ func TestGetExistentResourcesHaveChanged(t *testing.T) {
 		InstanceID:     "id_1",
 		AttributeDetail: AttributeDetail{
 			StateFileName: "My State File",
-			CloudDivision: "google-cloud-division",
 			ModuleName:    "root",
 			ResourceType:  "google_example",
 			ResourceName:  "my_resource",
@@ -73,7 +71,6 @@ func TestGetExistentResourcesHaveChanged_MoreThanOneAttribute(t *testing.T) {
 	// Given
 	terraformerResourcesIDToData := TerraformerResourceIDToData{
 		"id_1": TerraformerUniqueResourceData{
-			CloudDivision:  "google-cloud-division",
 			Module:         "root",
 			Type:           "google_example",
 			Name:           "my_resource",
@@ -105,7 +102,6 @@ func TestGetExistentResourcesHaveChanged_MoreThanOneAttribute(t *testing.T) {
 		CloudValue:     "id_1",
 		InstanceID:     "id_1",
 		AttributeDetail: AttributeDetail{
-			CloudDivision: "google-cloud-division",
 			StateFileName: "My State File",
 			ModuleName:    "root",
 			ResourceType:  "google_example",
@@ -120,7 +116,6 @@ func TestGetExistentResourcesHaveChanged_MoreThanOneAttribute(t *testing.T) {
 		CloudValue:     "123",
 		InstanceID:     "id_1",
 		AttributeDetail: AttributeDetail{
-			CloudDivision: "google-cloud-division",
 			StateFileName: "My State File",
 			ModuleName:    "root",
 			ResourceType:  "google_example",

@@ -23,14 +23,14 @@ func (f *Factory) Instantiate(ctx context.Context, environment string, vcs inter
 	case "isolated":
 		return new(IsolatedResourcesWriter), nil
 	default:
-		return f.bootstrappedResourceWriter(ctx, vcs, dragonDrop, divisionToProvider, hclConfig)
+		return f.bootstrappedResourceWriter(ctx, vcs, dragonDrop, provider, hclConfig)
 	}
 }
 
 // bootstrappedResourceWriter creates a complete implementation of the ResourcesWriter interface with
 // configuration specified via environment variables.
 func (f *Factory) bootstrappedResourceWriter(ctx context.Context, vcs interfaces.VCS, dragonDrop interfaces.DragonDrop, provider terraformValueObjects.Provider, hclConfig hclcreate.Config) (interfaces.ResourcesWriter, error) {
-	hclCreate, err := hclcreate.NewHCLCreate(hclConfig, divisionToProvider)
+	hclCreate, err := hclcreate.NewHCLCreate(hclConfig, provider)
 	if err != nil {
 		log.Errorf("[cannot instantiate hclCreate config]%s", err.Error())
 		return nil, fmt.Errorf("[cannot instantiate hclCreate config]%w", err)

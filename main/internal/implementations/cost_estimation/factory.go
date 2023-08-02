@@ -15,12 +15,12 @@ func (f *Factory) Instantiate(environment string, provider terraformValueObjects
 	case "isolated":
 		return new(IsolatedCostEstimator), nil
 	default:
-		return f.bootstrappedCostEstimator(divisionToProvider, config)
+		return f.bootstrappedCostEstimator(provider, config)
 	}
 }
 
 // bootstrappedCostEstimator instantiates an instance of CostEstimator with the proper environment
 // variables read in.
 func (f *Factory) bootstrappedCostEstimator(provider terraformValueObjects.Provider, config CostEstimatorConfig) (interfaces.CostEstimation, error) {
-	return NewCostEstimator(config, divisionToProvider), nil
+	return NewCostEstimator(config, provider), nil
 }

@@ -13,11 +13,10 @@ func TestManagedResourcesDriftDetector_identifyDeletedResources_SameResources(t 
 	// Given
 	terraformerResources := TerraformerResourceIDToData{
 		"dragondrop-modules": TerraformerUniqueResourceData{
-			CloudDivision: "google-cloud-division",
-			Type:          "google_storage_bucket",
-			Name:          "tfer--dragondrop-modules",
-			Module:        "module_name",
-			Provider:      "google",
+			Type:     "google_storage_bucket",
+			Name:     "tfer--dragondrop-modules",
+			Module:   "module_name",
+			Provider: "google",
 			AttributesFlat: map[string]string{
 				"id": "dragondrop-modules",
 			},
@@ -53,21 +52,19 @@ func TestManagedResourcesDriftDetector_identifyDeletedResources_NewResources(t *
 	// Given
 	terraformerResources := TerraformerResourceIDToData{
 		"dragondrop-modules": TerraformerUniqueResourceData{
-			CloudDivision: "google-cloud-division",
-			Type:          "google_storage_bucket",
-			Name:          "tfer--dragondrop-modules",
-			Module:        "module_name",
-			Provider:      "google",
+			Type:     "google_storage_bucket",
+			Name:     "tfer--dragondrop-modules",
+			Module:   "module_name",
+			Provider: "google",
 			AttributesFlat: map[string]string{
 				"id": "dragondrop-modules",
 			},
 		},
 		"dragondrop-modules-2": TerraformerUniqueResourceData{
-			CloudDivision: "google-cloud-division",
-			Type:          "google_storage_bucket",
-			Name:          "tfer--dragondrop-modules-new",
-			Module:        "module_name",
-			Provider:      "google",
+			Type:     "google_storage_bucket",
+			Name:     "tfer--dragondrop-modules-new",
+			Module:   "module_name",
+			Provider: "google",
 			AttributesFlat: map[string]string{
 				"id": "dragondrop-modules-2",
 			},
@@ -103,11 +100,10 @@ func TestManagedResourcesDriftDetector_identifyDeletedResources_OneDeletedResour
 	// Given
 	terraformerResources := TerraformerResourceIDToData{
 		"dragondrop-modules": TerraformerUniqueResourceData{
-			CloudDivision: "google-cloud-division",
-			Type:          "google_storage_bucket",
-			Name:          "tfer--dragondrop-modules",
-			Module:        "module_name",
-			Provider:      "google",
+			Type:     "google_storage_bucket",
+			Name:     "tfer--dragondrop-modules",
+			Module:   "module_name",
+			Provider: "google",
 			AttributesFlat: map[string]string{
 				"id": "dragondrop-modules",
 			},

@@ -177,5 +177,6 @@ func (c JobConfig) getCostEstimationConfig() costEstimation.CostEstimatorConfig 
 func (c JobConfig) getIdentifyCloudActorsConfig() identifyCloudActors.Config {
 	return identifyCloudActors.Config{
 		CloudCredential: c.CloudCredential,
+		Division:        c.Division,
 	}
 }

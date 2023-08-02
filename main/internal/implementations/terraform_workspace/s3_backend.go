@@ -103,34 +103,38 @@ func (s *S3Backend) configureS3Client(credential terraformValueObjects.Credentia
 // getWorkspaceStateByTestingAllS3Credentials downloads from the remote S3 backend a single "workspace"'s latest
 // state file testing all the s3 credentials.
 func (s *S3Backend) getWorkspaceStateByTestingAllS3Credentials(ctx context.Context, workspaceName string) error {
-	for _, credential := range s.config.DivisionCloudCredentials {
-		err := s.configureS3Client(credential)
+	err := s.configureS3Client(s.config.CloudCredential)
+	if err != nil {
+		return fmt.Errorf("[s.configureS3Client]%w", err)
+	}
+
+	stateFileName := fmt.Sprintf("%v.json", workspaceName)
+
+	fileOutPath := fmt.Sprintf("state_files/%v", stateFileName)
+
+	outFile, err := os.Create(fileOutPath)
+	if err != nil {
+		return fmt.Errorf("[get_workspace_state][error creating file]%w", err)
+	}
+
+	s3BackendDetails := s.workspaceToBackendDetails[workspaceName].(S3BackendBlock)
+	downloadInput := &s3.GetObjectInput{
+		Bucket: aws.String(s3BackendDetails.Bucket),
+		Key:    aws.String(stateFileName),
+	}
+
+	_, err = s.s3Client.GetObject(downloadInput)
+	if err != nil {
+		err = outFileCloser(outFile)
 		if err != nil {
-			continue
+			return fmt.Errorf("[s.s3Client.GetObject][outFileCloser]%v", err)
 		}
+		return fmt.Errorf("[s.s3Client.GetObject]%w", err)
+	}
 
-		stateFileName := fmt.Sprintf("%v.json", workspaceName)
-
-		fileOutPath := fmt.Sprintf("state_files/%v", stateFileName)
-
-		outFile, err := os.Create(fileOutPath)
-		if err != nil {
-			return fmt.Errorf("[get_workspace_state][error creating file]%w", err)
-		}
-
-		s3BackendDetails := s.workspaceToBackendDetails[workspaceName].(S3BackendBlock)
-		downloadInput := &s3.GetObjectInput{
-			Bucket: aws.String(s3BackendDetails.Bucket),
-			Key:    aws.String(stateFileName),
-		}
-
-		_, err = s.s3Client.GetObject(downloadInput)
-		if err != nil {
-			outFile.Close()
-			continue
-		}
-
-		outFile.Close()
+	err = outFileCloser(outFile)
+	if err != nil {
+		return fmt.Errorf("[outFileCloser]%v", err)
 	}
 
 	return nil
