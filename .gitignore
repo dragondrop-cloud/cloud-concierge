@@ -22,3 +22,4 @@ local.env
 .env
 .tfstate
 .idea/
+**/__pycache__/

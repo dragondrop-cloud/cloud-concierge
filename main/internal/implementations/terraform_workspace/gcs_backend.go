@@ -66,12 +66,12 @@ func (b *GCSBackend) getWorkspaceStateByTestingAllGoogleCredentials(ctx context.
 
 	outFile, err := os.Create(fileOutPath)
 	if err != nil {
-		return fmt.Errorf("[os.Create] %v\n", err)
+		return fmt.Errorf("[os.Create] %v", err)
 	}
 
 	client, err := storage.NewClient(ctx, option.WithCredentialsJSON([]byte(b.config.CloudCredential)))
 	if err != nil {
-		return fmt.Errorf("[storage.NewClient] %v\n", err)
+		return fmt.Errorf("[storage.NewClient] %v", err)
 	}
 
 	gcsBackendDetails := b.workspaceToBackendDetails[workspaceName].(GCSBackendBlock)
@@ -80,9 +80,9 @@ func (b *GCSBackend) getWorkspaceStateByTestingAllGoogleCredentials(ctx context.
 	if err != nil {
 		err = outFileCloser(outFile)
 		if err != nil {
-			return fmt.Errorf("[bucket.Object().NewReader][outFileCloser]%v\n", err)
+			return fmt.Errorf("[bucket.Object().NewReader][outFileCloser]%v", err)
 		}
-		return fmt.Errorf("[bucket.Object().NewReader] %v\n", err)
+		return fmt.Errorf("[bucket.Object().NewReader] %v", err)
 	}
 	defer rc.Close()
 

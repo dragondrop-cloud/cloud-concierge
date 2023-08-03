@@ -138,7 +138,6 @@ def test_uncontrolled_cost_by_div_by_type():
     expected_output_df = pd.DataFrame(
         [
             {
-                "provider": "google",
                 "resource_type": "google_sql_database_instance",
                 "num_cost_components": 2,
                 "monthly_cost": "$9.36",
@@ -178,10 +177,10 @@ def test_process_new_resource():
     Unit test for the process_new_resources helper function.
     """
     input_new_resources = {
-        "div_1.provider_resource_type.name": "asdasdasd",
-        "div_1.provider_resource_type.name2": "asdasdasd",
-        "div_1.provider2_resource_type.name": "asadasd",
-        "div_2.provider2_resource_type.name": "asdasdsd",
+        "provider_resource_type.name": "asdasdasd",
+        "provider_resource_type.name2": "asdasdasd",
+        "provider2_resource_type.name": "asadasd",
+        "provider2_resource_type.name2": "asdasdsd",
     }
 
     output_dict = process_new_resources(new_resources=input_new_resources)
@@ -217,13 +216,12 @@ def test_process_new_resource():
     # Testing provider_by_division_df
     expected_provider_by_division_df = pd.DataFrame(
         [
-            {"provider": "provider", "division": "div_1", "num_resources": 2},
-            {"provider": "provider2", "division": "div_1", "num_resources": 1},
-            {"provider": "provider2", "division": "div_2", "num_resources": 1},
+            {"provider": "provider", "num_resources": 2},
+            {"provider": "provider2", "num_resources": 2},
         ]
     )
     pd.testing.assert_frame_equal(
-        expected_provider_by_division_df, output_dict["provider_by_division_df"]
+        expected_provider_by_division_df, output_dict["provider_df"]
     )
 
 

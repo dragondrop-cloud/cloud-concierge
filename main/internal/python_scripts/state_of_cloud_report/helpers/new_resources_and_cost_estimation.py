@@ -304,9 +304,9 @@ def _dataframe_from_cost_estimates_json(
     """
     complete_data_list_of_dicts = []
 
-    for dict in cost_estimates_json:
-        dict["resource_type"] = dict["resource_name"].split(".")[0]
-        complete_data_list_of_dicts.extend(dict)
+    for row_dict in cost_estimates_json:
+        row_dict["resource_type"] = row_dict["resource_name"].split(".")[0]
+        complete_data_list_of_dicts.append(row_dict)
 
     df = pd.DataFrame(complete_data_list_of_dicts)
 
@@ -345,9 +345,7 @@ def _calculate_aggregate_costs_across_scan(df: pd.DataFrame) -> pd.DataFrame:
         .drop(columns=["is_new_resource"])
     )
 
-    combined_cost_summary_df = grouped_controlled_df.merge(
-        grouped_uncontrolled_df, how="outer", on="provider"
-    ).fillna(0)
+    combined_cost_summary_df = pd.concat([grouped_controlled_df, grouped_uncontrolled_df], axis=1).fillna(0)
     assert len(combined_cost_summary_df) <= len(grouped_controlled_df) + len(
         grouped_uncontrolled_df
     )
