@@ -120,7 +120,6 @@ def test_calculate_aggregate_costs_across_scan():
         [
             {
                 "Uncontrolled Resources Monthly Cost": "$0.0",
-                "provider": "google",
                 "Terraform Controlled Resources Monthly Cost": "$9.36",
                 "Total Cost": "$9.36",
             }
