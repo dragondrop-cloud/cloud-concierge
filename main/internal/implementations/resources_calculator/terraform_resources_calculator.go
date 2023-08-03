@@ -165,9 +165,7 @@ func (c *TerraformResourcesCalculator) createDivisionToTerraformerStateMap(resou
 		return nil, divisionToTerraformerByteArray, fmt.Errorf("[gabs.ParseJSON]%v", err)
 	}
 
-	terraformerContent, err := os.ReadFile(
-		fmt.Sprintf("current_cloud/terraform.tfstate"),
-	)
+	terraformerContent, err := os.ReadFile("current_cloud/terraform.tfstate")
 	if err != nil {
 		return nil, divisionToTerraformerByteArray, fmt.Errorf("[os.ReadFile]%v", err)
 	}

@@ -10,12 +10,9 @@ import (
 	"github.com/hashicorp/hcl/v2/hclwrite"
 )
 
-// allCosts is a mapping between division name in the complete costs for that division.
-type allCosts map[terraformValueObjects.Division]divisionCosts
-
-// divisionCosts is a map between the complete resource name and the corresponding
+// costs is a map between the complete resource name and the corresponding
 // resourceCosts struct.
-type divisionCosts map[terraformValueObjects.ResourceName]resourceCosts
+type costs map[terraformValueObjects.ResourceName]resourceCosts
 
 // resourceCosts is a struct containing cost descriptions for resource costs from
 // costComponents and subResources.
@@ -48,75 +45,69 @@ type costComponent struct {
 	unit string
 }
 
-// gabsContainerToAllCostsStruct converts a gabs container to the allCosts struct.
-func gabsContainerToAllCostsStruct(c *gabs.Container) (allCosts, error) {
-	costs := allCosts{}
+// gabsContainerToCostsStruct converts a gabs container to the divisionCosts struct.
+func gabsContainerToCostsStruct(c *gabs.Container) (costs, error) {
+	divCosts := costs{}
 
-	for division, entityArray := range c.ChildrenMap() {
-		divCosts := divisionCosts{}
+	for _, cost := range c.Children() {
+		resourceName := cost.Search("resource_name").Data().(string)
+		intermediateString := strings.Replace(resourceName, "tfer--", "", -1)
+		resourceName = strings.Replace(intermediateString, "-", "_", -1)
 
-		for _, cost := range entityArray.Children() {
-			resourceName := cost.Search("resource_name").Data().(string)
-			intermediateString := strings.Replace(resourceName, "tfer--", "", -1)
-			resourceName = strings.Replace(intermediateString, "-", "_", -1)
-
-			var resourceCostEntry resourceCosts
-			existingResourceCost, ok := divCosts[terraformValueObjects.ResourceName(resourceName)]
-			if ok {
-				resourceCostEntry = existingResourceCost
-			} else {
-				resourceCostEntry = resourceCosts{
-					costComponents: []costComponent{},
-					subResources:   map[string][]costComponent{},
-				}
+		var resourceCostEntry resourceCosts
+		existingResourceCost, ok := divCosts[terraformValueObjects.ResourceName(resourceName)]
+		if ok {
+			resourceCostEntry = existingResourceCost
+		} else {
+			resourceCostEntry = resourceCosts{
+				costComponents: []costComponent{},
+				subResources:   map[string][]costComponent{},
 			}
-
-			subResourceName := cost.Search("sub_resource_name").Data().(string)
-			if subResourceName == "" {
-				// cost component definition
-				currentComponent := costComponent{
-					componentName: cost.Search("cost_component").Data().(string),
-					isUsageBased:  cost.Search("is_usage_based").Data().(bool),
-					monthlyCost:   cost.Search("monthly_cost").Data().(string),
-					price:         cost.Search("price").Data().(string),
-					unit:          cost.Search("unit").Data().(string),
-				}
-				resourceCostEntry.costComponents = append(resourceCostEntry.costComponents, currentComponent)
-			} else {
-				existingSubComponentList, ok := resourceCostEntry.subResources[subResourceName]
-				if !ok {
-					existingSubComponentList = []costComponent{}
-				}
-
-				// sub resource cost component definition
-				currentComponent := costComponent{
-					componentName: cost.Search("cost_component").Data().(string),
-					isUsageBased:  cost.Search("is_usage_based").Data().(bool),
-					monthlyCost:   cost.Search("monthly_cost").Data().(string),
-					price:         cost.Search("price").Data().(string),
-					unit:          cost.Search("unit").Data().(string),
-				}
-				existingSubComponentList = append(existingSubComponentList, currentComponent)
-				resourceCostEntry.subResources[subResourceName] = existingSubComponentList
-			}
-
-			divCosts[terraformValueObjects.ResourceName(resourceName)] = resourceCostEntry
 		}
 
-		costs[terraformValueObjects.Division(division)] = divCosts
+		subResourceName := cost.Search("sub_resource_name").Data().(string)
+		if subResourceName == "" {
+			// cost component definition
+			currentComponent := costComponent{
+				componentName: cost.Search("cost_component").Data().(string),
+				isUsageBased:  cost.Search("is_usage_based").Data().(bool),
+				monthlyCost:   cost.Search("monthly_cost").Data().(string),
+				price:         cost.Search("price").Data().(string),
+				unit:          cost.Search("unit").Data().(string),
+			}
+			resourceCostEntry.costComponents = append(resourceCostEntry.costComponents, currentComponent)
+		} else {
+			existingSubComponentList, ok := resourceCostEntry.subResources[subResourceName]
+			if !ok {
+				existingSubComponentList = []costComponent{}
+			}
+
+			// sub resource cost component definition
+			currentComponent := costComponent{
+				componentName: cost.Search("cost_component").Data().(string),
+				isUsageBased:  cost.Search("is_usage_based").Data().(bool),
+				monthlyCost:   cost.Search("monthly_cost").Data().(string),
+				price:         cost.Search("price").Data().(string),
+				unit:          cost.Search("unit").Data().(string),
+			}
+			existingSubComponentList = append(existingSubComponentList, currentComponent)
+			resourceCostEntry.subResources[subResourceName] = existingSubComponentList
+		}
+
+		divCosts[terraformValueObjects.ResourceName(resourceName)] = resourceCostEntry
 	}
 
-	return costs, nil
+	return divCosts, nil
 }
 
 // generateHCLCloudCostComment generates data on Cloud Actor actions for the specified resource.
 func (h *hclCreate) generateHCLCloudCostComment(
 	resourceType string, resourceName string,
-	divisionCostEstimates divisionCosts,
+	costEstimates costs,
 ) hclwrite.Tokens {
 	completeResourceName := fmt.Sprintf("%v.%v", resourceType, resourceName)
 	cloudCostStatement := ""
-	cloudCostCurrentResource, ok := divisionCostEstimates[terraformValueObjects.ResourceName(completeResourceName)]
+	cloudCostCurrentResource, ok := costEstimates[terraformValueObjects.ResourceName(completeResourceName)]
 	if ok {
 		cloudCostStatement += "# Identified Resource Cost Components:\n"
 		for _, costComponent := range cloudCostCurrentResource.costComponents {

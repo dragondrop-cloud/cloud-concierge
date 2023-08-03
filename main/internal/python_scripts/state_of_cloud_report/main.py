@@ -26,7 +26,7 @@ from helpers.managed_resource_drift import (
 )
 from helpers.security_scanning import (
     create_markdown_table_security_scans,
-    division_to_security_scan_to_df_dict,
+    security_scan_to_df,
 )
 
 
@@ -38,11 +38,11 @@ def create_markdown_file(job_name: str, markdown_text_output_path):
     with open("mappings/resources-to-cloud-actions.json", "r") as json_file:
         resources_to_cloud_actions = json.loads(json_file.read())
 
-    with open("mappings/division-to-cost-estimates.json", "r") as json_file:
-        divisions_to_cost_estimates = json.loads(json_file.read())
+    with open("mappings/cost-estimates.json", "r") as json_file:
+        cost_estimates = json.loads(json_file.read())
 
-    with open("mappings/division-to-security-scan.json", "r") as json_file:
-        divisions_to_security_scan = json.loads(json_file.read())
+    with open("mappings/security-scan.json", "r") as json_file:
+        security_scan = json.loads(json_file.read())
 
     with open("mappings/drift-resources-differences.json", "r") as json_file:
         managed_drift_list_of_dicts = json.loads(json_file.read())
@@ -69,9 +69,9 @@ def create_markdown_file(job_name: str, markdown_text_output_path):
             resources_to_cloud_actions=resources_to_cloud_actions,
         )
 
-    if divisions_to_cost_estimates:
-        cost_summary_dict_of_dfs = process_pricing_data(
-            divisions_to_cost_estimates=divisions_to_cost_estimates,
+    if cost_estimates:
+        cost_summary_dfs = process_pricing_data(
+            cost_estimates=cost_estimates,
             new_resources=new_resources,
         )
 
@@ -90,14 +90,14 @@ def create_markdown_file(job_name: str, markdown_text_output_path):
     )
 
     markdown_file.new_header(level=1, title="Identified Security Risks", style="atx")
-    if divisions_to_security_scan:
-        division_to_security_df_dict = division_to_security_scan_to_df_dict(
-            divisions_to_security_scan=divisions_to_security_scan
+    if security_scan:
+        security_df = security_scan_to_df(
+            list_of_dicts=security_scan
         )
 
         markdown_file = create_markdown_table_security_scans(
             markdown_file=markdown_file,
-            division_to_security_df_dict=division_to_security_df_dict,
+            security_df=security_df,
         )
     else:
         markdown_file.new_line("Security scan not run.")
@@ -105,10 +105,10 @@ def create_markdown_file(job_name: str, markdown_text_output_path):
     markdown_file.new_header(
         level=1, title="Calculable Cloud Costs (Monthly)", style="atx"
     )
-    if divisions_to_cost_estimates:
+    if cost_estimates:
         markdown_file = create_markdown_table_cost_summary(
             markdown_file=markdown_file,
-            cost_summary_df=cost_summary_dict_of_dfs["cost_summary"],
+            cost_summary_df=cost_summary_dfs["cost_summary"],
         )
     else:
         markdown_file.new_line("Cost estimation not run.")
@@ -121,10 +121,10 @@ def create_markdown_file(job_name: str, markdown_text_output_path):
         markdown_file = create_new_resource_tabular_breakdowns_with_cost(
             markdown_file=markdown_file,
             resource_count_dict_of_dfs=resource_count_dict_of_dfs,
-            cost_by_provider_by_type_df=cost_summary_dict_of_dfs[
+            cost_by_provider_by_type_df=cost_summary_dfs[
                 "uncontrolled_cost_by_div_by_type_df"
             ]
-            if cost_summary_dict_of_dfs
+            if cost_summary_dfs
             else pd.DataFrame(),
         )
     else:

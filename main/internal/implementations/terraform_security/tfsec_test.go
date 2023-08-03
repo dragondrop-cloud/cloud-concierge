@@ -17,20 +17,23 @@ func TestGetResultsWithResourceID(t *testing.T) {
 	resources["resourceType2.resourceName2"] = "uniqueID2"
 	resources["resourceType3.resourceName3"] = "uniqueID3"
 
-	results := []Result{
-		{Resource: "resourceType1.resourceName1"},
-		{Resource: "resourceType2.resourceName2"},
-		{Resource: "resourceType3.resourceName3"},
+	results := TFSecFile{
+		[]Result{
+			{Resource: "resourceType1.resourceName1"},
+			{Resource: "resourceType2.resourceName2"},
+			{Resource: "resourceType3.resourceName3"},
+		},
 	}
-
 	// When
 	newResults := tfsec.getResultsWithResourceID(results, resources)
 
 	// Then
-	expectedResults := []Result{
-		{ID: "uniqueID1", Resource: "resourceType1.resourceName1"},
-		{ID: "uniqueID2", Resource: "resourceType2.resourceName2"},
-		{ID: "uniqueID3", Resource: "resourceType3.resourceName3"},
+	expectedResults := TFSecFile{
+		[]Result{
+			{ID: "uniqueID1", Resource: "resourceType1.resourceName1"},
+			{ID: "uniqueID2", Resource: "resourceType2.resourceName2"},
+			{ID: "uniqueID3", Resource: "resourceType3.resourceName3"},
+		},
 	}
 	assert.Equal(t, expectedResults, newResults, "The expected and actual results should match")
 }
