@@ -10,9 +10,6 @@ import (
 	terraformValueObjects "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_value_objects"
 )
 
-// DivisionToHCL is a map between division names and the corresponding hclwrite File object.
-type DivisionToHCL map[string]*hclwrite.File
-
 // WorkspaceToHCL is a map between workspace names and the corresponding hclwrite File object.
 type WorkspaceToHCL map[string]*hclwrite.File
 

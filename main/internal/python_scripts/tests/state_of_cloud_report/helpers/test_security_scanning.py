@@ -3,7 +3,7 @@ Unit tests for helpers in security scanning formatting.
 """
 import pandas as pd
 from main.internal.python_scripts.state_of_cloud_report.helpers.security_scanning import (
-    _security_scan_to_df,
+    security_scan_to_df,
 )
 
 
@@ -54,7 +54,7 @@ def test_division_to_security_scan_to_df_dict():
         },
     ]
 
-    output_df = _security_scan_to_df(list_of_dicts=input_security_results_list)
+    output_df = security_scan_to_df(list_of_dicts=input_security_results_list)
 
     expected_output_df = pd.DataFrame(
         [

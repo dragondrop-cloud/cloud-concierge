@@ -9,7 +9,7 @@ from main.internal.python_scripts.state_of_cloud_report.helpers.new_resources_an
     create_markdown_table_new_resources,
     process_new_resources,
     _calculate_aggregate_costs_across_scan,
-    _dataframe_from_divisions_to_cost_estimates_dict,
+    _dataframe_from_cost_estimates_json,
     _uncontrolled_cost_by_div_by_type,
     _query_sort_and_clip_grouped_data,
 )
@@ -28,7 +28,6 @@ def _create_baseline_expected_df(is_new_resource: bool = True) -> pd.DataFrame:
                 "sub_resource_name": "",
                 "unit": "hours",
                 "provider": "google",
-                "division": "google-dragondrop-dev",
                 "resource_type": "google_sql_database_instance",
                 "is_new_resource": is_new_resource,
             },
@@ -42,7 +41,6 @@ def _create_baseline_expected_df(is_new_resource: bool = True) -> pd.DataFrame:
                 "sub_resource_name": "",
                 "unit": "GB",
                 "provider": "google",
-                "division": "google-dragondrop-dev",
                 "resource_type": "google_sql_database_instance",
                 "is_new_resource": is_new_resource,
             },
@@ -50,10 +48,9 @@ def _create_baseline_expected_df(is_new_resource: bool = True) -> pd.DataFrame:
     )
 
 
-def test_dataframe_from_divisions_to_cost_estimates_dict():
+def test_dataframe_from_cost_estimates_json():
     """Unit test for _dataframe_from_divisions_to_cost_estimates_dict"""
-    input_divisions_to_cost_estimates = {
-        "google-dragondrop-dev": [
+    input_cost_estimates = [
             {
                 "cost_component": "SQL instance (db-f1-micro, zonal)",
                 "is_usage_based": False,
@@ -64,7 +61,6 @@ def test_dataframe_from_divisions_to_cost_estimates_dict():
                 "sub_resource_name": "",
                 "unit": "hours",
                 "provider": "google",
-                "division": "google-dragondrop-dev",
                 "resource_type": "google_sql_database_instance",
             },
             {
@@ -77,11 +73,9 @@ def test_dataframe_from_divisions_to_cost_estimates_dict():
                 "sub_resource_name": "",
                 "unit": "GB",
                 "provider": "google",
-                "division": "google-dragondrop-dev",
                 "resource_type": "google_sql_database_instance",
             },
         ]
-    }
 
     input_new_resources = {
         "google-dragondrop-dev.google_sql_database.tfer--outside-of-terraform-control-db-postgres": "terraform name of tfer  outs",
@@ -91,8 +85,8 @@ def test_dataframe_from_divisions_to_cost_estimates_dict():
 
     expected_output_df = _create_baseline_expected_df()
 
-    output_df = _dataframe_from_divisions_to_cost_estimates_dict(
-        divisions_to_cost_estimates=input_divisions_to_cost_estimates,
+    output_df = _dataframe_from_cost_estimates_json(
+        cost_estimates_json=input_cost_estimates,
         new_resources=input_new_resources,
     )
     pd.testing.assert_frame_equal(expected_output_df, output_df)

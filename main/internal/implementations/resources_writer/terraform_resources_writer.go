@@ -83,6 +83,7 @@ func (w *TerraformResourceWriter) commitChangesOpenPullRequest(ctx context.Conte
 		return "", fmt.Errorf("[commit_changes_open_pull_request][error in vcs.Push]%w", err)
 	}
 
+	// TODO: Get the base branch from a remote API call instead of requiring another env var
 	prURL, err := w.vcs.OpenPullRequest(w.jobName)
 	if err != nil {
 		return "", fmt.Errorf("[commit_changes_open_pull_request][error in vcs.OpenPullRequest]%w", err)
