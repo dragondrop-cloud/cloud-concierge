@@ -89,13 +89,13 @@ func (b *GCSBackend) getWorkspaceStateByTestingAllGoogleCredentials(ctx context.
 	if _, err = io.Copy(outFile, rc); err != nil {
 		err = outFileCloser(outFile)
 		if err != nil {
-			return fmt.Errorf("[io.Copy][outFileCloser]%v\n", err)
+			return fmt.Errorf("[io.Copy][outFileCloser]%v", err)
 		}
 	}
 
 	err = outFileCloser(outFile)
 	if err != nil {
-		return fmt.Errorf("[outFileCloser] %v\n", err)
+		return fmt.Errorf("[outFileCloser] %v", err)
 	}
 
 	return nil

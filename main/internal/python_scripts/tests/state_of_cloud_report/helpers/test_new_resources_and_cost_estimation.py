@@ -102,7 +102,6 @@ def test_calculate_aggregate_costs_across_scan():
     expected_output_df = pd.DataFrame(
         [
             {
-                "provider": "google",
                 "Uncontrolled Resources Monthly Cost": "$9.36",
                 "Terraform Controlled Resources Monthly Cost": "$0.0",
                 "Total Cost": "$9.36",
