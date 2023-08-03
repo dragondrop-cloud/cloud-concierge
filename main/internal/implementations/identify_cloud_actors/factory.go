@@ -18,12 +18,12 @@ func (f *Factory) Instantiate(ctx context.Context, environment string, dragonDro
 	case "isolated":
 		return new(IsolatedIdentifyCloudActors), nil
 	default:
-		return f.bootstrappedResourceCalculator(dragonDrop, divisionToProvider, config)
+		return f.bootstrappedResourceCalculator(dragonDrop, provider, config)
 	}
 }
 
 // bootstrappedResourceCalculator creates a complete implementation of the interfaces.IdentifyCloudActors interface with
 // configuration specified via environment variables.
 func (f *Factory) bootstrappedResourceCalculator(dragonDrop interfaces.DragonDrop, provider terraformValueObjects.Provider, config Config) (interfaces.IdentifyCloudActors, error) {
-	return NewIdentifyCloudActors(config, dragonDrop, divisionToProvider)
+	return NewIdentifyCloudActors(config, dragonDrop, provider)
 }

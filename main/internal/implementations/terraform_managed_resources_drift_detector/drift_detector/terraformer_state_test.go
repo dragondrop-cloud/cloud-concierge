@@ -7,8 +7,6 @@ import (
 
 func Test_ExtractUniqueResourceIdToData(t *testing.T) {
 	// Given
-	inputCloudDivisionName := "google-cloud-division"
-
 	inputStateFile := TerraformerStateFile{
 		Resources: []*TerraformerResource{
 			{
@@ -54,11 +52,10 @@ func Test_ExtractUniqueResourceIdToData(t *testing.T) {
 	m := ManagedResourcesDriftDetector{}
 
 	// When
-	output := m.extractUniqueResourceIDToData(inputCloudDivisionName, inputStateFile)
+	output := m.extractUniqueResourceIDToData(inputStateFile)
 
 	expectedOutput := TerraformerResourceIDToData{
 		"google_example.id_1": TerraformerUniqueResourceData{
-			CloudDivision:  "google-cloud-division",
 			Module:         "root",
 			Type:           "google_example",
 			Name:           "my_resource",
@@ -66,7 +63,6 @@ func Test_ExtractUniqueResourceIdToData(t *testing.T) {
 			AttributesFlat: map[string]string{"id": "id_1"},
 		},
 		"google_example.id_2": TerraformerUniqueResourceData{
-			CloudDivision:  "google-cloud-division",
 			Module:         "root",
 			Type:           "google_example",
 			Name:           "my_resource",
@@ -74,7 +70,6 @@ func Test_ExtractUniqueResourceIdToData(t *testing.T) {
 			AttributesFlat: map[string]string{"id": "id_2"},
 		},
 		"aws_example.id_3": TerraformerUniqueResourceData{
-			CloudDivision:  "google-cloud-division",
 			Module:         "my_module",
 			Type:           "aws_example",
 			Name:           "my_resource",

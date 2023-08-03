@@ -6,7 +6,6 @@ import (
 	"strconv"
 
 	"github.com/Jeffail/gabs/v2"
-	terraformValueObjects "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_value_objects"
 )
 
 // InfracostResourceData is a struct for handling individual data values for a resource entry in
@@ -65,47 +64,33 @@ type CostComponent struct {
 	monthlyCost string
 }
 
-// FormatAllCostEstimates processes infracost-generated cost estimation data into a more concise format for
-// downstream usage for all cloud divisions.
-func (ce *CostEstimator) FormatAllCostEstimates() error {
-	for division := range ce.config.DivisionCloudCredentials {
-		gabsJSONString, err := ce.FormatCostEstimate(division)
-		if err != nil {
-			return fmt.Errorf("[ce.FormatCostEstimate for division %v]%v", division, err)
-		}
-
-		divisionFolderName := fmt.Sprintf("%v-%v", ce.divisionToProvider[division], division)
-		filePath := fmt.Sprintf("current_cloud/%v/infracost-formatted.json", divisionFolderName)
-
-		err = os.WriteFile(filePath, []byte(gabsJSONString), 0400)
-		if err != nil {
-			return fmt.Errorf("[os.WriteFile]%v", err)
-		}
-	}
-	return nil
-}
-
 // FormatCostEstimate processes infracost-generated cost estimates.
-func (ce *CostEstimator) FormatCostEstimate(division terraformValueObjects.Division) (string, error) {
-	divisionFolderName := fmt.Sprintf("%v-%v", ce.divisionToProvider[division], division)
-	filePath := fmt.Sprintf("current_cloud/%v/infracost.json", divisionFolderName)
+func (ce *CostEstimator) FormatCostEstimate() error {
+	filePath := "current_cloud/infracost.json"
 
 	fileBytes, err := os.ReadFile(filePath)
 	if err != nil {
-		return "", fmt.Errorf("[os.ReadFile]%v", err)
+		return fmt.Errorf("[os.ReadFile]%v", err)
 	}
 
 	resourceDataList, err := ce.ParseJSONToStruct(fileBytes)
 	if err != nil {
-		return "", fmt.Errorf("[ce.parseJSONGABSContainerToStruct]%v", err)
+		return fmt.Errorf("[ce.parseJSONGABSContainerToStruct]%v", err)
 	}
 
 	output, err := ce.StructToJSONString(resourceDataList)
 	if err != nil {
-		return "", fmt.Errorf("[ce.structToJSONString]%v", err)
+		return fmt.Errorf("[ce.structToJSONString]%v", err)
 	}
 
-	return output, nil
+	formattedFilePath := "current_cloud/infracost-formatted.json"
+
+	err = os.WriteFile(formattedFilePath, []byte(output), 0400)
+	if err != nil {
+		return fmt.Errorf("[os.WriteFile]%v", err)
+	}
+
+	return nil
 }
 
 // ParseJSONToStruct takes a JSON file byte list and converts to a list of InfracostResourceData.

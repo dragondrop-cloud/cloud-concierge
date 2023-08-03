@@ -56,15 +56,12 @@ type Location struct {
 // TFSec is a struct that implements the interfaces.TerraformSecurity but
 // executing the tfsec command
 type TFSec struct {
-	// DivisionToProvider is a map between the string representing a division and the corresponding
-	// cloud provider (aws, azurerm, google, etc.).
-	// For AWS, an account is the division, for GCP a project name is the division,
-	// and for azurerm a resource group is a division.
-	divisionToProvider map[terraformValueObjects.Division]terraformValueObjects.Provider
+	// provider is a string of the current cloud provider (aws, azurerm, google, etc.).
+	provider terraformValueObjects.Provider
 }
 
 // NewTFSec generates a new instance from TFSec
-func NewTFSec(divisionToProvider map[terraformValueObjects.Division]terraformValueObjects.Provider) *TFSec {
+func NewTFSec(provider terraformValueObjects.Provider) *TFSec {
 	return &TFSec{
 		provider: provider,
 	}
@@ -102,34 +99,27 @@ func (s *TFSec) ExecuteScan(ctx context.Context) error {
 }
 
 // runTFSec runs the tfsec command through the directories from the divisions configured by the user
-func (s *TFSec) runTFSec() (TFSecFileBytesPerDivision, error) {
-	contentResults := map[terraformValueObjects.Division][]byte{}
+func (s *TFSec) runTFSec() ([]byte, error) {
+	tfsecScanningPath := "./current_cloud/"
+	outLocationFlag := "./current_cloud/tfsec.json"
+	outFlag := fmt.Sprintf("--out=%s", outLocationFlag)
 
-	for division := range s.divisionToProvider {
-		divisionFolderName := fmt.Sprintf("%v-%v", s.divisionToProvider[division], division)
-		tfsecScanningPath := fmt.Sprintf("./current_cloud/%v", divisionFolderName)
-		outLocationFlag := fmt.Sprintf("./current_cloud/%s/tfsec.json", divisionFolderName)
-		outFlag := fmt.Sprintf("--out=%s", outLocationFlag)
+	cmd := exec.Command("tfsec", outFlag, "--format=json", "--soft-fail", tfsecScanningPath)
 
-		cmd := exec.Command("tfsec", outFlag, "--format=json", "--soft-fail", tfsecScanningPath)
+	var out bytes.Buffer
+	cmd.Stdout = &out
 
-		var out bytes.Buffer
-		cmd.Stdout = &out
-
-		err := cmd.Run()
-		if err != nil {
-			return nil, fmt.Errorf("%s, %w", out.String(), err)
-		}
-
-		results, err := os.ReadFile(outLocationFlag)
-		if err != nil {
-			return nil, fmt.Errorf("[os.ReadFile][%v]", err)
-		}
-
-		contentResults[division] = results
+	err := cmd.Run()
+	if err != nil {
+		return nil, fmt.Errorf("%s, %w", out.String(), err)
 	}
 
-	return contentResults, nil
+	results, err := os.ReadFile(outLocationFlag)
+	if err != nil {
+		return nil, fmt.Errorf("[os.ReadFile][%v]", err)
+	}
+
+	return results, nil
 }
 
 // parseContentResults takes the bytes of the output tfsec results and returns the same bytes parsed
@@ -170,14 +160,13 @@ func (s *TFSec) writeResultsToMappingFile(results TFSecResultsPerDivision) error
 	return os.WriteFile("mappings/division-to-security-scan.json", differencesJSON, 0400)
 }
 
+// TODO: Lots to do here
 // addIDToResources takes the results grouped by division and adds the id of the resource
 func (s *TFSec) addIDToResources(resultsPerDivision TFSecResultsPerDivision) (TFSecResultsPerDivision, error) {
 	mergedResults := map[terraformValueObjects.Division][]Result{}
 
 	for division, results := range resultsPerDivision {
-		fullDivisionName := fmt.Sprintf("%v-%v", s.divisionToProvider[division], division)
-
-		fileContent, err := os.ReadFile(fmt.Sprintf("current_cloud/%v/terraform.tfstate", fullDivisionName))
+		fileContent, err := os.ReadFile("current_cloud/terraform.tfstate")
 		if err != nil {
 			return nil, err
 		}

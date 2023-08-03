@@ -276,6 +276,7 @@ func InitializeJobDependencies(ctx context.Context, env string) (*Job, error) {
 	if err != nil {
 		return nil, err
 	}
+	// TODO: Major refactor needed here
 	writer, err := (&resourcesWriter.Factory{}).Instantiate(ctx, env, vcsInstance, dragonDropInstance, inferredData.Provider, jobConfig.getHCLCreateConfig())
 	if err != nil {
 		return nil, err

@@ -11,11 +11,11 @@ import (
 func TestCreateNotSupported(t *testing.T) {
 	// Given
 	config := CostEstimatorConfig{}
-	divisionToProvider := make(map[terraformValueObjects.Division]terraformValueObjects.Provider)
+	provider := terraformValueObjects.Provider("")
 	costEstimatorFactory := new(Factory)
 
 	// When
-	costEstimator, err := costEstimatorFactory.Instantiate("", divisionToProvider, config)
+	costEstimator, err := costEstimatorFactory.Instantiate("", provider, config)
 
 	// Then
 	assert.Nil(t, err)
@@ -27,10 +27,10 @@ func TestCreateIsolatedDragonDrop(t *testing.T) {
 	config := CostEstimatorConfig{}
 	costEstimatorProtocol := "isolated"
 	costEstimatorFactory := new(Factory)
-	divisionToProvider := make(map[terraformValueObjects.Division]terraformValueObjects.Provider)
+	provider := terraformValueObjects.Provider("")
 
 	// When
-	costEstimator, err := costEstimatorFactory.Instantiate(costEstimatorProtocol, divisionToProvider, config)
+	costEstimator, err := costEstimatorFactory.Instantiate(costEstimatorProtocol, provider, config)
 
 	// Then
 	assert.Nil(t, err)

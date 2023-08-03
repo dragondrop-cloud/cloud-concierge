@@ -26,6 +26,15 @@ type ContainerBackendConfig struct {
 	CloudCredential terraformValueObjects.Credential `required:"true"`
 }
 
+// outFileCloser closes the outFile and returns an error if one occurred.
+func outFileCloser(outFile *os.File) error {
+	err := outFile.Close()
+	if err != nil {
+		return fmt.Errorf("[outFile.Close]%v", err)
+	}
+	return nil
+}
+
 // findTerraformWorkspaces searches a repo for terraform workspaces.
 func findTerraformWorkspaces(ctx context.Context, dragonDrop interfaces.DragonDrop, workspaceDirectories []string, backendType string) (map[string]string, map[string]interface{}, error) {
 	workspaceToDirectory := make(map[string]string)

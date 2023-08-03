@@ -12,13 +12,12 @@ import (
 // ManagedResourcesDriftDetector is a type that identifies resources
 // managed by Terraform that have drifted from their expected state.
 type ManagedResourcesDriftDetector struct {
-	// DivisionToProvider is a mapping between a division and the provider that is responsible
-	// for that division.
-	divisionToProvider map[terraformValueObjects.Division]terraformValueObjects.Provider `required:"true"`
+	// Provider is the name of the provider against which drift detection will be performed.
+	provider terraformValueObjects.Provider `required:"true"`
 }
 
 // NewManagedResourcesDriftDetector generated a terraformer instance from ManagedResourcesDriftDetector
-func NewManagedResourcesDriftDetector(divisionToProvider map[terraformValueObjects.Division]terraformValueObjects.Provider) *ManagedResourcesDriftDetector {
+func NewManagedResourcesDriftDetector(provider terraformValueObjects.Provider) *ManagedResourcesDriftDetector {
 	return &ManagedResourcesDriftDetector{
 		provider: provider,
 	}
