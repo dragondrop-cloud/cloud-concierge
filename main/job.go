@@ -30,6 +30,9 @@ type InferredData struct {
 	// Provider is the name of the cloud provider (aws, azurerm, google, etc.).
 	Provider terraformValueObjects.Provider `required:"true"`
 
+	// VCSSystem is the name of the version control system (github, gitlab, bitbucket, etc.).
+	VCSSystem string `required:"true"`
+
 	// WorkspaceToDirectory is a map between a workspace and the directory that contains the terraform state file
 	WorkspaceToDirectory map[documentize.Workspace]documentize.Directory `required:"true"`
 }
@@ -221,7 +224,6 @@ func (j *Job) Run(ctx context.Context) error {
 	return nil
 }
 
-// TODO: major refactor needed for each of the following factories
 // InitializeJobDependencies instantiates interface implementations for all needed interfaces
 // and configures by pulling in environment variables.
 func InitializeJobDependencies(ctx context.Context, env string) (*Job, error) {
@@ -246,7 +248,7 @@ func InitializeJobDependencies(ctx context.Context, env string) (*Job, error) {
 	if err != nil {
 		return nil, err
 	}
-	vcsInstance, err := (&vcs.Factory{}).Instantiate(ctx, env, dragonDropInstance, jobConfig.getVCSConfig())
+	vcsInstance, err := (&vcs.Factory{}).Instantiate(ctx, env, dragonDropInstance, jobConfig.getVCSConfig(), inferredData.VCSSystem)
 	if err != nil {
 		return nil, err
 	}
@@ -305,7 +307,6 @@ func InitializeJobDependencies(ctx context.Context, env string) (*Job, error) {
 	}, nil
 }
 
-// TODO: This will be dramatically simplified to just pulling the key from the provider-version string
 // getInferredData calculates needed inferred data from the input job config
 func getInferredData(config JobConfig) (InferredData, error) {
 	provider, err := getProviderFromCredential(config.CloudCredential)
@@ -313,8 +314,14 @@ func getInferredData(config JobConfig) (InferredData, error) {
 		return InferredData{}, fmt.Errorf("[error getting the inferred data][%w]", err)
 	}
 
+	vcsSystem, err := getVCSSystemFromRepoURL(config.VCSRepo)
+	if err != nil {
+		return InferredData{}, fmt.Errorf("[error getting the inferred data][%w]", err)
+	}
+
 	return InferredData{
-		Provider: provider,
+		Provider:  provider,
+		VCSSystem: vcsSystem,
 	}, nil
 }
 
@@ -344,4 +351,12 @@ func getProviderFromCredential(credential terraformValueObjects.Credential) (ter
 	}
 
 	return "", fmt.Errorf("provider not supported")
+}
+
+// getVCSSystemFromRepoURL determines the VCS system from the input repo URL
+func getVCSSystemFromRepoURL(repoURL string) (string, error) {
+	if strings.Contains(repoURL, "github.com/") {
+		return "github", nil
+	}
+	return "", fmt.Errorf("VCS system inferred from %v repo is not supported", repoURL)
 }
