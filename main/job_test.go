@@ -907,10 +907,12 @@ func Test_getInferredData(t *testing.T) {
 			args: args{config: JobConfig{
 				IsManagedDriftOnly: false,
 				CloudCredential:    terraformValueObjects.Credential(`{"awsAccessKeyID": "AWS123", "awsSecretAccessKey": "DUGFVGBHAJ213"}`),
+				VCSRepo:            "https://github.com/test-org/test-repo.git",
 			},
 			},
 			want: InferredData{
-				Provider: terraformValueObjects.Provider("aws"),
+				Provider:  terraformValueObjects.Provider("aws"),
+				VCSSystem: "github",
 			},
 			wantErr: false,
 		},
@@ -919,10 +921,12 @@ func Test_getInferredData(t *testing.T) {
 			args: args{config: JobConfig{
 				IsManagedDriftOnly: false,
 				CloudCredential:    terraformValueObjects.Credential(`{"client_id": "123", "client_secret": "secret", "tenant_id": "tenant", "subscription_id": "subscription1"}`),
+				VCSRepo:            "https://github.com/test-org/test-repo.git",
 			},
 			},
 			want: InferredData{
-				Provider: terraformValueObjects.Provider("azurerm"),
+				Provider:  terraformValueObjects.Provider("azurerm"),
+				VCSSystem: "github",
 			},
 			wantErr: false,
 		},
@@ -936,10 +940,12 @@ func Test_getInferredData(t *testing.T) {
 							"token_uri": "https://oauth2.googleapis.com/token", "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
 							"client_x509_cert_url": "https://localhost.com"
 						}`),
+				VCSRepo: "https://github.com/test-org/test-repo.git",
 			},
 			},
 			want: InferredData{
-				Provider: terraformValueObjects.Provider("google"),
+				Provider:  terraformValueObjects.Provider("google"),
+				VCSSystem: "github",
 			},
 			wantErr: false,
 		},

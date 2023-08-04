@@ -18,7 +18,7 @@ func TestCreateNotSupported(t *testing.T) {
 	dragonDrop := new(interfaces.DragonDropMock)
 
 	// When
-	vcs, err := vcsFactory.Instantiate(ctx, vcsProvider, dragonDrop, config)
+	vcs, err := vcsFactory.Instantiate(ctx, vcsProvider, dragonDrop, config, "")
 
 	// Then
 	assert.NotNil(t, err)
@@ -34,7 +34,7 @@ func TestCreateIsolatedVCS(t *testing.T) {
 	dragonDrop := new(interfaces.DragonDropMock)
 
 	// When
-	vcs, err := vcsFactory.Instantiate(ctx, vcsProvider, dragonDrop, config)
+	vcs, err := vcsFactory.Instantiate(ctx, vcsProvider, dragonDrop, config, "github")
 
 	// Then
 	assert.Nil(t, err)
