@@ -32,15 +32,14 @@ func NewAWSScanner(credential terraformValueObjects.Credential, cliConfig Config
 }
 
 // Scan uses the TerraformerCLI interface to scan a given division's cloud environment
-func (awsScanner *AWSScanner) Scan(project terraformValueObjects.Division, credential terraformValueObjects.Credential, options ...string) (terraformValueObjects.Path, error) {
+func (awsScanner *AWSScanner) Scan(account terraformValueObjects.Division, credential terraformValueObjects.Credential, options ...string) error {
 	err := awsScanner.configureEnvironment(credential)
 	if err != nil {
-		return "", fmt.Errorf("[AWS Scanner] Error configuring environment %w", err)
+		return fmt.Errorf("[AWS Scanner] Error configuring environment %w", err)
 	}
 
-	path, err := awsScanner.terraformer.Import(TerraformImportMigrationGeneratorParams{
+	err = awsScanner.terraformer.Import(TerraformImportMigrationGeneratorParams{
 		Provider:       "aws",
-		Division:       project,
 		Resources:      []string{},
 		AdditionalArgs: []string{"--profile="},
 		Regions:        getValidRegions(awsScanner.CloudRegions, terraformValueObjects.AwsRegions, defaultAwsRegions),
@@ -48,16 +47,16 @@ func (awsScanner *AWSScanner) Scan(project terraformValueObjects.Division, crede
 	})
 
 	if err != nil {
-		return "", fmt.Errorf("[Scan] Error in terraformer.Import(): %v", err)
+		return fmt.Errorf("[Scan] Error in terraformer.Import(): %v", err)
 	}
 
-	err = awsScanner.terraformer.UpdateState("aws", string(path))
+	err = awsScanner.terraformer.UpdateState("aws")
 
 	if err != nil {
-		return "", fmt.Errorf("[Scan] Error in terraformer.UpdateState(): %v", err)
+		return fmt.Errorf("[Scan] Error in terraformer.UpdateState(): %v", err)
 	}
 
-	return path, nil
+	return nil
 }
 
 // AWSEnvironment is a struct defining the credential values needed for authenticating with an AWS account.

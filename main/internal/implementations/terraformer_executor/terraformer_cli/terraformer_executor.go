@@ -119,7 +119,7 @@ func (e *TerraformerExecutor) Execute(ctx context.Context) error {
 
 	e.dragonDrop.PostLog(ctx, "Done with running `terraform init`.\n Beginning to scan existing cloud environment.")
 
-	_, err = e.scanner.Scan("", e.config.CloudCredential) // TODO: Will need to load division name from config in a future PR.
+	err = e.scanner.Scan("", e.config.CloudCredential) // TODO: Will need to load division name from config in a future PR.
 	if err != nil {
 		return fmt.Errorf("[terraformer_executor][set_up][error scanning all providers]%w", err)
 	}
