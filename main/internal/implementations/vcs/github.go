@@ -21,19 +21,29 @@ import (
 
 // GitHub struct implements the VCS interface.
 type GitHub struct {
+	// authBasic is the authentication information needed to perform generic git operations via
+	authBasic *http.BasicAuth
+
+	// config contains the values that allow for authentication and the specific repo
+	// traits needed.
+	config Config
+
+	// defaultBranch is the name of the default branch of the repository.
+	defaultBranch string
+
+	// dragonDrop is needed to inform cloned status
+	dragonDrop interfaces.DragonDrop
+
 	// ID is a string which is a random, 10 character unique identifier
 	// for a cloud-concierge built commit/pull request
 	ID string
 
-	// authBasic is the authentication information needed to perform generic git operations via
-	authBasic *http.BasicAuth
+	// newBranchName is the name of the new branch name for the new pull request.
+	newBranchName string
 
 	// oauth2Client is an authenticated client that is able
 	// to access the customer's GitHub account. Primarily used for opening pull requests.
 	oauth2Client *github.Client
-
-	// newBranchName is the name of the new branch name for the new pull request.
-	newBranchName string
 
 	// repository is a code repository object from the go-git package which represents the customer's
 	// code repository containing IaC.
@@ -41,13 +51,6 @@ type GitHub struct {
 
 	// workTree is the working tree object which references repository
 	workTree *git.Worktree
-
-	// config contains the values that allow for authentication and the specific repo
-	// traits needed.
-	config Config
-
-	// dragonDrop is needed to inform cloned status
-	dragonDrop interfaces.DragonDrop
 }
 
 // NewGitHub creates a new instance of the GitHub struct.
@@ -58,7 +61,6 @@ func NewGitHub(ctx context.Context, dragonDrop interfaces.DragonDrop, config Con
 	tc := oauth2.NewClient(context.Background(), ts)
 
 	authenticatedClient := github.NewClient(tc)
-
 	dragonDrop.PostLog(ctx, "Created VCS client.")
 
 	return &GitHub{
@@ -70,6 +72,21 @@ func NewGitHub(ctx context.Context, dragonDrop interfaces.DragonDrop, config Con
 		oauth2Client: authenticatedClient,
 		dragonDrop:   dragonDrop,
 	}
+}
+
+// GetDefaultBranch returns the default branch of the repository.
+func (g *GitHub) GetDefaultBranch() error {
+	vcsCloneURLArray := strings.Split(g.config.VCSRepo, "/")
+	repoName := strings.Replace(vcsCloneURLArray[len(vcsCloneURLArray)-1], ".git", "", -1)
+	repoOwner := vcsCloneURLArray[len(vcsCloneURLArray)-2]
+
+	repoReference, _, err := g.oauth2Client.Repositories.Get(context.Background(), repoOwner, repoName)
+	if err != nil {
+		return fmt.Errorf("[g.oauth2Client.Repositories.Get][%v]", err)
+	}
+
+	g.defaultBranch = repoReference.GetDefaultBranch()
+	return nil
 }
 
 // GetID returns a string which is a random, 10 character unique identifier
@@ -97,7 +114,6 @@ func (g *GitHub) Clone() error {
 	}
 
 	repo, err := git.PlainClone("./repo/", false, cloneOptions)
-
 	if err != nil {
 		return err
 	}
@@ -211,10 +227,15 @@ func (g *GitHub) OpenPullRequest(jobName string) (string, error) {
 
 	prComment := string(reportContent)
 
+	err = g.GetDefaultBranch()
+	if err != nil {
+		return "", fmt.Errorf("[g.GetDefaultBranch]%v", err)
+	}
+
 	newPR := &github.NewPullRequest{
 		Title:               &prTitle,
 		Head:                &g.newBranchName,
-		Base:                &g.config.VCSBaseBranch,
+		Base:                &g.defaultBranch,
 		Body:                &prComment,
 		MaintainerCanModify: github.Bool(true),
 	}

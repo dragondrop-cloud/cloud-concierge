@@ -61,12 +61,8 @@ type JobConfig struct {
 	// WorkspaceDirectories is a slice of directories that contains terraform workspaces within the user repo.
 	WorkspaceDirectories terraformWorkspace.WorkspaceDirectoriesDecoder `required:"true"`
 
-	// Providers is a map between a cloud provider and the version for that provider.
-	Providers map[terraformValueObjects.Provider]string `required:"true"`
-
-	// VCSBaseBranch is the name of the base branch within the version control into which
-	// new PRs should be opened.
-	VCSBaseBranch string `required:"true"`
+	// Provider is a map between a cloud provider and the version for that provider.
+	Provider map[terraformValueObjects.Provider]string `required:"true"`
 
 	// VCSToken is the auth token needed to read code and open pull requests within a customer's VCS
 	// environment.
@@ -76,11 +72,8 @@ type JobConfig struct {
 	VCSUser string `required:"true"`
 
 	// VCSRepo is the full path of the repo containing a customer's infrastructure specification.
+	// At the moment, must be a valid GitHub repository URL.
 	VCSRepo string `required:"true"`
-
-	// VCSSystem is the name of the version control system chosen.
-	// At the moment only GitHub is supported.
-	VCSSystem string `required:"true"`
 
 	// PullReviewers is the name of the pull request reviewer who will be tagged on the opened pull request.
 	PullReviewers []string `default:"NoReviewer"`
@@ -119,11 +112,9 @@ func (c JobConfig) getDragonDropConfig() dragonDrop.HTTPDragonDropClientConfig {
 
 func (c JobConfig) getVCSConfig() vcs.Config {
 	return vcs.Config{
-		VCSBaseBranch: c.VCSBaseBranch,
 		VCSRepo:       c.VCSRepo,
 		VCSToken:      c.VCSToken,
 		VCSUser:       c.VCSUser,
-		VCSSystem:     c.VCSSystem,
 		PullReviewers: c.PullReviewers,
 	}
 }
@@ -147,7 +138,7 @@ func (c JobConfig) getHCLCreateConfig() hclcreate.Config {
 func (c JobConfig) getTerraformerConfig() terraformerCli.TerraformerExecutorConfig {
 	return terraformerCli.TerraformerExecutorConfig{
 		CloudCredential:  c.CloudCredential,
-		Providers:        c.Providers,
+		Provider:         c.Provider,
 		TerraformVersion: terraformValueObjects.Version(c.TerraformVersion),
 		CloudRegions:     c.CloudRegions,
 	}

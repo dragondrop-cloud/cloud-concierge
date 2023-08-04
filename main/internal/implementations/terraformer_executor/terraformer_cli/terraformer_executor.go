@@ -20,8 +20,8 @@ type TerraformerExecutorConfig struct {
 	// CloudCredential is a cloud credential with read-only access to a cloud division and, if applicable, access to read Terraform state files.
 	CloudCredential terraformValueObjects.Credential `required:"true"`
 
-	// Providers is a map between a cloud provider and the version for that provider.
-	Providers map[terraformValueObjects.Provider]string `required:"true"`
+	// Provider is a map between a cloud provider and the version for that provider.
+	Provider map[terraformValueObjects.Provider]string `required:"true"`
 
 	// TerraformVersion is the version of Terraform used.
 	TerraformVersion terraformValueObjects.Version `required:"true"`
@@ -177,7 +177,7 @@ func (e *TerraformerExecutor) setTerraformVersion() error {
 func (e *TerraformerExecutor) makeProviderVersionFile() error {
 	genericProviders := make(map[string]string)
 
-	for provider, version := range e.config.Providers {
+	for provider, version := range e.config.Provider {
 		genericProviders[string(provider)] = string(version)
 	}
 
