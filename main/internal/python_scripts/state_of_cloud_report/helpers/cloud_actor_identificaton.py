@@ -21,7 +21,7 @@ def create_markdown_table_cloud_actor_summary(
         )
 
     new_table_str = markdown_file.new_table(
-        columns=5,
+        columns=3,
         rows=len(actor_action_count_df) + 1,
         text=list_of_strings,
         text_align="center",
@@ -76,6 +76,6 @@ def process_cloud_actor_actions(
         .reset_index()
     )
     actor_action_count_df = actor_action_count_df.sort_values(
-        by=["Count"], ascending=[True, True, False]
+        by=["Count"], ascending=[False]
     ).reset_index(drop=True)
     return actor_action_count_df

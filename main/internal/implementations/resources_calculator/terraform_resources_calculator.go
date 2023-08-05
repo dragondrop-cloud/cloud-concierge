@@ -182,6 +182,9 @@ func (c *TerraformResourcesCalculator) createNewResourceData(
 	newResources := map[ResourceID]NewResourceData{}
 
 	container, err := gabs.ParseJSON(resourceDocsJSON)
+	if err != nil {
+		return nil, fmt.Errorf("[gabs.ParseJSON]%v", err)
+	}
 
 	for key := range container.ChildrenMap() {
 		typeNameSlice := strings.Split(key, ".")
