@@ -148,7 +148,7 @@ func (alc *AWSLogQuerier) QueryForAllResources(ctx context.Context) (terraformVa
 		return resourceActions, fmt.Errorf("[json.MarshalIndent]%v", err)
 	}
 
-	err = os.WriteFile("mappings/drift-resources-differences.json", managedAttributeDifferencesBytes, 0400)
+	err = os.WriteFile("outputs/drift-resources-differences.json", managedAttributeDifferencesBytes, 0400)
 	if err != nil {
 		return resourceActions, fmt.Errorf("[os.WriteFile]%v", err)
 	}

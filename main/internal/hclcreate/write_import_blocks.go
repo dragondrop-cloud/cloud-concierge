@@ -14,21 +14,21 @@ import (
 // configurations using Terraform version 1.5.0 or higher.
 func (h *hclCreate) WriteImportBlocks(uniqueID string, workspaceToDirectory map[string]string) error {
 	// load in resource to import location map
-	resourceToImportLoc, err := os.ReadFile("mappings/resources-to-import-location.json")
+	resourceToImportLoc, err := os.ReadFile("outputs/resources-to-import-location.json")
 	if err != nil {
-		return fmt.Errorf("[os.ReadFile] mappings/resources-to-import-location.json error: %v", err)
+		return fmt.Errorf("[os.ReadFile] outputs/resources-to-import-location.json error: %v", err)
 	}
 
-	resourceImportsByDivision := ResourceImportsByDivision{}
-	err = json.Unmarshal(resourceToImportLoc, &resourceImportsByDivision)
+	resourcetoImportDataPair := ResourceToImportDataPair{}
+	err = json.Unmarshal(resourceToImportLoc, &resourcetoImportDataPair)
 	if err != nil {
 		return fmt.Errorf("[json.Unmarshal] error unmarshalling `resourceToImportLoc`: %v", err)
 	}
 
 	// load in resource to workspace map
-	resourceToWorkspace, err := os.ReadFile("mappings/new-resources-to-workspace.json")
+	resourceToWorkspace, err := os.ReadFile("outputs/new-resources-to-workspace.json")
 	if err != nil {
-		return fmt.Errorf("[os.ReadFile] mappings/new-resources-to-workspace.json error: %v", err)
+		return fmt.Errorf("[os.ReadFile] outputs/new-resources-to-workspace.json error: %v", err)
 	}
 
 	newResourceToWorkspace := NewResourceToWorkspace{}
@@ -46,7 +46,7 @@ func (h *hclCreate) WriteImportBlocks(uniqueID string, workspaceToDirectory map[
 
 		importBlockFileBytes, err := h.generateImportBlockFile(
 			workspace,
-			resourceImportsByDivision,
+			resourcetoImportDataPair,
 			newResourceToWorkspace,
 		)
 		if err != nil {
@@ -83,7 +83,7 @@ func (h *hclCreate) setOfWorkspacesWithMigrationsStruct(resourceToWorkspace NewR
 // all resources within a workspace that are to be imported.
 func (h *hclCreate) generateImportBlockFile(
 	workspace string,
-	resourceToImportLocation ResourceImportsByDivision,
+	resourceToImportLocation ResourceToImportDataPair,
 	resourceToWorkspace NewResourceToWorkspace,
 ) ([]byte, error) {
 	f := hclwrite.NewEmptyFile()
@@ -93,7 +93,7 @@ func (h *hclCreate) generateImportBlockFile(
 		if currentWorkspace == workspace {
 			currentResource := h.resourceToIdentifierStruct(resource)
 			resourceID := fmt.Sprintf("%v.%v", currentResource.resourceType, currentResource.resourceName)
-			currentImportDataPair := resourceToImportLocation[currentResource.division][resourceID]
+			currentImportDataPair := resourceToImportLocation[resourceID]
 			fBody = h.hclImportBlock(fBody, currentImportDataPair)
 		}
 	}

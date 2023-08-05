@@ -51,31 +51,31 @@ def _create_baseline_expected_df(is_new_resource: bool = True) -> pd.DataFrame:
 def test_dataframe_from_cost_estimates_json():
     """Unit test for _dataframe_from_divisions_to_cost_estimates_dict"""
     input_cost_estimates = [
-            {
-                "cost_component": "SQL instance (db-f1-micro, zonal)",
-                "is_usage_based": False,
-                "monthly_cost": "7.665",
-                "monthly_quantity": "730",
-                "price": "hours",
-                "resource_name": "google_sql_database_instance.tfer--outside-of-terraform-control-db",
-                "sub_resource_name": "",
-                "unit": "hours",
-                "provider": "google",
-                "resource_type": "google_sql_database_instance",
-            },
-            {
-                "cost_component": "Storage (SSD, zonal)",
-                "is_usage_based": False,
-                "monthly_cost": "1.7",
-                "monthly_quantity": "10",
-                "price": "GB",
-                "resource_name": "google_sql_database_instance.tfer--outside-of-terraform-control-db",
-                "sub_resource_name": "",
-                "unit": "GB",
-                "provider": "google",
-                "resource_type": "google_sql_database_instance",
-            },
-        ]
+        {
+            "cost_component": "SQL instance (db-f1-micro, zonal)",
+            "is_usage_based": False,
+            "monthly_cost": "7.665",
+            "monthly_quantity": "730",
+            "price": "hours",
+            "resource_name": "google_sql_database_instance.tfer--outside-of-terraform-control-db",
+            "sub_resource_name": "",
+            "unit": "hours",
+            "provider": "google",
+            "resource_type": "google_sql_database_instance",
+        },
+        {
+            "cost_component": "Storage (SSD, zonal)",
+            "is_usage_based": False,
+            "monthly_cost": "1.7",
+            "monthly_quantity": "10",
+            "price": "GB",
+            "resource_name": "google_sql_database_instance.tfer--outside-of-terraform-control-db",
+            "sub_resource_name": "",
+            "unit": "GB",
+            "provider": "google",
+            "resource_type": "google_sql_database_instance",
+        },
+    ]
 
     input_new_resources = {
         "google-dragondrop-dev.google_sql_database.tfer--outside-of-terraform-control-db-postgres": "terraform name of tfer  outs",

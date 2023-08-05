@@ -296,10 +296,10 @@ def _predict(
 
 
 if __name__ == "__main__":
-    with open(f"mappings/new-resources-to-documents.json", "rb") as file:
+    with open(f"outputs/new-resources-to-documents.json", "rb") as file:
         new_resource_docs = json.load(file)
 
-    with open(f"mappings/workspace-to-documents.json", "rb") as file:
+    with open(f"outputs/workspace-to-documents.json", "rb") as file:
         workspace_docs = json.load(file)
 
     spacy.util.fix_random_seed(42)
@@ -307,5 +307,5 @@ if __name__ == "__main__":
         new_resource_docs=new_resource_docs, category_docs=workspace_docs
     )
 
-    with open(f"mappings/new-resources-to-workspace.json", "w") as file_out:
+    with open(f"outputs/new-resources-to-workspace.json", "w") as file_out:
         json.dump(resource_to_workspace_dict, file_out)

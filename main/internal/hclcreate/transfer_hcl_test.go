@@ -16,12 +16,11 @@ func TestSplitResourceIdentifier(t *testing.T) {
 	h := hclCreate{}
 
 	expectedOutput := ResourceIdentifier{
-		division:     "div",
 		resourceType: "tf_type",
 		resourceName: "tf_name",
 	}
 
-	output := h.splitResourceIdentifier("div.tf_type.tf_name")
+	output := h.splitResourceIdentifier("tf_type.tf_name")
 
 	if !reflect.DeepEqual(expectedOutput, output) {
 		t.Errorf("got %v, expected %v", output, expectedOutput)

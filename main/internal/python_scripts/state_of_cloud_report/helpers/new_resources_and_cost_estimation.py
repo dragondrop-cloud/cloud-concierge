@@ -247,38 +247,38 @@ def process_pricing_data(
     new_resources: dict,
 ) -> dict:
     """
-    Process pricing data in the following format:
-   [
-        {
-            'cost_component': 'SQL instance (db-f1-micro, zonal)',
-            'is_usage_based': False,
-            'monthly_cost': '7.665',
-            'monthly_quantity': '730',
-            'price': 'hours',
-            'resource_name': 'google_sql_database_instance.tfer--outside-of-terraform-control-db',
-            'sub_resource_name': '',
-            'unit': 'hours',
-            'provider': 'google',
-            'division': 'google-dragondrop-dev',
-            'resource_type': 'google_sql_database_instance'
-        },
-        ....
-        {
-            'cost_component': 'SQL instance (db-f1-micro, zonal)',
-            ...
-            'resource_type': 'google_sql_database_instance'
-        }
-    ]
-    into two dataframes that look as follows:
-    1)
-    Uncontrolled Resources Monthly Cost | Terraform Controlled Resources Monthly Cost |
-                             $16.665    |                          $16.665            |
-                             $16.665    |                          $16.665            |
+     Process pricing data in the following format:
+    [
+         {
+             'cost_component': 'SQL instance (db-f1-micro, zonal)',
+             'is_usage_based': False,
+             'monthly_cost': '7.665',
+             'monthly_quantity': '730',
+             'price': 'hours',
+             'resource_name': 'google_sql_database_instance.tfer--outside-of-terraform-control-db',
+             'sub_resource_name': '',
+             'unit': 'hours',
+             'provider': 'google',
+             'division': 'google-dragondrop-dev',
+             'resource_type': 'google_sql_database_instance'
+         },
+         ....
+         {
+             'cost_component': 'SQL instance (db-f1-micro, zonal)',
+             ...
+             'resource_type': 'google_sql_database_instance'
+         }
+     ]
+     into two dataframes that look as follows:
+     1)
+     Uncontrolled Resources Monthly Cost | Terraform Controlled Resources Monthly Cost |
+                              $16.665    |                          $16.665            |
+                              $16.665    |                          $16.665            |
 
-    2)
-    resource_type                | num_cost_components | monthly_cost | is_usage_based |
-    google_sql_database_instance | 4                   |   $16.665    |   False        |
-    google_storage_bucket        | 8                   |   $0.0*      |      True      |
+     2)
+     resource_type                | num_cost_components | monthly_cost | is_usage_based |
+     google_sql_database_instance | 4                   |   $16.665    |   False        |
+     google_storage_bucket        | 8                   |   $0.0*      |      True      |
     """
     df = _dataframe_from_cost_estimates_json(
         cost_estimates_json=cost_estimates,
@@ -345,7 +345,9 @@ def _calculate_aggregate_costs_across_scan(df: pd.DataFrame) -> pd.DataFrame:
         .drop(columns=["is_new_resource"])
     )
 
-    combined_cost_summary_df = pd.concat([grouped_controlled_df, grouped_uncontrolled_df], axis=1).fillna(0)
+    combined_cost_summary_df = pd.concat(
+        [grouped_controlled_df, grouped_uncontrolled_df], axis=1
+    ).fillna(0)
     assert len(combined_cost_summary_df) <= len(grouped_controlled_df) + len(
         grouped_uncontrolled_df
     )
@@ -394,9 +396,9 @@ def _uncontrolled_cost_by_div_by_type(df: pd.DataFrame) -> pd.DataFrame:
         .reset_index()
     )
 
-    uncontrolled_cost_by_type_df[
+    uncontrolled_cost_by_type_df["monthly_cost"] = "$" + uncontrolled_cost_by_type_df[
         "monthly_cost"
-    ] = "$" + uncontrolled_cost_by_type_df["monthly_cost"].round(2).astype(str)
+    ].round(2).astype(str)
     uncontrolled_cost_by_type_df.loc[
         uncontrolled_cost_by_type_df["is_usage_based"], "monthly_cost"
     ] = (
