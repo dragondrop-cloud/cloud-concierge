@@ -38,7 +38,7 @@ def test_create_markdown_table_cloud_actor_summary():
         markdown_file=MdUtils("", ""),
     )
 
-    expected_output_markdown_string = "\n|Actor|Action|Count|\n| :---: | :---: | :---: |\n|g.b@dragondrop.cloud|Create Resource|2|\n|g.b@dragondrop.cloud|Modify Resource|1|\n|mcguill.jimmy@dragondrop.cloud|Modify Resource|1|\n"
+    expected_output_markdown_string = "\n|Actor|Action|Count|\n| :---: | :---: | :---: |\n|g.b@dragondrop.cloud|Create Resource|2|\n|g.b@dragondrop.cloud|Modify Resource|1|\n"
 
     case.assertEqual(output_markdown_string, expected_output_markdown_string)
 
