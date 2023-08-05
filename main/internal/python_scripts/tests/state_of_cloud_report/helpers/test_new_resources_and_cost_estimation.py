@@ -6,7 +6,6 @@ from unittest import TestCase
 import pandas as pd
 from mdutils.mdutils import MdUtils
 from main.internal.python_scripts.state_of_cloud_report.helpers.new_resources_and_cost_estimation import (
-    create_markdown_table_new_resources,
     process_new_resources,
     _calculate_aggregate_costs_across_scan,
     _dataframe_from_cost_estimates_json,
@@ -147,27 +146,6 @@ def test_uncontrolled_cost_by_div_by_type():
     output_df = _uncontrolled_cost_by_div_by_type(input_df)
 
     pd.testing.assert_frame_equal(expected_output_df, output_df)
-
-
-def test_create_markdown_table_new_resources():
-    """Unit test for create_new_markdown_table()"""
-    case = TestCase()
-
-    input_current_resource_count_df = pd.DataFrame(
-        [{"type": "abc", "num_resources": 12}, {"type": "def", "num_resources": 8}]
-    )
-
-    _, markdown_string = create_markdown_table_new_resources(
-        current_resource_count_df=input_current_resource_count_df,
-        column="type",
-        markdown_file=MdUtils("", ""),
-    )
-
-    expected_markdown_string = (
-        "\n|Type|# Resources|\n| :---: | :---: |\n|abc|12|\n|def|8|\n"
-    )
-
-    case.assertEqual(expected_markdown_string, markdown_string)
 
 
 def test_process_new_resource():
