@@ -81,11 +81,11 @@ func determineActionClass(value string) string {
 // of driftDetector.AttributeDifference.
 func loadDriftResourcesDifferences() ([]driftDetector.AttributeDifference, error) {
 	var resourceDifferences []driftDetector.AttributeDifference
-	if _, err := os.Stat("mappings/drift-resources-differences.json"); errors.Is(err, os.ErrNotExist) {
+	if _, err := os.Stat("outputs/drift-resources-differences.json"); errors.Is(err, os.ErrNotExist) {
 		return resourceDifferences, nil
 	}
 
-	fileContent, err := os.ReadFile("mappings/drift-resources-differences.json")
+	fileContent, err := os.ReadFile("outputs/drift-resources-differences.json")
 	if err != nil {
 		return nil, fmt.Errorf("[os.ReadFile]%v", err)
 	}
@@ -101,11 +101,11 @@ func loadDriftResourcesDifferences() ([]driftDetector.AttributeDifference, error
 // loadNewResources loads the new-resources file as a resourcesCalculator.NewResourceMap struct.
 func loadNewResources() (resourcesCalculator.NewResourceMap, error) {
 	newResources := resourcesCalculator.NewResourceMap{}
-	if _, err := os.Stat("mappings/new-resources.json"); errors.Is(err, os.ErrNotExist) {
+	if _, err := os.Stat("outputs/new-resources.json"); errors.Is(err, os.ErrNotExist) {
 		return newResources, nil
 	}
 
-	fileContent, err := os.ReadFile("mappings/new-resources.json")
+	fileContent, err := os.ReadFile("outputs/new-resources.json")
 	if err != nil {
 		return newResources, fmt.Errorf("[os.ReadFile]%v", err)
 	}

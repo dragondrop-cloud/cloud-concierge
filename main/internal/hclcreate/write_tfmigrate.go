@@ -14,21 +14,21 @@ import (
 // components for TFMigrate to operate successfully.
 func (h *hclCreate) CreateTFMigrate(uniqueID string, workspaceToDirectory map[string]string) error {
 	// load in resource to import location map
-	resourceToImportLoc, err := os.ReadFile("mappings/resources-to-import-location.json")
+	resourceToImportLoc, err := os.ReadFile("outputs/resources-to-import-location.json")
 	if err != nil {
-		return fmt.Errorf("[os.ReadFile] mappings/resources-to-import-location.json error: %v", err)
+		return fmt.Errorf("[os.ReadFile] outputs/resources-to-import-location.json error: %v", err)
 	}
 
-	resourceImportsByDivision := ResourceImportsByDivision{}
-	err = json.Unmarshal(resourceToImportLoc, &resourceImportsByDivision)
+	resourceToImportDataPair := ResourceToImportDataPair{}
+	err = json.Unmarshal(resourceToImportLoc, &resourceToImportDataPair)
 	if err != nil {
 		return fmt.Errorf("[json.Unmarshal] error unmarshalling `resourceToImportLoc`: %v", err)
 	}
 
 	// load in resource to workspace map
-	resourceToWorkspace, err := os.ReadFile("mappings/new-resources-to-workspace.json")
+	resourceToWorkspace, err := os.ReadFile("outputs/new-resources-to-workspace.json")
 	if err != nil {
-		return fmt.Errorf("[os.ReadFile] mappings/new-resources-to-workspace.json error: %v", err)
+		return fmt.Errorf("[os.ReadFile] outputs/new-resources-to-workspace.json error: %v", err)
 	}
 
 	newResourceToWorkspace := NewResourceToWorkspace{}
@@ -44,7 +44,7 @@ func (h *hclCreate) CreateTFMigrate(uniqueID string, workspaceToDirectory map[st
 
 	err = h.CreateTFMigrateMigration(
 		uniqueID,
-		resourceImportsByDivision,
+		resourceToImportDataPair,
 		newResourceToWorkspace,
 		workspaceToDirectory,
 	)
@@ -120,7 +120,7 @@ func (h *hclCreate) individualTFMigrateConfig(workspace string) ([]byte, error) 
 // CreateTFMigrateMigration saves HCL which defines a TFMigrate migration.
 func (h *hclCreate) CreateTFMigrateMigration(
 	uniqueID string,
-	resourceImportsByDivision ResourceImportsByDivision,
+	resourceToImportDataPair ResourceToImportDataPair,
 	newResourceToWorkspace NewResourceToWorkspace,
 	workspaceToDirectory map[string]string,
 ) error {
@@ -135,7 +135,7 @@ func (h *hclCreate) CreateTFMigrateMigration(
 		migrationFileBytes, err := h.individualTFMigrateMigration(
 			directory,
 			workspace,
-			resourceImportsByDivision,
+			resourceToImportDataPair,
 			newResourceToWorkspace,
 		)
 		if err != nil {
@@ -157,7 +157,7 @@ func (h *hclCreate) CreateTFMigrateMigration(
 func (h *hclCreate) individualTFMigrateMigration(
 	directory string,
 	workspace string,
-	resourceImportsByDivision ResourceImportsByDivision,
+	resourceToImportDataPair ResourceToImportDataPair,
 	newResourceToWorkspace NewResourceToWorkspace,
 ) ([]byte, error) {
 	f := hclwrite.NewEmptyFile()
@@ -178,7 +178,7 @@ func (h *hclCreate) individualTFMigrateMigration(
 		if workspaceName == workspace {
 			importStatement, err := h.generateImportStatement(
 				resource,
-				resourceImportsByDivision,
+				resourceToImportDataPair,
 			)
 			if err != nil {
 				return nil, fmt.Errorf("[h.generateImportStatement] Error with resource %v: %v", resource, err)
@@ -197,13 +197,11 @@ func (h *hclCreate) individualTFMigrateMigration(
 // resourceToImportLocation.
 func (h *hclCreate) generateImportStatement(
 	resource string,
-	resourceImportsByDivision ResourceImportsByDivision,
+	resourceToImportDataPair ResourceToImportDataPair,
 ) (string, error) {
 	resourceIDStruct := h.resourceToIdentifierStruct(resource)
 
-	resourceImports := resourceImportsByDivision[resourceIDStruct.division]
-
-	resourceImportData := resourceImports[fmt.Sprintf("%v.%v", resourceIDStruct.resourceType, resourceIDStruct.resourceName)]
+	resourceImportData := resourceToImportDataPair[fmt.Sprintf("%v.%v", resourceIDStruct.resourceType, resourceIDStruct.resourceName)]
 
 	importText := h.generateImportStatementText(resourceImportData.RemoteCloudReference, resourceIDStruct)
 	return importText, nil
@@ -222,8 +220,7 @@ func (h *hclCreate) generateImportStatementText(remoteCloudReference string, res
 func (h *hclCreate) resourceToIdentifierStruct(resource string) ResourceIdentifier {
 	resourceComponents := strings.Split(resource, ".")
 	return ResourceIdentifier{
-		division:     resourceComponents[0],
-		resourceType: resourceComponents[1],
-		resourceName: resourceComponents[2],
+		resourceType: resourceComponents[0],
+		resourceName: resourceComponents[1],
 	}
 }

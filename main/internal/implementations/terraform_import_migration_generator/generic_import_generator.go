@@ -12,7 +12,7 @@ import (
 
 // GenericResourcesToImportLocation creates a map between any cloud provider resources Terraform definition location and the corresponding Import location reference.
 func (i *TerraformImportMigrationGenerator) GenericResourcesToImportLocation(provider terraformValueObjects.Provider) (terraformValueObjects.ResourceImportMap, error) {
-	stateFileContent, err := i.readTerraformerStateFile(provider)
+	stateFileContent, err := i.readTerraformerStateFile()
 	if err != nil {
 		return nil, err
 	}
@@ -20,19 +20,14 @@ func (i *TerraformImportMigrationGenerator) GenericResourcesToImportLocation(pro
 	return i.mapResourcesToImportLocation(provider, stateFileContent)
 }
 
-// readTerraformerResourcesFile reads the terraformer resources.tf file
-func (i *TerraformImportMigrationGenerator) readTerraformerResourcesFile(provider terraformValueObjects.Provider) ([]byte, error) {
-	return i.readTerraformerFileByName(provider, "resources.tf")
-}
-
 // readTerraformerStateFile reads the terraformer terraform.tfstate file
-func (i *TerraformImportMigrationGenerator) readTerraformerStateFile(provider terraformValueObjects.Provider) ([]byte, error) {
-	return i.readTerraformerFileByName(provider, "terraform.tfstate")
+func (i *TerraformImportMigrationGenerator) readTerraformerStateFile() ([]byte, error) {
+	return i.readTerraformerFileByName("terraform.tfstate")
 }
 
 // readTerraformerFileByName reads files from /current cloud directory specifying its name
-func (i *TerraformImportMigrationGenerator) readTerraformerFileByName(provider terraformValueObjects.Provider, fileName string) ([]byte, error) {
-	fileContent, err := os.ReadFile(fmt.Sprintf("%s-%s/%s", provider, i.config.Division, fileName))
+func (i *TerraformImportMigrationGenerator) readTerraformerFileByName(fileName string) ([]byte, error) {
+	fileContent, err := os.ReadFile(fileName)
 	if err != nil {
 		return nil, fmt.Errorf("[generic_import_migration_generator][error reading terraformer %s file]%w", fileName, err)
 	}

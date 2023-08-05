@@ -1,11 +1,12 @@
 """
 Helper functions for formatting security scan results.
 """
+from typing import List
 import pandas as pd
 from mdutils.mdutils import MdUtils
 
 
-def security_scan_to_df(list_of_dicts: list) -> pd.DataFrame:
+def security_scan_to_df(list_of_dicts: List[dict]) -> pd.DataFrame:
     """Converts an input list of dicts representing a security scan"""
     output_df = pd.DataFrame(list_of_dicts)
 
@@ -52,7 +53,9 @@ def create_markdown_table_security_scans(
                         record["rule_description"],
                         record["severity"],
                         record["resolution"],
-                        f'[Rule]({record["links"][0]}), [Tf Doc]({record["links"][1]})' if len(record["links"]) > 1 else f'[Rule]({record["links"][0]})'
+                        f'[Rule]({record["links"][0]}), [Tf Doc]({record["links"][1]})'
+                        if len(record["links"]) > 1
+                        else f'[Rule]({record["links"][0]})',
                     ]
                 )
 

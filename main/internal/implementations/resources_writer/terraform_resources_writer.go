@@ -176,7 +176,7 @@ func (w *TerraformResourceWriter) writeDummyFile(ctx context.Context, workspaceT
 			return fmt.Errorf("error writing the placeholder file %v", err)
 		}
 
-		err = os.WriteFile("mappings/new-resources-to-documents.json", []byte("{}"), 0400)
+		err = os.WriteFile("outputs/new-resources-to-documents.json", []byte("{}"), 0400)
 		if err != nil {
 			return fmt.Errorf("error writing new resources empty JSON file: %v", err)
 		}

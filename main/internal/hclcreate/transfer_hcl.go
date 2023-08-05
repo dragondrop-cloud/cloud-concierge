@@ -22,7 +22,7 @@ func (h *hclCreate) ExtractResourceDefinitions(noNewResources bool, workspaceToD
 		workspaceToHCLFile[workspace] = hclwrite.NewEmptyFile()
 	}
 
-	rawCloudActions, err := os.ReadFile("mappings/resources-to-cloud-actions.json")
+	rawCloudActions, err := os.ReadFile("outputs/resources-to-cloud-actions.json")
 	if err != nil {
 		return fmt.Errorf("[os.ReadFile resources-to-cloud-actions.json]%v", err)
 	}
@@ -31,7 +31,7 @@ func (h *hclCreate) ExtractResourceDefinitions(noNewResources bool, workspaceToD
 		return fmt.Errorf("[gabs.ParseJSON rawCloudActions]%v", err)
 	}
 
-	rawCloudCosts, err := os.ReadFile("mappings/cost-estimates.json")
+	rawCloudCosts, err := os.ReadFile("outputs/cost-estimates.json")
 	if err != nil {
 		return fmt.Errorf("[os.ReadFile cost-estimates.json]%v", err)
 	}
@@ -68,7 +68,7 @@ func (h *hclCreate) ExtractResourceDefinitions(noNewResources bool, workspaceToD
 	// Read in new-resources-to-workspace.json, parse as gabs file
 	newResourcesToWorkspace := []byte("{}")
 	if !noNewResources {
-		newResourcesToWorkspace, err = os.ReadFile("mappings/new-resources-to-workspace.json")
+		newResourcesToWorkspace, err = os.ReadFile("outputs/new-resources-to-workspace.json")
 		if err != nil {
 			return fmt.Errorf("[os.ReadFile()] Error reading in new-resources-to-workspace.json: %v", err)
 		}
@@ -247,9 +247,8 @@ func (h *hclCreate) splitResourceIdentifier(resourceIdentifier string) ResourceI
 	resourceIDSlice := strings.Split(resourceIdentifier, ".")
 
 	return ResourceIdentifier{
-		division:     resourceIDSlice[0],
-		resourceType: resourceIDSlice[1],
-		resourceName: resourceIDSlice[2],
+		resourceType: resourceIDSlice[0],
+		resourceName: resourceIDSlice[1],
 	}
 }
 

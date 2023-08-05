@@ -4,19 +4,15 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/Jeffail/gabs/v2"
 	driftDetector "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_managed_resources_drift_detector/drift_detector"
 )
 
 func TestCreateDivisionToNewResourceData(t *testing.T) {
 	// Given
 	c := TerraformResourcesCalculator{}
-	inputGabsContainer, err := gabs.ParseJSON([]byte(`{
-"aws-dragondrop-dev.aws_lb_listener.tfer--number_1":"placeholder"
-}`))
-	if err != nil {
-		t.Errorf("unexpected error: %v", err)
-	}
+	inputBytesJSON := []byte(`{
+"aws_lb_listener.tfer--number_1":"placeholder"
+}`)
 
 	inputTerraformerStateFile := driftDetector.TerraformerStateFile{
 		Resources: []*driftDetector.TerraformerResource{
@@ -46,7 +42,7 @@ func TestCreateDivisionToNewResourceData(t *testing.T) {
 
 	// When
 	output, err := c.createNewResourceData(
-		inputGabsContainer,
+		inputBytesJSON,
 		inputTerraformerStateFile,
 	)
 	if err != nil {

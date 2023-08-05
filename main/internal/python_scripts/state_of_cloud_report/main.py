@@ -32,19 +32,19 @@ from helpers.security_scanning import (
 
 def create_markdown_file(job_name: str, markdown_text_output_path):
     """Generate and save a state-of-cloud markdown report"""
-    with open("mappings/new-resources-to-documents.json", "r") as json_file:
+    with open("outputs/new-resources-to-documents.json", "r") as json_file:
         new_resources = json.loads(json_file.read())
 
-    with open("mappings/resources-to-cloud-actions.json", "r") as json_file:
+    with open("outputs/resources-to-cloud-actions.json", "r") as json_file:
         resources_to_cloud_actions = json.loads(json_file.read())
 
-    with open("mappings/cost-estimates.json", "r") as json_file:
+    with open("outputs/cost-estimates.json", "r") as json_file:
         cost_estimates = json.loads(json_file.read())
 
-    with open("mappings/security-scan.json", "r") as json_file:
+    with open("outputs/security-scan.json", "r") as json_file:
         security_scan = json.loads(json_file.read())
 
-    with open("mappings/drift-resources-differences.json", "r") as json_file:
+    with open("outputs/drift-resources-differences.json", "r") as json_file:
         managed_drift_list_of_dicts = json.loads(json_file.read())
 
     if managed_drift_list_of_dicts:
@@ -82,8 +82,8 @@ def create_markdown_file(job_name: str, markdown_text_output_path):
 
     markdown_file.new_header(level=1, title=f"How to Read this Report", style="atx")
     markdown_file.new_line(
-        f"Your job, titled {job_name}, has run. Of the resources "
-        "the job scans, at least one resource was identified to have drifted or be outside of Terraform control. "
+        f"'{job_name}' has run. Of the resources "
+        "the execution scans, at least one resource was identified to have drifted or be outside of Terraform control. "
         "While code has been generated of the Terraform code and corresponding import statements needed to bring these "
         "resources under Terraform control, below you will find a summary of the gaps identified in your "
         "current IaC posture."
@@ -91,9 +91,7 @@ def create_markdown_file(job_name: str, markdown_text_output_path):
 
     markdown_file.new_header(level=1, title="Identified Security Risks", style="atx")
     if security_scan:
-        security_df = security_scan_to_df(
-            list_of_dicts=security_scan
-        )
+        security_df = security_scan_to_df(list_of_dicts=security_scan["results"])
 
         markdown_file = create_markdown_table_security_scans(
             markdown_file=markdown_file,
@@ -171,8 +169,6 @@ def create_markdown_file(job_name: str, markdown_text_output_path):
     markdown_file.new_line(
         f"Created by Cloud Concierge at {datetime.now().strftime('%H:%M UTC on %Y-%m-%d')}"
     )
-
-    markdown_file.new_table_of_contents(table_title="Contents", depth=1)
     markdown_file.create_md_file()
     print("Down creating markdown-styled report.")
 

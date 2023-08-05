@@ -86,7 +86,7 @@ func (ce *CostEstimator) WriteCostEstimates() error {
 		return fmt.Errorf("[os.ReadFile]%v", err)
 	}
 
-	err = os.WriteFile("mappings/cost-estimates.json", costs, 0400)
+	err = os.WriteFile("outputs/cost-estimates.json", costs, 0400)
 	if err != nil {
 		return fmt.Errorf("[os.WriteFile]%v", err)
 	}

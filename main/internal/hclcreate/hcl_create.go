@@ -17,9 +17,6 @@ type WorkspaceToHCL map[string]*hclwrite.File
 // terraformer-generated resource.
 type ResourceIdentifier struct {
 
-	// division is the division within which a cloud resource was identified.
-	division string
-
 	// resourceType is the Terraform resource-type.
 	resourceType string
 
@@ -55,11 +52,8 @@ type Config struct {
 // NewResourceToWorkspace is a map of resource unique id to workspace name
 type NewResourceToWorkspace map[string]string
 
-// ResourceImportsByDivision is a map of division name to a DivisionToImportDataPairs map
-type ResourceImportsByDivision map[string]DivisionToImportDataPairs
-
-// DivisionToImportDataPairs is a map of resource unique id within a division to ImportDataPair
-type DivisionToImportDataPairs map[string]ImportDataPair
+// ResourceToImportDataPair is a map of resource unique id to ImportDataPair
+type ResourceToImportDataPair map[string]ImportDataPair
 
 // ImportDataPair is a struct that holds the data needed to write an individual import block
 type ImportDataPair struct {
@@ -88,7 +82,7 @@ type HCLCreate interface {
 	// CreateTFMigrateMigration saves HCL which defines a TFMigrate migration.
 	CreateTFMigrateMigration(
 		uniqueID string,
-		resourceImportsByDivision ResourceImportsByDivision,
+		resourceToImportDataPair ResourceToImportDataPair,
 		newResourceToWorkspace NewResourceToWorkspace,
 		workspaceToDirectory map[string]string,
 	) error

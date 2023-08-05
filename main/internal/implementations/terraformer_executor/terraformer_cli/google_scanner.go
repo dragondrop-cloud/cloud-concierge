@@ -31,25 +31,24 @@ func NewGoogleScanner(credential terraformValueObjects.Credential, cliConfig Con
 }
 
 // Scan uses the TerraformerCLI interface to scan a given division's cloud environment
-func (gcpScan *GoogleScanner) Scan(project terraformValueObjects.Division, credential terraformValueObjects.Credential, options ...string) (terraformValueObjects.Path, error) {
+func (gcpScan *GoogleScanner) Scan(project terraformValueObjects.Division, credential terraformValueObjects.Credential, options ...string) error {
 	_ = os.MkdirAll("credentials", 0660)
 
 	err := os.WriteFile(fmt.Sprintf("credentials/google-%v.json", project), []byte(credential), 0400)
 
 	if err != nil {
-		return "", fmt.Errorf("[Scan] error saving credential file: %v", err)
+		return fmt.Errorf("[Scan] error saving credential file: %v", err)
 	}
 
 	err = os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", fmt.Sprintf("credentials/google-%s.json", project))
 
 	if err != nil {
-		return "", fmt.Errorf("[Scan] Error in setting GOOGLE_APPLICATION_CREDENTIALS value: %v", err)
+		return fmt.Errorf("[Scan] Error in setting GOOGLE_APPLICATION_CREDENTIALS value: %v", err)
 	}
 
 	projectsFlag := fmt.Sprintf("--projects=%v", project)
-	path, err := gcpScan.terraformer.Import(TerraformImportMigrationGeneratorParams{
+	err = gcpScan.terraformer.Import(TerraformImportMigrationGeneratorParams{
 		Provider:       "google",
-		Division:       project,
 		Regions:        getValidRegions(gcpScan.CloudRegions, terraformValueObjects.GoogleRegions, defaultGoogleRegions),
 		Resources:      []string{"us-east4", "global"},
 		AdditionalArgs: []string{projectsFlag},
@@ -57,14 +56,14 @@ func (gcpScan *GoogleScanner) Scan(project terraformValueObjects.Division, crede
 	})
 
 	if err != nil {
-		return "", fmt.Errorf("[Scan] Error in terraformer.Import(): %v", err)
+		return fmt.Errorf("[Scan] Error in terraformer.Import(): %v", err)
 	}
 
-	err = gcpScan.terraformer.UpdateState("google", string(path))
+	err = gcpScan.terraformer.UpdateState("google")
 
 	if err != nil {
-		return "", fmt.Errorf("[Scan] Error in terraformer.UpdateState(): %v", err)
+		return fmt.Errorf("[Scan] Error in terraformer.UpdateState(): %v", err)
 	}
 
-	return path, nil
+	return nil
 }

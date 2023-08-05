@@ -66,9 +66,9 @@ func (ica *IdentifyCloudActors) Execute(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("[ica.convertProviderResourceActionsToJSON]%v", err)
 	}
-	err = os.WriteFile("mappings/resources-to-cloud-actions.json", jsonBytes, 0400)
+	err = os.WriteFile("outputs/resources-to-cloud-actions.json", jsonBytes, 0400)
 	if err != nil {
-		return fmt.Errorf("[os.WriteFile mappings/resources-to-cloud-actions.json]%v", err)
+		return fmt.Errorf("[os.WriteFile outputs/resources-to-cloud-actions.json]%v", err)
 	}
 	return nil
 }

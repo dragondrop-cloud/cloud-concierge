@@ -67,7 +67,6 @@ func (c *TerraformResourcesCalculator) Execute(ctx context.Context, workspaceToD
 // calculateResourceToWorkspaceMapping determines which resources need to be added
 // and to which workspaces.
 func (c *TerraformResourcesCalculator) calculateResourceToWorkspaceMapping(ctx context.Context, docu documentize.Documentize, workspaceToDirectory map[string]string) (string, error) {
-
 	message, err := c.createWorkspaceDocuments(ctx, docu, workspaceToDirectory)
 	if err != nil {
 		return message, fmt.Errorf("[calculate_resource_to_workspace_mapping][error creating workspace documents]%w", err)
@@ -119,22 +118,22 @@ func (c *TerraformResourcesCalculator) createNewResourceDocuments(ctx context.Co
 		return fmt.Errorf("[create_new_resource_documents][docu.NewResourceDocuments]%w", err)
 	}
 
-	resourceDocsJSON, err := docu.ConvertNewResourcesToJSON(newResourceDocs)
+	resourceDocsJSONBytes, err := docu.ConvertNewResourcesToJSON(newResourceDocs)
 	if err != nil {
 		return fmt.Errorf("[create_new_resource_documents][docu.ConvertNewResourcesToJSON] Error: %v", err)
 	}
 
-	err = os.WriteFile("mappings/new-resources-to-documents.json", resourceDocsJSON, 0400)
+	err = os.WriteFile("outputs/new-resources-to-documents.json", resourceDocsJSONBytes, 0400)
 	if err != nil {
-		return fmt.Errorf("[create_new_resource_documents][write mappings/new-resources-to-documents.json] Error: %v", err)
+		return fmt.Errorf("[create_new_resource_documents][write outputs/new-resources-to-documents.json] Error: %v", err)
 	}
 
-	gabsContainer, terraformerBytes, err := c.createDivisionToTerraformerStateMap(resourceDocsJSON)
+	terraformerParsed, err := c.parseTerraformStateFile()
 	if err != nil {
 		return fmt.Errorf("[createDivisionToTerraformerStateMap]%v", err)
 	}
 
-	newResourceData, err := c.createNewResourceData(gabsContainer, terraformerBytes)
+	newResourceData, err := c.createNewResourceData(resourceDocsJSONBytes, terraformerParsed)
 	if err != nil {
 		return fmt.Errorf("[createDivisionToNewResourceData]%v", err)
 	}
@@ -144,54 +143,53 @@ func (c *TerraformResourcesCalculator) createNewResourceDocuments(ctx context.Co
 		return fmt.Errorf("[json.MarshalIndent]%v", err)
 	}
 
-	err = os.WriteFile("mappings/new-resources.json", newResourceDataJSON, 0400)
+	err = os.WriteFile("outputs/new-resources.json", newResourceDataJSON, 0400)
 	if err != nil {
-		return fmt.Errorf("[create_new_resource_documents][write mappings/new-resources.json] Error: %v", err)
+		return fmt.Errorf("[create_new_resource_documents][write outputs/new-resources.json] Error: %v", err)
 	}
 
 	c.dragonDrop.PostLog(ctx, "Done creating new resource documents.")
 	return nil
 }
 
-// createDivisionToNewResourceData loads Terraformer state file bytes
-// along with a gabs container of the resource to documents JSON.
-func (c *TerraformResourcesCalculator) createDivisionToTerraformerStateMap(resourceDocsJSON []byte) (
-	*gabs.Container, driftDetector.TerraformerStateFile, error,
+// parseTerraformStateFile parses the terraform state file to a TerraformerStateFile struct.
+func (c *TerraformResourcesCalculator) parseTerraformStateFile() (
+	driftDetector.TerraformerStateFile, error,
 ) {
-	divisionToTerraformerByteArray := driftDetector.TerraformerStateFile{}
-
-	container, err := gabs.ParseJSON(resourceDocsJSON)
-	if err != nil {
-		return nil, divisionToTerraformerByteArray, fmt.Errorf("[gabs.ParseJSON]%v", err)
-	}
+	terraformerByteArray := driftDetector.TerraformerStateFile{}
 
 	terraformerContent, err := os.ReadFile("current_cloud/terraform.tfstate")
 	if err != nil {
-		return nil, divisionToTerraformerByteArray, fmt.Errorf("[os.ReadFile]%v", err)
+		return terraformerByteArray, fmt.Errorf("[os.ReadFile]%v", err)
 	}
 
 	parsedStateFile, err := driftDetector.ParseTerraformerStateFile(terraformerContent)
 	if err != nil {
-		return nil, divisionToTerraformerByteArray, fmt.Errorf("[driftDetector.ParseTerraformerStateFile]%v", err)
+		return terraformerByteArray, fmt.Errorf("[driftDetector.ParseTerraformerStateFile]%v", err)
 	}
 
-	return container, parsedStateFile, nil
+	return parsedStateFile, nil
 }
 
 // createNewResourceData converts the resourceDocsJSON to a newResources struct.
 // This data is saved in downstream operations for subsequent use with cloud actor identification.
 func (c *TerraformResourcesCalculator) createNewResourceData(
-	container *gabs.Container,
+	resourceDocsJSON []byte,
 	terraformerStateFile driftDetector.TerraformerStateFile,
 ) (map[ResourceID]NewResourceData, error) {
 	var err error
 
 	newResources := map[ResourceID]NewResourceData{}
 
+	container, err := gabs.ParseJSON(resourceDocsJSON)
+	if err != nil {
+		return nil, fmt.Errorf("[gabs.ParseJSON]%v", err)
+	}
+
 	for key := range container.ChildrenMap() {
-		divisionTypeNameSlice := strings.Split(key, ".")
-		resourceType := divisionTypeNameSlice[1]
-		resourceName := divisionTypeNameSlice[2]
+		typeNameSlice := strings.Split(key, ".")
+		resourceType := typeNameSlice[0]
+		resourceName := typeNameSlice[1]
 
 		resourceID := ""
 		region := ""
@@ -256,7 +254,7 @@ func (c *TerraformResourcesCalculator) createWorkspaceDocuments(ctx context.Cont
 		return "[createWorkspacesToDocuments] %v", err
 	}
 
-	err = os.WriteFile("mappings/workspace-to-documents.json", outputBytes, 0400)
+	err = os.WriteFile("outputs/workspace-to-documents.json", outputBytes, 0400)
 
 	if err != nil {
 		return "[createWorkspacesToDocuments] %v", err

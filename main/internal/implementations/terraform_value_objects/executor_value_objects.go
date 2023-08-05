@@ -13,9 +13,6 @@ type Credential string
 // this is a project name.
 type Division string
 
-// Path is the relative file path within the 'current_cloud' directory to the division's output content.
-type Path string
-
 // Provider is the name of a cloud computing resource provider.
 type Provider string
 

@@ -7,25 +7,6 @@ import pandas as pd
 from mdutils.mdutils import MdUtils
 
 
-def create_markdown_table_new_resources(
-    current_resource_count_df: pd.DataFrame,
-    column: str,
-    markdown_file: MdUtils,
-) -> Tuple[MdUtils, str]:
-    """Create a new Markdown table out of the current_resource_count_df"""
-    list_of_strings = [column.title(), "# Resources"]
-    for record in current_resource_count_df.to_dict("records"):
-        list_of_strings.extend([record[column], record["num_resources"]])
-
-    new_table_str = markdown_file.new_table(
-        columns=2,
-        rows=len(current_resource_count_df) + 1,
-        text=list_of_strings,
-        text_align="center",
-    )
-    return markdown_file, new_table_str
-
-
 def process_new_resources(new_resources: dict) -> dict:
     """
     Parses input resources file and returns relevant, processed versions of the data as dataframe.
@@ -73,31 +54,6 @@ def process_new_resources(new_resources: dict) -> dict:
     }
 
 
-def single_provider_new_resources_by_provider_tabular_output(
-    markdown_file: MdUtils,
-    current_provider: str,
-    by_provider_df: pd.DataFrame,
-) -> MdUtils:
-    """
-    Create tabular for resource counts for a single provider.
-    """
-    (
-        current_by_provider_df,
-        number_of_top_types_count,
-    ) = _query_sort_and_clip_grouped_data(
-        grouped_df=by_provider_df, current_provider=current_provider
-    )
-
-    markdown_file.new_line()
-    markdown_file, _ = create_markdown_table_new_resources(
-        current_resource_count_df=current_by_provider_df,
-        column="provider",
-        markdown_file=markdown_file,
-    )
-
-    return markdown_file
-
-
 def _query_sort_and_clip_grouped_data(
     grouped_df: pd.DataFrame, current_provider: str
 ) -> Tuple[pd.DataFrame, int]:
@@ -125,30 +81,11 @@ def create_new_resource_tabular_breakdowns_with_cost(
     provider_breakdown_df = resource_count_dict_of_dfs["provider_df"]
     provider_to_resource_totals = provider_breakdown_df.to_dict("records")
 
-    markdown_file, _ = create_markdown_table_new_resources(
-        markdown_file=markdown_file,
-        column="provider",
-        current_resource_count_df=provider_breakdown_df,
-    )
-
     by_type_df = resource_count_dict_of_dfs["provider_by_type_df"]
 
     # Creating outputs by provider
     for provider in provider_to_resource_totals:
         current_provider = provider["provider"]
-        markdown_file.new_header(
-            level=2,
-            title=current_provider.title()
-            if current_provider.lower() != "aws"
-            else "AWS",
-            add_table_of_contents="n",
-        )
-
-        markdown_file = single_provider_new_resources_by_provider_tabular_output(
-            markdown_file=markdown_file,
-            current_provider=current_provider,
-            by_provider_df=by_type_df,
-        )
 
         markdown_file = single_provider_costs_by_type_tabular_output(
             markdown_file=markdown_file,
@@ -247,38 +184,38 @@ def process_pricing_data(
     new_resources: dict,
 ) -> dict:
     """
-    Process pricing data in the following format:
-   [
-        {
-            'cost_component': 'SQL instance (db-f1-micro, zonal)',
-            'is_usage_based': False,
-            'monthly_cost': '7.665',
-            'monthly_quantity': '730',
-            'price': 'hours',
-            'resource_name': 'google_sql_database_instance.tfer--outside-of-terraform-control-db',
-            'sub_resource_name': '',
-            'unit': 'hours',
-            'provider': 'google',
-            'division': 'google-dragondrop-dev',
-            'resource_type': 'google_sql_database_instance'
-        },
-        ....
-        {
-            'cost_component': 'SQL instance (db-f1-micro, zonal)',
-            ...
-            'resource_type': 'google_sql_database_instance'
-        }
-    ]
-    into two dataframes that look as follows:
-    1)
-    Uncontrolled Resources Monthly Cost | Terraform Controlled Resources Monthly Cost |
-                             $16.665    |                          $16.665            |
-                             $16.665    |                          $16.665            |
+     Process pricing data in the following format:
+    [
+         {
+             'cost_component': 'SQL instance (db-f1-micro, zonal)',
+             'is_usage_based': False,
+             'monthly_cost': '7.665',
+             'monthly_quantity': '730',
+             'price': 'hours',
+             'resource_name': 'google_sql_database_instance.tfer--outside-of-terraform-control-db',
+             'sub_resource_name': '',
+             'unit': 'hours',
+             'provider': 'google',
+             'division': 'google-dragondrop-dev',
+             'resource_type': 'google_sql_database_instance'
+         },
+         ....
+         {
+             'cost_component': 'SQL instance (db-f1-micro, zonal)',
+             ...
+             'resource_type': 'google_sql_database_instance'
+         }
+     ]
+     into two dataframes that look as follows:
+     1)
+     Uncontrolled Resources Monthly Cost | Terraform Controlled Resources Monthly Cost |
+                              $16.665    |                          $16.665            |
+                              $16.665    |                          $16.665            |
 
-    2)
-    resource_type                | num_cost_components | monthly_cost | is_usage_based |
-    google_sql_database_instance | 4                   |   $16.665    |   False        |
-    google_storage_bucket        | 8                   |   $0.0*      |      True      |
+     2)
+     resource_type                | num_cost_components | monthly_cost | is_usage_based |
+     google_sql_database_instance | 4                   |   $16.665    |   False        |
+     google_storage_bucket        | 8                   |   $0.0*      |      True      |
     """
     df = _dataframe_from_cost_estimates_json(
         cost_estimates_json=cost_estimates,
@@ -345,7 +282,9 @@ def _calculate_aggregate_costs_across_scan(df: pd.DataFrame) -> pd.DataFrame:
         .drop(columns=["is_new_resource"])
     )
 
-    combined_cost_summary_df = pd.concat([grouped_controlled_df, grouped_uncontrolled_df], axis=1).fillna(0)
+    combined_cost_summary_df = pd.concat(
+        [grouped_controlled_df, grouped_uncontrolled_df], axis=1
+    ).fillna(0)
     assert len(combined_cost_summary_df) <= len(grouped_controlled_df) + len(
         grouped_uncontrolled_df
     )
@@ -394,9 +333,9 @@ def _uncontrolled_cost_by_div_by_type(df: pd.DataFrame) -> pd.DataFrame:
         .reset_index()
     )
 
-    uncontrolled_cost_by_type_df[
+    uncontrolled_cost_by_type_df["monthly_cost"] = "$" + uncontrolled_cost_by_type_df[
         "monthly_cost"
-    ] = "$" + uncontrolled_cost_by_type_df["monthly_cost"].round(2).astype(str)
+    ].round(2).astype(str)
     uncontrolled_cost_by_type_df.loc[
         uncontrolled_cost_by_type_df["is_usage_based"], "monthly_cost"
     ] = (
@@ -428,7 +367,7 @@ def create_markdown_table_cost_summary(
             )
 
     _ = markdown_file.new_table(
-        columns=3,
+        columns=2,
         rows=len(cost_summary_df) + 1,
         text=list_of_strings,
         text_align="center",
