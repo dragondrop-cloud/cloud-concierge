@@ -24,11 +24,6 @@ def _func_create_cloud_actor_dataframe() -> pd.DataFrame:
                 "Action": "Modify Resource",
                 "Count": 1,
             },
-            {
-                "Cloud Actor": "mcguill.jimmy@dragondrop.cloud",
-                "Action": "Modify Resource",
-                "Count": 1,
-            },
         ]
     )
 

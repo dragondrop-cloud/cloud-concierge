@@ -1,11 +1,12 @@
 """
 Helper functions for formatting security scan results.
 """
+from typing import List
 import pandas as pd
 from mdutils.mdutils import MdUtils
 
 
-def security_scan_to_df(list_of_dicts: list) -> pd.DataFrame:
+def security_scan_to_df(list_of_dicts: List[dict]) -> pd.DataFrame:
     """Converts an input list of dicts representing a security scan"""
     output_df = pd.DataFrame(list_of_dicts)
 

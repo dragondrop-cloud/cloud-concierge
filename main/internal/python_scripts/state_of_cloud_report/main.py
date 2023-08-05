@@ -82,8 +82,8 @@ def create_markdown_file(job_name: str, markdown_text_output_path):
 
     markdown_file.new_header(level=1, title=f"How to Read this Report", style="atx")
     markdown_file.new_line(
-        f"Your job, titled {job_name}, has run. Of the resources "
-        "the job scans, at least one resource was identified to have drifted or be outside of Terraform control. "
+        f"'{job_name}' has run. Of the resources "
+        "the execution scans, at least one resource was identified to have drifted or be outside of Terraform control. "
         "While code has been generated of the Terraform code and corresponding import statements needed to bring these "
         "resources under Terraform control, below you will find a summary of the gaps identified in your "
         "current IaC posture."
@@ -91,7 +91,7 @@ def create_markdown_file(job_name: str, markdown_text_output_path):
 
     markdown_file.new_header(level=1, title="Identified Security Risks", style="atx")
     if security_scan:
-        security_df = security_scan_to_df(list_of_dicts=security_scan)
+        security_df = security_scan_to_df(list_of_dicts=security_scan["results"])
 
         markdown_file = create_markdown_table_security_scans(
             markdown_file=markdown_file,
@@ -169,8 +169,6 @@ def create_markdown_file(job_name: str, markdown_text_output_path):
     markdown_file.new_line(
         f"Created by Cloud Concierge at {datetime.now().strftime('%H:%M UTC on %Y-%m-%d')}"
     )
-
-    markdown_file.new_table_of_contents(table_title="Contents", depth=1)
     markdown_file.create_md_file()
     print("Down creating markdown-styled report.")
 
