@@ -13,17 +13,17 @@ type Factory struct {
 
 // Instantiate returns an implementation of interfaces.TerraformSecurity depending on the passed
 // environment specification.
-func (f *Factory) Instantiate(ctx context.Context, environment string, divisionToProvider map[terraformValueObjects.Division]terraformValueObjects.Provider) (interfaces.TerraformSecurity, error) {
+func (f *Factory) Instantiate(ctx context.Context, environment string, provider terraformValueObjects.Provider) (interfaces.TerraformSecurity, error) {
 	switch environment {
 	case "isolated":
 		return NewIsolatedTerraformSecurity(), nil
 	default:
-		return f.bootstrappedTerraformSecurity(divisionToProvider)
+		return f.bootstrappedTerraformSecurity(provider)
 	}
 }
 
 // bootstrappedTerraformSecurity creates a complete implementation of the interfaces.TerraformSecurity interface with
 // configuration specified via environment variables.
-func (f *Factory) bootstrappedTerraformSecurity(divisionToProvider map[terraformValueObjects.Division]terraformValueObjects.Provider) (interfaces.TerraformSecurity, error) {
-	return NewTFSec(divisionToProvider), nil
+func (f *Factory) bootstrappedTerraformSecurity(provider terraformValueObjects.Provider) (interfaces.TerraformSecurity, error) {
+	return NewTFSec(provider), nil
 }

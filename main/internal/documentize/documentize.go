@@ -46,11 +46,11 @@ type Documentize interface {
 	// IdentifyNewResources determines which resources in the remote cloud environment state files from
 	// terraformer are not present in the workspace state files. Returns a map of new resources to their
 	// corresponding provider.
-	IdentifyNewResources(workspaceToDirectory map[string]string) (map[terraformValueObjects.Division]map[ResourceData]bool, error)
+	IdentifyNewResources(workspaceToDirectory map[string]string) (map[ResourceData]bool, error)
 
 	// NewResourceDocuments creates a map between new resources and a document extracted from that
 	// resource definition.
-	NewResourceDocuments(divisionToResource map[terraformValueObjects.Division]map[ResourceData]bool) (map[ResourceName]string, error)
+	NewResourceDocuments(divisionToResource map[ResourceData]bool) (map[ResourceName]string, error)
 
 	// WorkspaceStateToDocument converts a workspace state to a document of non-sensitive strings.
 	WorkspaceStateToDocument(workspace Workspace) ([]byte, error)
@@ -59,7 +59,7 @@ type Documentize interface {
 // documentize is a struct that implements the Documentize interface.
 type documentize struct {
 	// DivisionToProvider is a map between the division name and the provider name
-	divisionToProvider map[terraformValueObjects.Division]terraformValueObjects.Provider
+	provider terraformValueObjects.Provider
 
 	// resourceExtractors is a map between a provider name and the logic needed to extract
 	// resource information for the provider.
@@ -67,7 +67,7 @@ type documentize struct {
 }
 
 // NewDocumentize creates a new instance that implements the Documentize interface.
-func NewDocumentize(divisionToProvider map[terraformValueObjects.Division]terraformValueObjects.Provider) (Documentize, error) {
+func NewDocumentize(provider terraformValueObjects.Provider) (Documentize, error) {
 
 	resourceExtractors := map[terraformValueObjects.Provider]ResourceExtractor{
 		"aws":     NewAWSResourceExtractor(),
@@ -76,7 +76,7 @@ func NewDocumentize(divisionToProvider map[terraformValueObjects.Division]terraf
 	}
 
 	return &documentize{
-		divisionToProvider: divisionToProvider,
+		provider:           provider,
 		resourceExtractors: resourceExtractors,
 	}, nil
 }

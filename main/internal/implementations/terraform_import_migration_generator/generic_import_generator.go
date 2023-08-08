@@ -11,28 +11,23 @@ import (
 )
 
 // GenericResourcesToImportLocation creates a map between any cloud provider resources Terraform definition location and the corresponding Import location reference.
-func GenericResourcesToImportLocation(division terraformValueObjects.Division, provider terraformValueObjects.Provider) (map[terraformValueObjects.Division]terraformValueObjects.ResourceImportMap, error) {
-	stateFileContent, err := readTerraformerStateFile(division, provider)
+func (i *TerraformImportMigrationGenerator) GenericResourcesToImportLocation(provider terraformValueObjects.Provider) (terraformValueObjects.ResourceImportMap, error) {
+	stateFileContent, err := i.readTerraformerStateFile()
 	if err != nil {
 		return nil, err
 	}
 
-	return mapResourcesToImportLocation(division, provider, stateFileContent)
-}
-
-// readTerraformerResourcesFile reads the terraformer resource.tf file
-func readTerraformerResourcesFile(division terraformValueObjects.Division, provider terraformValueObjects.Provider) ([]byte, error) {
-	return readTerraformerFileByName(division, provider, "resources.tf")
+	return i.mapResourcesToImportLocation(provider, stateFileContent)
 }
 
 // readTerraformerStateFile reads the terraformer terraform.tfstate file
-func readTerraformerStateFile(division terraformValueObjects.Division, provider terraformValueObjects.Provider) ([]byte, error) {
-	return readTerraformerFileByName(division, provider, "terraform.tfstate")
+func (i *TerraformImportMigrationGenerator) readTerraformerStateFile() ([]byte, error) {
+	return i.readTerraformerFileByName("terraform.tfstate")
 }
 
 // readTerraformerFileByName reads files from /current cloud directory specifying its name
-func readTerraformerFileByName(division terraformValueObjects.Division, provider terraformValueObjects.Provider, fileName string) ([]byte, error) {
-	fileContent, err := os.ReadFile(fmt.Sprintf("%s-%s/%s", provider, division, fileName))
+func (i *TerraformImportMigrationGenerator) readTerraformerFileByName(fileName string) ([]byte, error) {
+	fileContent, err := os.ReadFile(fileName)
 	if err != nil {
 		return nil, fmt.Errorf("[generic_import_migration_generator][error reading terraformer %s file]%w", fileName, err)
 	}
@@ -41,7 +36,7 @@ func readTerraformerFileByName(division terraformValueObjects.Division, provider
 }
 
 // mapResourcesToImportLocation maps the resources locations using the terraform.tfstate file
-func mapResourcesToImportLocation(division terraformValueObjects.Division, provider terraformValueObjects.Provider, stateFileContent []byte) (map[terraformValueObjects.Division]terraformValueObjects.ResourceImportMap, error) {
+func (i *TerraformImportMigrationGenerator) mapResourcesToImportLocation(provider terraformValueObjects.Provider, stateFileContent []byte) (terraformValueObjects.ResourceImportMap, error) {
 	resourceImportMap := terraformValueObjects.ResourceImportMap{}
 
 	stateFileJSON, err := gabs.ParseJSON(stateFileContent)
@@ -59,7 +54,7 @@ func mapResourcesToImportLocation(division terraformValueObjects.Division, provi
 				resourceName,
 			)
 
-			terraformConfigLocation, err := getTerraformConfigLocation(resourceType, resourceName)
+			terraformConfigLocation, err := i.getTerraformConfigLocation(resourceType, resourceName)
 			if err != nil {
 				return nil, fmt.Errorf("[generic_import_migration_generator][error obtaining terraform config location]%w", err)
 			}
@@ -77,15 +72,11 @@ func mapResourcesToImportLocation(division terraformValueObjects.Division, provi
 			log.Warnf("Resource doesn't have name: %v", resource)
 		}
 	}
-
-	divisionToResourceImportMap := map[terraformValueObjects.Division]terraformValueObjects.ResourceImportMap{
-		division: resourceImportMap,
-	}
-	return divisionToResourceImportMap, nil
+	return resourceImportMap, nil
 }
 
 // getTerraformConfigLocation gets the resources location with the specific format applied
-func getTerraformConfigLocation(resourceType string, resourceName string) (terraformValueObjects.TerraformConfigLocation, error) {
+func (i *TerraformImportMigrationGenerator) getTerraformConfigLocation(resourceType string, resourceName string) (terraformValueObjects.TerraformConfigLocation, error) {
 	importLocation := fmt.Sprintf("%s.%s", resourceType, resourceName)
 	return terraformValueObjects.TerraformConfigLocation(importLocation), nil
 }

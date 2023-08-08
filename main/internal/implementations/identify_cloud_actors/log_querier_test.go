@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	driftDetector "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_managed_resources_drift_detector/drift_detector"
-	terraformValueObjects "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_value_objects"
 )
 
 func TestCreateDivisionUniqueDriftedResources(t *testing.T) {
@@ -15,7 +14,6 @@ func TestCreateDivisionUniqueDriftedResources(t *testing.T) {
 			InstanceID:    "dragondrop",
 			AttributeName: "1",
 			AttributeDetail: driftDetector.AttributeDetail{
-				CloudDivision: "div-1",
 				ResourceType:  "type-1",
 				ResourceName:  "name-1",
 				StateFileName: "state-1",
@@ -25,7 +23,6 @@ func TestCreateDivisionUniqueDriftedResources(t *testing.T) {
 			InstanceID:    "dragondrop",
 			AttributeName: "2",
 			AttributeDetail: driftDetector.AttributeDetail{
-				CloudDivision: "div-1",
 				ResourceType:  "type-1",
 				ResourceName:  "name-1",
 				StateFileName: "state-1",
@@ -35,54 +32,31 @@ func TestCreateDivisionUniqueDriftedResources(t *testing.T) {
 			InstanceID:    "dragondrop",
 			AttributeName: "5",
 			AttributeDetail: driftDetector.AttributeDetail{
-				CloudDivision: "div-1",
 				ResourceType:  "type-3",
 				ResourceName:  "name-3",
 				StateFileName: "state-3",
-			},
-		},
-		{
-			InstanceID:    "dragondrop",
-			AttributeName: "4",
-			AttributeDetail: driftDetector.AttributeDetail{
-				CloudDivision: "div-2",
-				ResourceType:  "type-1",
-				ResourceName:  "name-1",
-				StateFileName: "state-1",
 			},
 		},
 	}
 
-	expectedOutput := DivisionToUniqueDriftedResources{
-		"div-1": {
-			"state-1.type-1.name-1.dragondrop": {
-				CloudDivision: "div-1",
-				ResourceType:  "type-1",
-				ResourceName:  "name-1",
-				StateFileName: "state-1",
-				InstanceID:    "dragondrop",
-			},
-			"state-3.type-3.name-3.dragondrop": {
-				CloudDivision: "div-1",
-				ResourceType:  "type-3",
-				ResourceName:  "name-3",
-				StateFileName: "state-3",
-				InstanceID:    "dragondrop",
-			},
+	expectedOutput := UniqueDriftedResources{
+		"state-1.type-1.name-1.dragondrop": {
+			ResourceType:  "type-1",
+			ResourceName:  "name-1",
+			StateFileName: "state-1",
+			InstanceID:    "dragondrop",
 		},
-		"div-2": {
-			"state-1.type-1.name-1.dragondrop": {
-				CloudDivision: "div-2",
-				ResourceType:  "type-1",
-				ResourceName:  "name-1",
-				StateFileName: "state-1",
-				InstanceID:    "dragondrop",
-			},
+		"state-3.type-3.name-3.dragondrop": {
+
+			ResourceType:  "type-3",
+			ResourceName:  "name-3",
+			StateFileName: "state-3",
+			InstanceID:    "dragondrop",
 		},
 	}
 
 	// When
-	output, err := createDivisionUniqueDriftedResources(inputDifferences)
+	output, err := createUniqueDriftedResources(inputDifferences)
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
 	}
@@ -117,43 +91,6 @@ func TestDetermineActionClass(t *testing.T) {
 	output = determineActionClass("cloud.run.service")
 	if output != "not_classified" {
 		t.Errorf("got:\n%vexpected:\n%v", output, "not_classified")
-	}
-}
-
-func TestFilterDivisionCloudCredentialsForProvider(t *testing.T) {
-	// Testing base filtering case
-	divisionToProvider := map[terraformValueObjects.Division]terraformValueObjects.Provider{
-		"div-1": "google",
-		"div-2": "google",
-		"div-3": "aws",
-	}
-
-	inputGlobalConfig := Config{
-		DivisionCloudCredentials: map[terraformValueObjects.Division]terraformValueObjects.Credential{
-			"div-1": "asd",
-			"div-2": "qwe",
-			"div-3": "plo",
-		},
-	}
-
-	expectedOutput := terraformValueObjects.DivisionCloudCredentialDecoder{
-		"div-1": "asd",
-		"div-2": "qwe",
-	}
-
-	output := filterDivisionCloudCredentialsForProvider("google", divisionToProvider, inputGlobalConfig)
-
-	if !reflect.DeepEqual(expectedOutput, output) {
-		t.Errorf("got:\n%v\nexpected:\n%v", output, expectedOutput)
-	}
-
-	// Testing empty case once filtered
-	expectedOutput = terraformValueObjects.DivisionCloudCredentialDecoder{}
-
-	output = filterDivisionCloudCredentialsForProvider("azurerm", divisionToProvider, inputGlobalConfig)
-
-	if !reflect.DeepEqual(expectedOutput, output) {
-		t.Errorf("got:\n%v\nexpected:\n%v", output, expectedOutput)
 	}
 }
 

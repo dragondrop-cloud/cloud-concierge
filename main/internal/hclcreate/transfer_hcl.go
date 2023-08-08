@@ -22,12 +22,7 @@ func (h *hclCreate) ExtractResourceDefinitions(noNewResources bool, workspaceToD
 		workspaceToHCLFile[workspace] = hclwrite.NewEmptyFile()
 	}
 
-	// Create mapping between provider-division and the corresponding terraformer-generated resources file,
-	// Read in the required corresponding files.
-	divisionToTerraformerResources := DivisionToHCL{}
-	divisionToResourceActions := terraformValueObjects.DivisionResourceActions{}
-
-	rawCloudActions, err := os.ReadFile("mappings/resources-to-cloud-actions.json")
+	rawCloudActions, err := os.ReadFile("outputs/resources-to-cloud-actions.json")
 	if err != nil {
 		return fmt.Errorf("[os.ReadFile resources-to-cloud-actions.json]%v", err)
 	}
@@ -36,50 +31,44 @@ func (h *hclCreate) ExtractResourceDefinitions(noNewResources bool, workspaceToD
 		return fmt.Errorf("[gabs.ParseJSON rawCloudActions]%v", err)
 	}
 
-	rawCloudCosts, err := os.ReadFile("mappings/division-to-cost-estimates.json")
+	rawCloudCosts, err := os.ReadFile("outputs/cost-estimates.json")
 	if err != nil {
-		return fmt.Errorf("[os.ReadFile resources-to-cloud-actions.json]%v", err)
+		return fmt.Errorf("[os.ReadFile cost-estimates.json]%v", err)
 	}
 	parsedCloudCosts, err := gabs.ParseJSON(rawCloudCosts)
 	if err != nil {
 		return fmt.Errorf("[gabs.ParseJSON rawCloudCosts]%v", err)
 	}
-	divisionToCostEstimates, err := gabsContainerToAllCostsStruct(parsedCloudCosts)
+	costEstimates, err := gabsContainerToCostsStruct(parsedCloudCosts)
 	if err != nil {
 		return fmt.Errorf("[gabsContainerToAllCostsStruct]%v", err)
 	}
 
-	for division, provider := range h.divisionToProvider {
-		fullDivisionName := fmt.Sprintf("%v-%v", provider, division)
+	hclBytes, err := os.ReadFile("current_cloud/resources.tf")
 
-		hclBytes, err := os.ReadFile(fmt.Sprintf("current_cloud/%v/resources.tf", fullDivisionName))
+	if err != nil {
+		return fmt.Errorf("[os.ReadFile()] Error reading in resources.tf")
+	}
 
-		if err != nil {
-			return fmt.Errorf("[os.ReadFile()] Error reading in resources.tf for %v: %v", fullDivisionName, err)
-		}
+	terraformerResources, hclDiagnostics := hclwrite.ParseConfig(
+		hclBytes,
+		"cloud-resources.tf",
+		hcl.Pos{Line: 0, Column: 0, Byte: 0},
+	)
 
-		divisionFile, hclDiagnostics := hclwrite.ParseConfig(
-			hclBytes,
-			fullDivisionName,
-			hcl.Pos{Line: 0, Column: 0, Byte: 0},
-		)
+	if hclDiagnostics != nil {
+		return fmt.Errorf("[hclwrite.ParseConfig]%v", hclDiagnostics)
+	}
 
-		if hclDiagnostics != nil {
-			return fmt.Errorf("[hclwrite.ParseConfig] Error for %v: %v", fullDivisionName, hclDiagnostics)
-		}
-		divisionToTerraformerResources[fullDivisionName] = divisionFile
-
-		resourceIDToCloudActions, err := h.subsetCloudActionsToCurrentDivision(string(provider), string(division), parsedCloudActions)
-		if err != nil {
-			return fmt.Errorf("[h.subsetCloudActionsToCurrentDivision]%v", err)
-		}
-		divisionToResourceActions[terraformValueObjects.Division(fullDivisionName)] = resourceIDToCloudActions
+	resourceActions, err := h.cloudActionsToResourceActionMap(parsedCloudActions)
+	if err != nil {
+		return fmt.Errorf("[h.subsetCloudActionsToCurrentDivision]%v", err)
 	}
 
 	// Read in new-resources-to-workspace.json, parse as gabs file
 	newResourcesToWorkspace := []byte("{}")
 	if !noNewResources {
-		newResourcesToWorkspace, err = os.ReadFile("mappings/new-resources-to-workspace.json")
+		newResourcesToWorkspace, err = os.ReadFile("outputs/new-resources-to-workspace.json")
 		if err != nil {
 			return fmt.Errorf("[os.ReadFile()] Error reading in new-resources-to-workspace.json: %v", err)
 		}
@@ -92,9 +81,9 @@ func (h *hclCreate) ExtractResourceDefinitions(noNewResources bool, workspaceToD
 	}
 
 	completeWorkspaceToHCLFile, err := h.placeHCLIntoNewFileDef(
-		divisionToResourceActions,
-		divisionToCostEstimates,
-		divisionToTerraformerResources,
+		resourceActions,
+		costEstimates,
+		terraformerResources,
 		parsedNewResourceToWorkspace,
 		workspaceToHCLFile,
 	)
@@ -114,21 +103,13 @@ func (h *hclCreate) ExtractResourceDefinitions(noNewResources bool, workspaceToD
 	return nil
 }
 
-// subsetCloudActionsToCurrentDivision takes in a gabs.Container, and converts to a subset of
-// resources for the specified provider and division within a map for faster downstream look-up.
-func (h *hclCreate) subsetCloudActionsToCurrentDivision(
-	provider string, division string, parsedCloudActions *gabs.Container,
-) (map[terraformValueObjects.ResourceName]terraformValueObjects.ResourceActions, error) {
-	currentDivisionResources := map[terraformValueObjects.ResourceName]terraformValueObjects.ResourceActions{}
+// cloudActionsToResourceActionMap takes in a gabs.Container, and converts to a ResourceActionMap
+func (h *hclCreate) cloudActionsToResourceActionMap(parsedCloudActions *gabs.Container) (
+	terraformValueObjects.ResourceActionMap, error,
+) {
+	resourceActionMap := terraformValueObjects.ResourceActionMap{}
 
-	ok := parsedCloudActions.Exists(provider, division)
-	if !ok {
-		fmt.Printf("[subsetCloudActionsToCurrentDivision][gabs.Container.Exists(%v, %v) sub-container not found]\n", provider, division)
-		return currentDivisionResources, nil
-	}
-
-	currentDivContainer := parsedCloudActions.Search(provider, division)
-	for resourceName, resourceActions := range currentDivContainer.ChildrenMap() {
+	for resourceName, resourceActions := range parsedCloudActions.ChildrenMap() {
 		currentResourceActions := terraformValueObjects.ResourceActions{}
 		if resourceActions.Exists("creation") {
 			currentResourceActions.Creator = terraformValueObjects.CloudActorTimeStamp{
@@ -143,30 +124,27 @@ func (h *hclCreate) subsetCloudActionsToCurrentDivision(
 			}
 		}
 
-		currentDivisionResources[terraformValueObjects.ResourceName(resourceName)] = currentResourceActions
+		resourceActionMap[terraformValueObjects.ResourceName(resourceName)] = currentResourceActions
 	}
 
-	return currentDivisionResources, nil
+	return resourceActionMap, nil
 }
 
 // placeHCLIntoNewFileDef transfers the relevant HCL created by terraformer
 // into the new file definition.
 func (h *hclCreate) placeHCLIntoNewFileDef(
-	divisionToCloudActions terraformValueObjects.DivisionResourceActions,
-	divisionToCostEstimates allCosts,
-	divisionToTerraformerResources DivisionToHCL,
+	cloudActions terraformValueObjects.ResourceActionMap,
+	costEstimates costs,
+	terraformerResources *hclwrite.File,
 	parsedNewResourceToWorkspace *gabs.Container,
 	workspaceToHCLFile WorkspaceToHCL,
 ) (WorkspaceToHCL, error) {
 	for resource, workspaceName := range parsedNewResourceToWorkspace.ChildrenMap() {
 		resourceID := h.splitResourceIdentifier(resource)
 
-		// extract block of resource definition from Terraformer result
-		currentTerraformerFile := divisionToTerraformerResources[resourceID.division]
-
 		cleanResourceName := ConvertTerraformerResourceName(resourceID.resourceName)
 		extractedBlock, err := h.extractResourceBlockDefinition(
-			currentTerraformerFile,
+			terraformerResources,
 			cleanResourceName,
 			resourceID,
 		)
@@ -174,11 +152,9 @@ func (h *hclCreate) placeHCLIntoNewFileDef(
 			return nil, fmt.Errorf("[h.extractResourceBlockDefinition] %v", err)
 		}
 
-		currentResourceToCloudActions := divisionToCloudActions[terraformValueObjects.Division(resourceID.division)]
-		cloudIdentifierComment := h.generateHCLCloudActorsComment(resourceID.resourceType, cleanResourceName, currentResourceToCloudActions)
+		cloudIdentifierComment := h.generateHCLCloudActorsComment(resourceID.resourceType, cleanResourceName, cloudActions)
 
-		currentDivisionCostEstimates := divisionToCostEstimates[terraformValueObjects.Division(resourceID.division)]
-		cloudCostComment := h.generateHCLCloudCostComment(resourceID.resourceType, cleanResourceName, currentDivisionCostEstimates)
+		cloudCostComment := h.generateHCLCloudCostComment(resourceID.resourceType, cleanResourceName, costEstimates)
 
 		// place resource within the corresponding workspace's file.
 		workspaceNameString := workspaceName.Data().(string)
@@ -271,9 +247,8 @@ func (h *hclCreate) splitResourceIdentifier(resourceIdentifier string) ResourceI
 	resourceIDSlice := strings.Split(resourceIdentifier, ".")
 
 	return ResourceIdentifier{
-		division:     resourceIDSlice[0],
-		resourceType: resourceIDSlice[1],
-		resourceName: resourceIDSlice[2],
+		resourceType: resourceIDSlice[0],
+		resourceName: resourceIDSlice[1],
 	}
 }
 

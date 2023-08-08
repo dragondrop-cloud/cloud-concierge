@@ -9,11 +9,12 @@ import (
 
 func TestGenerateLogFilter(t *testing.T) {
 	// Given
-	inputDivision := terraformValueObjects.Division("test-div")
-	glc := GoogleLogQuerier{}
+	glc := GoogleLogQuerier{
+		division: terraformValueObjects.Division("test-div"),
+	}
 
 	// When
-	output := glc.generateLogFilter(inputDivision, "my-id")
+	output := glc.generateLogFilter("my-id")
 
 	// Then
 	expectedOutput := "logName=projects/test-div/logs/cloudaudit.googleapis.com%2Factivity AND protoPayload.resourceName=my-id"

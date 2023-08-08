@@ -14,17 +14,17 @@ type Factory struct {
 
 // Instantiate returns an implementation of interfaces.TerraformManagedResourcesDriftDetector depending on the passed
 // environment specification.
-func (f *Factory) Instantiate(ctx context.Context, environment string, divisionToProvider map[terraformValueObjects.Division]terraformValueObjects.Provider) (interfaces.TerraformManagedResourcesDriftDetector, error) {
+func (f *Factory) Instantiate(ctx context.Context, environment string, provider terraformValueObjects.Provider) (interfaces.TerraformManagedResourcesDriftDetector, error) {
 	switch environment {
 	case "isolated":
 		return NewIsolatedDriftDetector(), nil
 	default:
-		return f.bootstrappedDriftDetector(ctx, divisionToProvider)
+		return f.bootstrappedDriftDetector(ctx, provider)
 	}
 }
 
 // bootstrappedDriftDetector creates a complete implementation of the interfaces.TerraformManagedResourcesDriftDetector interface with
 // configuration specified via environment variables.
-func (f *Factory) bootstrappedDriftDetector(ctx context.Context, divisionToProvider map[terraformValueObjects.Division]terraformValueObjects.Provider) (interfaces.TerraformManagedResourcesDriftDetector, error) {
-	return driftDetector.NewManagedResourcesDriftDetector(divisionToProvider), nil
+func (f *Factory) bootstrappedDriftDetector(ctx context.Context, provider terraformValueObjects.Provider) (interfaces.TerraformManagedResourcesDriftDetector, error) {
+	return driftDetector.NewManagedResourcesDriftDetector(provider), nil
 }

@@ -15,23 +15,12 @@ def _func_create_cloud_actor_dataframe() -> pd.DataFrame:
     return pd.DataFrame(
         [
             {
-                "Cloud Provider": "google",
-                "Cloud Division": "dragondrop-dev",
                 "Cloud Actor": "g.b@dragondrop.cloud",
                 "Action": "Create Resource",
                 "Count": 2,
             },
             {
-                "Cloud Provider": "google",
-                "Cloud Division": "dragondrop-dev",
                 "Cloud Actor": "g.b@dragondrop.cloud",
-                "Action": "Modify Resource",
-                "Count": 1,
-            },
-            {
-                "Cloud Provider": "google",
-                "Cloud Division": "dragondrop-extra",
-                "Cloud Actor": "mcguill.jimmy@dragondrop.cloud",
                 "Action": "Modify Resource",
                 "Count": 1,
             },
@@ -49,41 +38,29 @@ def test_create_markdown_table_cloud_actor_summary():
         markdown_file=MdUtils("", ""),
     )
 
-    expected_output_markdown_string = "\n|Cloud Provider|Division|Actor|Action|Count|\n| :---: | :---: | :---: | :---: | :---: |\n|google|dragondrop-dev|g.b@dragondrop.cloud|Create Resource|2|\n|google|dragondrop-dev|g.b@dragondrop.cloud|Modify Resource|1|\n|google|dragondrop-extra|mcguill.jimmy@dragondrop.cloud|Modify Resource|1|\n"
+    expected_output_markdown_string = "\n|Actor|Action|Count|\n| :---: | :---: | :---: |\n|g.b@dragondrop.cloud|Create Resource|2|\n|g.b@dragondrop.cloud|Modify Resource|1|\n"
 
     case.assertEqual(output_markdown_string, expected_output_markdown_string)
 
 
 def test_process_cloud_actor_actions():
     resources_to_cloud_actions = {
-        "google": {
-            "dragondrop-dev": {
-                "google_storage_bucket.testing_out_this_bucket": {
-                    "creation": {
-                        "actor": "g.b@dragondrop.cloud",
-                        "timestamp": "2023-02-25",
-                    },
-                    "modified": {
-                        "actor": "g.b@dragondrop.cloud",
-                        "timestamp": "2023-03-08",
-                    },
-                },
-                "google_storage_bucket.new_unique_bucket": {
-                    "creation": {
-                        "actor": "g.b@dragondrop.cloud",
-                        "timestamp": "2023-02-25",
-                    },
-                },
+        "google_storage_bucket.testing_out_this_bucket": {
+            "creation": {
+                "actor": "g.b@dragondrop.cloud",
+                "timestamp": "2023-02-25",
             },
-            "dragondrop-extra": {
-                "google_storage_bucket.testing_out_this_bucket": {
-                    "modified": {
-                        "actor": "mcguill.jimmy@dragondrop.cloud",
-                        "timestamp": "2023-03-08",
-                    }
-                },
+            "modified": {
+                "actor": "g.b@dragondrop.cloud",
+                "timestamp": "2023-03-08",
             },
-        }
+        },
+        "google_storage_bucket.new_unique_bucket": {
+            "creation": {
+                "actor": "g.b@dragondrop.cloud",
+                "timestamp": "2023-02-25",
+            },
+        },
     }
 
     output_df = process_cloud_actor_actions(

@@ -6,8 +6,6 @@ import (
 	"strconv"
 
 	"github.com/Jeffail/gabs/v2"
-
-	terraformValueObjects "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_value_objects"
 )
 
 // ResourceData contains data on a Terraform resource type and the id for that resource
@@ -39,35 +37,30 @@ func (d *documentize) ConvertNewResourcesToJSON(resourceDocMap map[ResourceName]
 // IdentifyNewResources determines which resources in the remote cloud environment state files from
 // terraformer are not present in the workspace state files. Returns a map of new resources to their
 // corresponding provider.
-func (d *documentize) IdentifyNewResources(workspaceToDirectory map[string]string) (map[terraformValueObjects.Division]map[ResourceData]bool, error) {
+func (d *documentize) IdentifyNewResources(workspaceToDirectory map[string]string) (map[ResourceData]bool, error) {
 	workspaceToIDMap, err := d.pullWorkspaceResourceIdentifiers(workspaceToDirectory)
 	if err != nil {
 		return nil, fmt.Errorf("[d.pullWorkspaceResourceIdentifiers] %v", err)
 	}
 
-	divToIDMap, err := d.pullTerraformerResourceIdentifiers()
+	resourceData, err := d.pullTerraformerResourceIdentifiers()
 	if err != nil {
 		return nil, fmt.Errorf("[d.pullTerraformerResourceIdentifiers] %v", err)
 	}
 
-	divToResourceData := selectNewResources(workspaceToIDMap, divToIDMap)
+	divToResourceData := selectNewResources(workspaceToIDMap, resourceData)
 
 	return divToResourceData, nil
 }
 
 // selectNewResources determines which of the resources in divToID are not seen within typeToIDMap.
-func selectNewResources(workspaceToIDMap map[Workspace]map[ResourceData]bool, divToID map[terraformValueObjects.Division]map[ResourceData]bool) map[terraformValueObjects.Division]map[ResourceData]bool {
-	newResourcesMap := map[terraformValueObjects.Division]map[ResourceData]bool{}
+func selectNewResources(workspaceToIDMap map[Workspace]map[ResourceData]bool, resourceData map[ResourceData]bool) map[ResourceData]bool {
+	newResourcesMap := map[ResourceData]bool{}
 	resourceBlackList := newResourceBlackList()
 
-	for d, tfrResourceSet := range divToID {
-		for tfrResourceData := range tfrResourceSet {
-			if isValidNewResource(resourceBlackList, tfrResourceData, workspaceToIDMap) {
-				if _, ok := newResourcesMap[d]; !ok {
-					newResourcesMap[d] = map[ResourceData]bool{}
-				}
-				newResourcesMap[d][tfrResourceData] = true
-			}
+	for tfrResourceData := range resourceData {
+		if isValidNewResource(resourceBlackList, tfrResourceData, workspaceToIDMap) {
+			newResourcesMap[tfrResourceData] = true
 		}
 	}
 
@@ -88,31 +81,24 @@ func isValidNewResource(resourceBlackList map[string]bool, tfrResource ResourceD
 }
 
 // pullTerraformerResourceIdentifiers extracts identifiers for each unique resource instance within pulled terraformer generated state files.
-func (d *documentize) pullTerraformerResourceIdentifiers() (map[terraformValueObjects.Division]map[ResourceData]bool, error) {
-	outputMap := map[terraformValueObjects.Division]map[ResourceData]bool{}
-	for div, provider := range d.divisionToProvider {
-		tfStateBytes, err := os.ReadFile(fmt.Sprintf("current_cloud/%v-%v/terraform.tfstate", provider, div))
-		if err != nil {
-			return nil, fmt.Errorf("[os.ReadFile] Error reading in state file: %v", err)
-		}
-
-		tfStateParsed, err := gabs.ParseJSON(tfStateBytes)
-		if err != nil {
-			return nil, fmt.Errorf("[gabs.ParseJSON] Error reading in state file: %v", err)
-		}
-
-		resourceDataSet, err := extractResourceIdsFromTerraformerState(tfStateParsed)
-
-		if err != nil {
-			return nil, fmt.Errorf("[extractResourceIdsFromWorkspaceState] Error in reading resource ids from workspace state: %v", err)
-		}
-
-		currentDiv := terraformValueObjects.Division(fmt.Sprintf("%v-%v", provider, div))
-
-		outputMap[currentDiv] = resourceDataSet
+func (d *documentize) pullTerraformerResourceIdentifiers() (map[ResourceData]bool, error) {
+	tfStateBytes, err := os.ReadFile("current_cloud/terraform.tfstate")
+	if err != nil {
+		return nil, fmt.Errorf("[os.ReadFile] Error reading in state file: %v", err)
 	}
 
-	return outputMap, nil
+	tfStateParsed, err := gabs.ParseJSON(tfStateBytes)
+	if err != nil {
+		return nil, fmt.Errorf("[gabs.ParseJSON] Error reading in state file: %v", err)
+	}
+
+	resourceDataSet, err := extractResourceIdsFromTerraformerState(tfStateParsed)
+
+	if err != nil {
+		return nil, fmt.Errorf("[extractResourceIdsFromWorkspaceState] Error in reading resource ids from workspace state: %v", err)
+	}
+
+	return resourceDataSet, nil
 }
 
 // extractResourceIdsFromWorkspaceState extracts identifying information for all resource instances
@@ -195,29 +181,27 @@ func extractResourceIdsFromWorkspaceState(tfStateParsed *gabs.Container) (map[Re
 
 // NewResourceDocuments creates a map between new resources and a document extracted from that
 // resource definition.
-func (d *documentize) NewResourceDocuments(divisionToResource map[terraformValueObjects.Division]map[ResourceData]bool) (map[ResourceName]string, error) {
+func (d *documentize) NewResourceDocuments(resourceSet map[ResourceData]bool) (map[ResourceName]string, error) {
 	outputMap := map[ResourceName]string{}
 
-	for div, resourceSet := range divisionToResource {
-		tfrStateBytes, err := os.ReadFile(fmt.Sprintf("current_cloud/%v/terraform.tfstate", div))
+	tfrStateBytes, err := os.ReadFile("current_cloud/terraform.tfstate")
+	if err != nil {
+		return nil, fmt.Errorf("[os.ReadFile] Error reading in current_cloud/terraform.tfstate: %v", err)
+	}
+
+	tfrStateParsed, err := gabs.ParseJSON(tfrStateBytes)
+	if err != nil {
+		return nil, fmt.Errorf("[gabs.ParseJSON] Error parsing tfrStateBytes %v", err)
+	}
+
+	for resource := range resourceSet {
+		resourceName, resourceDoc, err := d.pullResourceDocumentFromDiv(tfrStateParsed, resource)
+
 		if err != nil {
-			return nil, fmt.Errorf("[os.ReadFile] Error reading in for div %v: %v", div, err)
+			return nil, fmt.Errorf("[d.pullResourceDocumentFromDiv] Error: %v", err)
 		}
 
-		tfrStateParsed, err := gabs.ParseJSON(tfrStateBytes)
-		if err != nil {
-			return nil, fmt.Errorf("[gabs.ParseJSON] Error parsing for div %v: %v", div, err)
-		}
-
-		for resource := range resourceSet {
-			resourceName, resourceDoc, err := d.pullResourceDocumentFromDiv(tfrStateParsed, div, resource)
-
-			if err != nil {
-				return nil, fmt.Errorf("[d.pullResourceDocumentFromDiv] Error: %v", err)
-			}
-
-			outputMap[resourceName] = resourceDoc
-		}
+		outputMap[resourceName] = resourceDoc
 	}
 
 	return outputMap, nil
@@ -225,7 +209,7 @@ func (d *documentize) NewResourceDocuments(divisionToResource map[terraformValue
 
 // pullResourceDocumentFromDiv determines which resource from which extract the document definition of
 // a particular resource identified by terraformer.
-func (d *documentize) pullResourceDocumentFromDiv(tfrStateParsed *gabs.Container, div terraformValueObjects.Division, resource ResourceData) (ResourceName, string, error) {
+func (d *documentize) pullResourceDocumentFromDiv(tfrStateParsed *gabs.Container, resource ResourceData) (ResourceName, string, error) {
 	i := 0
 	for tfrStateParsed.Exists("resources", strconv.Itoa(i)) {
 		if string(resource.tfType) != tfrStateParsed.Search("resources", strconv.Itoa(i), "type").Data().(string) {
@@ -248,7 +232,7 @@ func (d *documentize) pullResourceDocumentFromDiv(tfrStateParsed *gabs.Container
 					return "", "", fmt.Errorf("[d.extractResourceDocument] Error: %v", err)
 				}
 
-				return ResourceName(fmt.Sprintf("%v.%v.%v", div, resource.tfType, resource.name)), doc, nil
+				return ResourceName(fmt.Sprintf("%v.%v", resource.tfType, resource.name)), doc, nil
 			}
 			j++
 		}

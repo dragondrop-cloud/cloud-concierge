@@ -12,15 +12,14 @@ import (
 // ManagedResourcesDriftDetector is a type that identifies resources
 // managed by Terraform that have drifted from their expected state.
 type ManagedResourcesDriftDetector struct {
-	// DivisionToProvider is a mapping between a division and the provider that is responsible
-	// for that division.
-	divisionToProvider map[terraformValueObjects.Division]terraformValueObjects.Provider `required:"true"`
+	// Provider is the name of the provider against which drift detection will be performed.
+	provider terraformValueObjects.Provider `required:"true"`
 }
 
 // NewManagedResourcesDriftDetector generated a terraformer instance from ManagedResourcesDriftDetector
-func NewManagedResourcesDriftDetector(divisionToProvider map[terraformValueObjects.Division]terraformValueObjects.Provider) *ManagedResourcesDriftDetector {
+func NewManagedResourcesDriftDetector(provider terraformValueObjects.Provider) *ManagedResourcesDriftDetector {
 	return &ManagedResourcesDriftDetector{
-		divisionToProvider: divisionToProvider,
+		provider: provider,
 	}
 }
 
@@ -88,7 +87,7 @@ func (m *ManagedResourcesDriftDetector) writeDeletedResources(deleted []DeletedR
 		return fmt.Errorf("[json.MarshalIndent]%w", err)
 	}
 
-	return os.WriteFile("mappings/drift-resources-deleted.json", differencesJSON, 0400)
+	return os.WriteFile("outputs/drift-resources-deleted.json", differencesJSON, 0400)
 }
 
 // writeDifferences writes within a json file the differences between all the drifted resources to render within the PR
@@ -98,5 +97,5 @@ func (m *ManagedResourcesDriftDetector) writeDifferences(differences []Attribute
 		return fmt.Errorf("[json.MarshalIndent]%w", err)
 	}
 
-	return os.WriteFile("mappings/drift-resources-differences.json", differencesJSON, 0400)
+	return os.WriteFile("outputs/drift-resources-differences.json", differencesJSON, 0400)
 }

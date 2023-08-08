@@ -6,19 +6,15 @@ import (
 	terraformValueObjects "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_value_objects"
 )
 
-// TODO: This needs implementation!
 func TestConvertProviderToResourceImportMapToJSON(t *testing.T) {
 	// Given
-	inputResourceImportMap := terraformValueObjects.ProviderToResourceImportMap{
-		"google": {
-			"example-division": {
-				"resourceName": terraformValueObjects.ImportMigration{
-					TerraformConfigLocation: "config_location",
-					RemoteCloudReference:    "remote.reference",
-				},
-			},
+	inputResourceImportMap := terraformValueObjects.ResourceImportMap{
+		"resourceName": terraformValueObjects.ImportMigration{
+			TerraformConfigLocation: "config_location",
+			RemoteCloudReference:    "remote.reference",
 		},
 	}
+
 	i := TerraformImportMigrationGenerator{}
 
 	// Then
@@ -28,7 +24,7 @@ func TestConvertProviderToResourceImportMapToJSON(t *testing.T) {
 	}
 
 	// When
-	expectedOutput := `{"google-example-division":{"resourceName":{"TerraformConfigLocation":"config_location","RemoteCloudReference":"remote.reference"}}}`
+	expectedOutput := `{"resourceName":{"TerraformConfigLocation":"config_location","RemoteCloudReference":"remote.reference"}}`
 	if output != expectedOutput {
 		t.Errorf("got:\n%v\nexpected:%v", output, expectedOutput)
 	}

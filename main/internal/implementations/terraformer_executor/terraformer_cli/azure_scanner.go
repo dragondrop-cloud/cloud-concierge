@@ -12,9 +12,8 @@ var defaultAzureRegions = []string{"eastus"}
 
 // AzureScanner implements the Scanner interface for use with Azure cloud environments.
 type AzureScanner struct {
-	// Config is the needed configuration of a mapping between Division name and the corresponding
-	// Credential needed to access that environment.
-	config map[terraformValueObjects.Division]terraformValueObjects.Credential
+	// credential needed to scan an Azure cloud environment.
+	credential terraformValueObjects.Credential
 
 	// terraformer is the TerraformerCLI interface used to scan the Azure cloud environment.
 	terraformer TerraformerCLI
@@ -24,28 +23,12 @@ type AzureScanner struct {
 }
 
 // NewAzureScanner creates and returns a new instance of AzureScanner.
-func NewAzureScanner(config map[terraformValueObjects.Division]terraformValueObjects.Credential, cliConfig Config, cloudRegions []terraformValueObjects.CloudRegion) (Scanner, error) {
+func NewAzureScanner(credential terraformValueObjects.Credential, cliConfig Config, cloudRegions []terraformValueObjects.CloudRegion) (Scanner, error) {
 	return &AzureScanner{
 		CloudRegions: cloudRegions,
-		config:       config,
+		credential:   credential,
 		terraformer:  newTerraformerCLI(cliConfig),
 	}, nil
-}
-
-// ScanAll wraps Scan to scan each division for the provider.
-func (azureScanner *AzureScanner) ScanAll(options ...string) (*MultiScanResult, error) {
-	fmt.Println("Scanning all specified azure divisions.")
-	scanMap := make(map[terraformValueObjects.Division]terraformValueObjects.Path)
-
-	for division, credential := range azureScanner.config {
-		path, err := azureScanner.Scan(division, credential)
-		if err != nil {
-			return nil, fmt.Errorf("[ScanAll] Error in azureScanner.Scan: %v", err)
-		}
-		scanMap[division] = path
-	}
-
-	return &MultiScanResult{scanMap}, nil
 }
 
 // AzureEnvironment represents the configuration to run terraformer for Azure
@@ -57,23 +40,22 @@ type AzureEnvironment struct {
 }
 
 // Scan uses the TerraformerCLI interface to scan a given division's cloud environment
-func (azureScanner *AzureScanner) Scan(resourceGroup terraformValueObjects.Division, credential terraformValueObjects.Credential, options ...string) (terraformValueObjects.Path, error) {
+func (azureScanner *AzureScanner) Scan(subscription terraformValueObjects.Division, credential terraformValueObjects.Credential, options ...string) error {
 	env := new(AzureEnvironment)
 	err := json.Unmarshal([]byte(credential), &env)
 	if err != nil {
-		return "", fmt.Errorf("[azure_scanner][configure_environment][error unmarshalling credentials] %w", err)
+		return fmt.Errorf("[azure_scanner][configure_environment][error unmarshalling credentials] %w", err)
 	}
 
 	err = azureScanner.configureEnvironment(*env)
 	if err != nil {
-		return "", fmt.Errorf("[Azure Scanner] Error configuring environment %w", err)
+		return fmt.Errorf("[Azure Scanner] Error configuring environment %w", err)
 	}
 
-	filterValue := fmt.Sprintf("/subscriptions/%s/resourceGroups/%s", env.SubscriptionID, resourceGroup)
+	filterValue := fmt.Sprintf("/subscriptions/%s", env.SubscriptionID)
 
-	path, err := azureScanner.terraformer.Import(TerraformImportMigrationGeneratorParams{
+	err = azureScanner.terraformer.Import(TerraformImportMigrationGeneratorParams{
 		Provider:       "azurerm",
-		Division:       resourceGroup,
 		Resources:      []string{},
 		AdditionalArgs: []string{fmt.Sprintf("--filter=resource_group=%s", filterValue)},
 		Regions:        []string{},
@@ -81,16 +63,16 @@ func (azureScanner *AzureScanner) Scan(resourceGroup terraformValueObjects.Divis
 	})
 
 	if err != nil {
-		return "", fmt.Errorf("[Scan] Error in terraformer.Import(): %v", err)
+		return fmt.Errorf("[Scan] Error in terraformer.Import(): %v", err)
 	}
 
-	err = azureScanner.terraformer.UpdateState("azurerm", string(path))
+	err = azureScanner.terraformer.UpdateState("azurerm")
 
 	if err != nil {
-		return "", fmt.Errorf("[Scan] Error in terraformer.UpdateState(): %v", err)
+		return fmt.Errorf("[Scan] Error in terraformer.UpdateState(): %v", err)
 	}
 
-	return path, nil
+	return nil
 }
 
 func (azureScanner *AzureScanner) configureEnvironment(env AzureEnvironment) error {

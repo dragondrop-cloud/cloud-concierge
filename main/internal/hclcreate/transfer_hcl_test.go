@@ -16,12 +16,11 @@ func TestSplitResourceIdentifier(t *testing.T) {
 	h := hclCreate{}
 
 	expectedOutput := ResourceIdentifier{
-		division:     "div",
 		resourceType: "tf_type",
 		resourceName: "tf_name",
 	}
 
-	output := h.splitResourceIdentifier("div.tf_type.tf_name")
+	output := h.splitResourceIdentifier("tf_type.tf_name")
 
 	if !reflect.DeepEqual(expectedOutput, output) {
 		t.Errorf("got %v, expected %v", output, expectedOutput)
@@ -133,37 +132,18 @@ func createOutputString(block *hclwrite.Block) string {
 	return string(f.Bytes())
 }
 
-func TestSubsetCloudActionsToCurrentDivisionsFullData(t *testing.T) {
+func TestCloudActionsToResourceActionMap(t *testing.T) {
 	// Given
 	h := hclCreate{}
-	inputProvider := "google"
-	inputDivision := "dragondrop-dev"
-
 	rawCloudActions := `{
-		"google": {
-			"dragondrop-dev": {
-				"google_storage_bucket.testing-out-this-bucket": {
-					"creation": {
-						"actor":"example@dragondrop.cloud",
-						"timestamp":"2023-02-25"
-					},
-					"modified":{
-						"actor":"example@dragondrop.cloud",
-					    "timestamp":"2023-03-08"
-					}
-				}
+		"google_storage_bucket.testing-out-this-bucket": {
+			"creation": {
+				"actor":"example@dragondrop.cloud",
+				"timestamp":"2023-02-25"
 			},
-			"dragondrop-prod": {
-				"google_storage_bucket.testing-out-this-bucket": {
-					"creation": {
-						"actor":"example@dragondrop.cloud",
-						"timestamp":"2025-02-25"
-					},
-					"modified":{
-						"actor":"example@dragondrop.cloud",
-					    "timestamp":"2025-03-08"
-					}
-				}
+			"modified":{
+				"actor":"example@dragondrop.cloud",
+				"timestamp":"2023-03-08"
 			}
 		}
 	}
@@ -174,13 +154,13 @@ func TestSubsetCloudActionsToCurrentDivisionsFullData(t *testing.T) {
 	}
 
 	// When
-	output, err := h.subsetCloudActionsToCurrentDivision(inputProvider, inputDivision, parsedJSON)
+	output, err := h.cloudActionsToResourceActionMap(parsedJSON)
 	if err != nil {
 		t.Errorf("[h.subsetCloudActionsToCurrentDivision]%v", err)
 	}
 
 	// Then
-	expectedOutput := map[terraformValueObjects.ResourceName]terraformValueObjects.ResourceActions{
+	expectedOutput := terraformValueObjects.ResourceActionMap{
 		"google_storage_bucket.testing-out-this-bucket": {
 			Creator: terraformValueObjects.CloudActorTimeStamp{
 				Actor:     "example@dragondrop.cloud",
@@ -201,30 +181,12 @@ func TestSubsetCloudActionsToCurrentDivisionsFullData(t *testing.T) {
 func TestSubsetCloudActionsToCurrentDivisionsModifierOnly(t *testing.T) {
 	// Given
 	h := hclCreate{}
-	inputProvider := "google"
-	inputDivision := "dragondrop-prod"
 
 	rawCloudActions := `{
-		"google": {
-			"dragondrop-dev": {
-				"google_storage_bucket.testing-out-this-bucket": {
-					"creation": {
-						"actor":"example@dragondrop.cloud",
-						"timestamp":"2023-02-25"
-					},
-					"modified":{
-						"actor":"example@dragondrop.cloud",
-					    "timestamp":"2023-03-08"
-					}
-				}
-			},
-			"dragondrop-prod": {
-				"google_storage_bucket.testing-out-this-bucket": {
-					"modified":{
-						"actor":"example@dragondrop.cloud",
-					    "timestamp":"2025-03-08"
-					}
-				}
+		"google_storage_bucket.testing-out-this-bucket": {
+			"modified":{
+				"actor":"example@dragondrop.cloud",
+				"timestamp":"2025-03-08"
 			}
 		}
 	}
@@ -235,13 +197,13 @@ func TestSubsetCloudActionsToCurrentDivisionsModifierOnly(t *testing.T) {
 	}
 
 	// When
-	output, err := h.subsetCloudActionsToCurrentDivision(inputProvider, inputDivision, parsedJSON)
+	output, err := h.cloudActionsToResourceActionMap(parsedJSON)
 	if err != nil {
 		t.Errorf("[h.subsetCloudActionsToCurrentDivision]%v", err)
 	}
 
 	// Then
-	expectedOutput := map[terraformValueObjects.ResourceName]terraformValueObjects.ResourceActions{
+	expectedOutput := terraformValueObjects.ResourceActionMap{
 		"google_storage_bucket.testing-out-this-bucket": {
 			Modifier: terraformValueObjects.CloudActorTimeStamp{
 				Actor:     "example@dragondrop.cloud",
@@ -258,30 +220,11 @@ func TestSubsetCloudActionsToCurrentDivisionsModifierOnly(t *testing.T) {
 func TestSubsetCloudActionsToCurrentDivisionsCreationOnly(t *testing.T) {
 	// Given
 	h := hclCreate{}
-	inputProvider := "google"
-	inputDivision := "dragondrop-dev"
-
 	rawCloudActions := `{
-		"google": {
-			"dragondrop-dev": {
-				"google_storage_bucket.testing-out-this-bucket": {
-					"creation": {
-						"actor":"example@dragondrop.cloud",
-						"timestamp":"2023-02-25"
-					}
-				}
-			},
-			"dragondrop-prod": {
-				"google_storage_bucket.testing-out-this-bucket": {
-					"creation": {
-						"actor":"example@dragondrop.cloud",
-						"timestamp":"2025-02-25"
-					},
-					"modified":{
-						"actor":"example@dragondrop.cloud",
-					    "timestamp":"2025-03-08"
-					}
-				}
+		"google_storage_bucket.testing-out-this-bucket": {
+			"creation": {
+				"actor":"example@dragondrop.cloud",
+				"timestamp":"2023-02-25"
 			}
 		}
 	}
@@ -292,13 +235,13 @@ func TestSubsetCloudActionsToCurrentDivisionsCreationOnly(t *testing.T) {
 	}
 
 	// When
-	output, err := h.subsetCloudActionsToCurrentDivision(inputProvider, inputDivision, parsedJSON)
+	output, err := h.cloudActionsToResourceActionMap(parsedJSON)
 	if err != nil {
 		t.Errorf("[h.subsetCloudActionsToCurrentDivision]%v", err)
 	}
 
 	// Then
-	expectedOutput := map[terraformValueObjects.ResourceName]terraformValueObjects.ResourceActions{
+	expectedOutput := terraformValueObjects.ResourceActionMap{
 		"google_storage_bucket.testing-out-this-bucket": {
 			Creator: terraformValueObjects.CloudActorTimeStamp{
 				Actor:     "example@dragondrop.cloud",
@@ -315,41 +258,21 @@ func TestSubsetCloudActionsToCurrentDivisionsCreationOnly(t *testing.T) {
 func TestSubsetCloudActionsToCurrentDivisionsEmpty(t *testing.T) {
 	// Given
 	h := hclCreate{}
-	inputProvider := "google"
-	inputDivision := "dragondrop-dev"
 
-	rawCloudActions := `{
-		"google": {
-			"dragondrop-dev": {
-			},
-			"dragondrop-prod": {
-				"google_storage_bucket.testing-out-this-bucket": {
-					"creation": {
-						"actor":"example@dragondrop.cloud",
-						"timestamp":"2025-02-25"
-					},
-					"modified":{
-						"actor":"example@dragondrop.cloud",
-					    "timestamp":"2025-03-08"
-					}
-				}
-			}
-		}
-	}
-`
+	rawCloudActions := `{}`
 	parsedJSON, err := gabs.ParseJSON([]byte(rawCloudActions))
 	if err != nil {
 		t.Errorf("[gabs.ParseJSON unexpected error]%v", err)
 	}
 
 	// When
-	output, err := h.subsetCloudActionsToCurrentDivision(inputProvider, inputDivision, parsedJSON)
+	output, err := h.cloudActionsToResourceActionMap(parsedJSON)
 	if err != nil {
 		t.Errorf("[h.subsetCloudActionsToCurrentDivision]%v", err)
 	}
 
 	// Then
-	expectedOutput := map[terraformValueObjects.ResourceName]terraformValueObjects.ResourceActions{}
+	expectedOutput := terraformValueObjects.ResourceActionMap{}
 
 	if !reflect.DeepEqual(output, expectedOutput) {
 		t.Errorf("got:\n%v\nexpected:\n%v", output, expectedOutput)
@@ -362,7 +285,7 @@ func TestGenerateHCLActorsCommentCompleteData(t *testing.T) {
 	inputResourceType := "google_storage_bucket"
 	inputResourceName := "testing-out-this-bucket"
 
-	inputResourceToCloudActions := map[terraformValueObjects.ResourceName]terraformValueObjects.ResourceActions{
+	inputResourceToCloudActions := terraformValueObjects.ResourceActionMap{
 		"google_storage_bucket.testing-out-this-bucket": {
 			Creator: terraformValueObjects.CloudActorTimeStamp{
 				Actor:     "example@dragondrop.cloud",
@@ -395,7 +318,7 @@ func TestGenerateHCLActorsCommentModifierOnly(t *testing.T) {
 	inputResourceType := "google_storage_bucket"
 	inputResourceName := "testing-out-this-bucket"
 
-	inputResourceToCloudActions := map[terraformValueObjects.ResourceName]terraformValueObjects.ResourceActions{
+	inputResourceToCloudActions := terraformValueObjects.ResourceActionMap{
 		"google_storage_bucket.testing-out-this-bucket": {
 			Modifier: terraformValueObjects.CloudActorTimeStamp{
 				Actor:     "example@dragondrop.cloud",
@@ -424,7 +347,7 @@ func TestGenerateHCLActorsCommentCreatorOnly(t *testing.T) {
 	inputResourceType := "google_storage_bucket"
 	inputResourceName := "testing-out-this-bucket"
 
-	inputResourceToCloudActions := map[terraformValueObjects.ResourceName]terraformValueObjects.ResourceActions{
+	inputResourceToCloudActions := terraformValueObjects.ResourceActionMap{
 		"google_storage_bucket.testing-out-this-bucket": {
 			Creator: terraformValueObjects.CloudActorTimeStamp{
 				Actor:     "example@dragondrop.cloud",
@@ -453,7 +376,7 @@ func TestGenerateHCLActorsCommentNoInput(t *testing.T) {
 	inputResourceType := "google_storage_bucket"
 	inputResourceName := "testing-out-this-bucket"
 
-	inputResourceToCloudActions := map[terraformValueObjects.ResourceName]terraformValueObjects.ResourceActions{}
+	inputResourceToCloudActions := terraformValueObjects.ResourceActionMap{}
 
 	// When
 	output := h.generateHCLCloudActorsComment(
