@@ -4,19 +4,10 @@
 </p>
 <h2 align="center">
 <a href="https://github.com/dragondrop-cloud/cloud-concierge-example/pull/2" target="_blank">Example Output</a> |
-<a href="https://docs.cloudconcierge.io" target="_blank">Docs</a> |
-<a href="https://www.youtube.com/watch?v=y8OSfQQMEL0" target="_blank"> Recorded Demo </a>
+<a href="https://docs.cloudconcierge.io" target="_blank">Docs</a>
 </h2>
 
-## Motivation
-Many teams build their own Terraform management "stacks" using major cloud provider state backends
-and tools like Atlantis for running `plan` and `apply` and state-locking. 
-
-For more sophisticated tooling, some may turn to tools like Terraform Cloud,
-Scalr, Spacelift and Firefly. We find, however, that these tool's pricing can become particularly onerous
-when wanting to self-host runners or access the most desired features like drift detection, security scanning, etc.
-
-## Why Cloud Concierge?
+## Why cloud-concierge?
 cloud-concierge is a container that integrates with your existing Terraform management stack.
 All results and codified resources are output via a digestible [Pull Request](https://github.com/dragondrop-cloud/cloud-concierge-example/pull/2) to a repository of your choice, providing you with a "State of Cloud"
 report in a GitOps manner. It provides:
@@ -29,6 +20,17 @@ report in a GitOps manner. It provides:
 - &#9989; Whole-cloud cost estimation, powered by Infracost
 
 - &#9989; Whole-cloud security scanning, powered by tfsec (checkov integration coming soon)
+
+## In action (managed instance)
+https://github.com/dragondrop-cloud/cloud-concierge/assets/52042939/f81f567c-2c04-4aaf-ba75-963c49bcfab5
+
+## Motivation
+Many teams build their own Terraform management "stacks" using major cloud provider state backends
+and tools like Atlantis for running `plan` and `apply` and state-locking. 
+
+For more sophisticated tooling, some may turn to tools like Terraform Cloud,
+Scalr, Spacelift and Firefly. We find, however, that these tool's pricing can become particularly onerous
+when wanting to self-host runners or access the most desired features like drift detection, security scanning, etc.
 
 ## Getting Started
 0) Retrieve an organization token from the dragondrop.cloud management platform [here](https://app.dragondrop.cloud).
