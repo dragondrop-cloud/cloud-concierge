@@ -52,6 +52,8 @@ type DragonDrop interface {
 
 	// PutJobPullRequestURL sends the job url to the dragondrop API
 	PutJobPullRequestURL(ctx context.Context, prURL string) error
+
+	SendCloudPerchData(ctx context.Context) error
 }
 
 // DragonDropMock is a struct that implements the DragonDrop interface solely for the purpose
@@ -141,5 +143,10 @@ func (m *DragonDropMock) PostLog(ctx context.Context, log string) {}
 // PutJobPullRequestURL sends the job url to the dragondrop API
 func (m *DragonDropMock) PutJobPullRequestURL(ctx context.Context, prURL string) error {
 	args := m.Called(ctx, prURL)
+	return args.Error(0)
+}
+
+func (m *DragonDropMock) SendCloudPerchData(ctx context.Context) error {
+	args := m.Called(ctx)
 	return args.Error(0)
 }

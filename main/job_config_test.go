@@ -18,17 +18,21 @@ import (
 
 func validJobConfig() *JobConfig {
 	return &JobConfig{
-		IsManagedDriftOnly:         false,
-		InfracostAPIToken:          "InfracostAPIToken",
-		APIPath:                    "https://api.dragondrop.cloud",
-		JobID:                      "JobID",
-		OrgToken:                   "OrgToken",
-		MigrationHistoryStorage:    hclcreate.MigrationHistory{ /* Valor necesario */ },
+		IsManagedDriftOnly: false,
+		InfracostAPIToken:  "InfracostAPIToken",
+		APIPath:            "https://api.dragondrop.cloud",
+		JobID:              "JobID",
+		OrgToken:           "OrgToken",
+		MigrationHistoryStorage: hclcreate.MigrationHistory{
+			StorageType: "S3",
+			Bucket:      "Bucket",
+			Region:      "Region",
+		},
 		TerraformVersion:           "TerraformVersion",
 		StateBackend:               "StateBackend",
 		TerraformCloudOrganization: "TerraformCloudOrganization",
 		TerraformCloudToken:        "TerraformCloudToken",
-		WorkspaceDirectories:       terraformWorkspace.WorkspaceDirectoriesDecoder{ /* Valor necesario */ },
+		WorkspaceDirectories:       terraformWorkspace.WorkspaceDirectoriesDecoder{"workspace1", "workspace2"},
 		Provider: map[terraformValueObjects.Provider]string{
 			"aws": "~>4.57.0",
 		},
@@ -36,8 +40,8 @@ func validJobConfig() *JobConfig {
 		VCSUser:            "VCSUser",
 		VCSRepo:            "VCSRepo",
 		PullReviewers:      []string{"PullReviewer1", "PullReviewer2"},
-		ResourcesWhiteList: terraformValueObjects.ResourceNameList{ /* Valor necesario */ },
-		ResourcesBlackList: terraformValueObjects.ResourceNameList{ /* Valor necesario */ },
+		ResourcesWhiteList: terraformValueObjects.ResourceNameList{"Resource1", "Resource2"},
+		ResourcesBlackList: terraformValueObjects.ResourceNameList{"Resource3", "Resource4"},
 	}
 }
 
@@ -52,11 +56,13 @@ func TestGetDragonDropConfig(t *testing.T) {
 	assert.Equal(t, jobConfig.APIPath, dragonDropConfig.APIPath, "APIPath should be equal")
 	assert.Equal(t, jobConfig.JobID, dragonDropConfig.JobID, "JobID should be equal")
 	assert.Equal(t, jobConfig.OrgToken, dragonDropConfig.OrgToken, "OrgToken should be equal")
+	assert.Equal(t, jobConfig.WorkspaceDirectories, dragonDropConfig.WorkspaceDirectories, "OrgToken should be equal")
 
 	want := dragonDrop.HTTPDragonDropClientConfig{
-		APIPath:  jobConfig.APIPath,
-		JobID:    jobConfig.JobID,
-		OrgToken: jobConfig.OrgToken,
+		APIPath:              jobConfig.APIPath,
+		JobID:                jobConfig.JobID,
+		OrgToken:             jobConfig.OrgToken,
+		WorkspaceDirectories: jobConfig.WorkspaceDirectories,
 	}
 
 	assert.Equal(t, want, dragonDropConfig, "HTTPDragonDropClientConfig should be equal")

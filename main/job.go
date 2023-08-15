@@ -216,6 +216,11 @@ func (j *Job) Run(ctx context.Context) error {
 		return fmt.Errorf("[run_job][error putting job pull request URL][%v]", err)
 	}
 
+	err = j.dragonDrop.SendCloudPerchData(ctx)
+	if err != nil {
+		log.WithError(err).Errorf("[failed to send cloudperch data][%v]", err)
+	}
+
 	err = j.dragonDrop.InformComplete(ctx)
 	if err != nil {
 		return fmt.Errorf("[run_job][error informing complete status][%w]", err)

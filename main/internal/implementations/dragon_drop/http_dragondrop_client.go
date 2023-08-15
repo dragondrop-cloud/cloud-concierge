@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 
+	terraformWorkspace "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_workspace"
 	"github.com/dragondrop-cloud/cloud-concierge/main/internal/interfaces"
 )
 
@@ -20,6 +21,9 @@ type HTTPDragonDropClientConfig struct {
 
 	// OrgToken is the token that authorizes access to the dragondrop API.
 	OrgToken string
+
+	// WorkspaceDirectories is a slice of directories that contains terraform workspaces within the user repo.
+	WorkspaceDirectories terraformWorkspace.WorkspaceDirectoriesDecoder `required:"true"`
 }
 
 // HTTPDragonDropClient is a struct that implements the DragonDrop interface and makes
