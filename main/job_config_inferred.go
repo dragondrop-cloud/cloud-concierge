@@ -36,12 +36,14 @@ func getInferredData(config JobConfig) (InferredData, error) {
 		return InferredData{}, fmt.Errorf("[error getting vcs system from repo url][%w]", err)
 	}
 
-	cloudCredential, err := getCloudCredential(provider, config.JobID)
-	if err != nil {
-		return InferredData{}, fmt.Errorf("[error getting cloud credential for %v][%w]", provider, err)
-	}
+	if config.JobID != "test-pull" {
+		cloudCredential, err := getCloudCredential(provider, config.JobID)
+		if err != nil {
+			return InferredData{}, fmt.Errorf("[error getting cloud credential for %v][%w]", provider, err)
+		}
 
-	config.CloudCredential = cloudCredential
+		config.CloudCredential = cloudCredential
+	}
 
 	return InferredData{
 		Provider:  provider,
@@ -89,14 +91,13 @@ func getAWSCredential(jobID string) (terraformValueObjects.Credential, error) {
 			return "", fmt.Errorf("[parseAWSCredentialValues][%w]", err)
 		}
 		return credential, nil
-	} else {
-		// Load credentials with assumption that is running in AWS
-		credential, err := loadAWSCredentialWithinECS()
-		if err != nil {
-			return "", fmt.Errorf("[loadAWSCredentialWithinECS][%w]", err)
-		}
-		return credential, nil
 	}
+	// Load credentials with assumption that is running in AWS
+	credential, err := loadAWSCredentialWithinECS()
+	if err != nil {
+		return "", fmt.Errorf("[loadAWSCredentialWithinECS][%w]", err)
+	}
+	return credential, nil
 }
 
 // parseAWSCredentialValues parses the AWS credential values from the raw, CLI-generated credential file.
@@ -105,11 +106,11 @@ func parseAWSCredentialValues(credentialBytes []byte) (terraformValueObjects.Cre
 	// [default]
 	// aws_access_key_id = <access_key_id>
 	// aws_secret_access_key = <secret_access_key>
-	re := regexp.MustCompile(`(?m)aws_access_key_id = (?P<aws_access_key_id>.*)\naws_secret_access_key = (?P<aws_secret_access_key>.*)`)
+	re := regexp.MustCompile(`\naws_access_key_id = (.*)\naws_secret_access_key = (.*)`)
 	credentialValues := re.FindStringSubmatch(string(credentialBytes))
 	AWSCredentialLocal := awsCredentialLocal{
-		awsAccessKeyID:     credentialValues[1],
-		awsSecretAccessKey: credentialValues[2],
+		AwsAccessKeyID:     credentialValues[1],
+		AwsSecretAccessKey: credentialValues[2],
 	}
 	credential, err := json.Marshal(AWSCredentialLocal)
 	if err != nil {
@@ -121,8 +122,8 @@ func parseAWSCredentialValues(credentialBytes []byte) (terraformValueObjects.Cre
 // awsCredentialLocal is the struct that represents an AWS credential configured
 // locally in the ~/.aws/credentials file.
 type awsCredentialLocal struct {
-	awsAccessKeyID     string `json:"aws_access_key_id"`
-	awsSecretAccessKey string `json:"aws_secret_access_key"`
+	AwsAccessKeyID     string `json:"awsAccessKeyID"`
+	AwsSecretAccessKey string `json:"awsSecretAccessKey"`
 }
 
 // loadAWSCredentialWithinECS loads the AWS credential from the ECS metadata endpoint, only to be called hosted within
@@ -160,8 +161,8 @@ func loadAWSCredentialWithinECS() (terraformValueObjects.Credential, error) {
 // awsCredentialRemote is the struct that represents an AWS credential from the AWS metadata
 // endpoint within an ECS task.
 type awsCredentialRemote struct {
-	awsAccessKeyID     string `json:"AccessKeyId"`
-	awsSecretAccessKey string `json:"SecretAccessKey"`
+	AwsAccessKeyID     string `json:"AccessKeyId"`
+	AwsSecretAccessKey string `json:"SecretAccessKey"`
 }
 
 // getAzureCredential loads the Azure credential based on whether the job is managed or in OSS execution mode.

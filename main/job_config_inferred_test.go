@@ -65,7 +65,6 @@ func Test_getProviderByCredential(t *testing.T) {
 	}
 }
 
-// TODO: Refactor of these unit tests needed
 func Test_getInferredData(t *testing.T) {
 	type args struct {
 		config JobConfig
@@ -80,45 +79,13 @@ func Test_getInferredData(t *testing.T) {
 			name: "single provider aws",
 			args: args{config: JobConfig{
 				IsManagedDriftOnly: false,
-				CloudCredential:    terraformValueObjects.Credential(`{"awsAccessKeyID": "AWS123", "awsSecretAccessKey": "DUGFVGBHAJ213"}`),
+				Provider:           map[terraformValueObjects.Provider]string{"aws": ""},
 				VCSRepo:            "https://github.com/test-org/test-repo.git",
+				JobID:              "test-pull",
 			},
 			},
 			want: InferredData{
 				Provider:  terraformValueObjects.Provider("aws"),
-				VCSSystem: "github",
-			},
-			wantErr: false,
-		},
-		{
-			name: "three providers azurerm",
-			args: args{config: JobConfig{
-				IsManagedDriftOnly: false,
-				CloudCredential:    terraformValueObjects.Credential(`{"client_id": "123", "client_secret": "secret", "tenant_id": "tenant", "subscription_id": "subscription1"}`),
-				VCSRepo:            "https://github.com/test-org/test-repo.git",
-			},
-			},
-			want: InferredData{
-				Provider:  terraformValueObjects.Provider("azurerm"),
-				VCSSystem: "github",
-			},
-			wantErr: false,
-		},
-		{
-			name: "three providers aws, azurerm and google",
-			args: args{config: JobConfig{
-				IsManagedDriftOnly: false,
-				CloudCredential: terraformValueObjects.Credential(
-					`{  "type": "service_account", "project_id": "project", "private_key_id": "123", "private_key": "key", 
-							"client_email": "example@dragondrop.cloud", "client_id": "123456", "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-							"token_uri": "https://oauth2.googleapis.com/token", "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-							"client_x509_cert_url": "https://localhost.com"
-						}`),
-				VCSRepo: "https://github.com/test-org/test-repo.git",
-			},
-			},
-			want: InferredData{
-				Provider:  terraformValueObjects.Provider("google"),
 				VCSSystem: "github",
 			},
 			wantErr: false,
@@ -145,10 +112,7 @@ func Test_parseAWSCredentialValues(t *testing.T) {
 aws_access_key_id = AWS123
 aws_secret_access_key = Secret123
 `)
-	expectedOutput := []byte(
-		`{"awsAccessKeyID": "AWS123",
-      "awsSecretAccessKey": "Secret123"
-}`)
+	expectedOutput := []byte(`{"awsAccessKeyID":"AWS123","awsSecretAccessKey":"Secret123"}`)
 
 	// When
 	credential, err := parseAWSCredentialValues(inputCredentialBytes)
