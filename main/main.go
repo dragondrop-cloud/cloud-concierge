@@ -60,9 +60,11 @@ func RemoveSubDirectories() error {
 		fmt.Printf("All sub directories identified:\n%v\n", names)
 
 		for _, name := range names {
-			err = os.RemoveAll(filepath.Join("/main/", name))
-			if err != nil {
-				return fmt.Errorf("[os.RemoveAll(/main/%v)]%v", name, err)
+			if name != "credentials" {
+				err = os.RemoveAll(filepath.Join("/main/", name))
+				if err != nil {
+					return fmt.Errorf("[os.RemoveAll(/main/%v)]%v", name, err)
+				}
 			}
 		}
 	}

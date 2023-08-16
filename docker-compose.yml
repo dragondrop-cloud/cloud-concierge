@@ -7,7 +7,6 @@ services:
     environment:
       # cloud-concierge specific env vars
       - "CLOUDCONCIERGE_APIPATH=$CLOUDCONCIERGE_APIPath"
-      - "CLOUDCONCIERGE_CLOUDCREDENTIAL=$CLOUDCONCIERGE_CloudCredential"
       - "CLOUDCONCIERGE_DIVISION=$CLOUDCONCIERGE_Division"
       - "CLOUDCONCIERGE_JOBID=$CLOUDCONCIERGE_JobID"
       - "CLOUDCONCIERGE_ORGTOKEN=$CLOUDCONCIERGE_OrgToken"
@@ -31,6 +30,7 @@ services:
       - network
     volumes:
       - main:/main
+      - ~/.aws:/main/credentials/aws:ro
 
 networks:
   network:
