@@ -2,15 +2,12 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/kelseyhightower/envconfig"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/dragondrop-cloud/cloud-concierge/main/internal/documentize"
 	costEstimation "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/cost_estimation"
 	dragonDrop "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/dragon_drop"
 	identifyCloudActors "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/identify_cloud_actors"
@@ -19,23 +16,11 @@ import (
 	terraformImportMigrationGenerator "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_import_migration_generator"
 	terraformManagedResourcesDriftDetector "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_managed_resources_drift_detector"
 	terraformSecurity "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_security"
-	terraformValueObjects "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_value_objects"
 	terraformWorkspace "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_workspace"
 	terraformerExecutor "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraformer_executor"
 	"github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/vcs"
 	"github.com/dragondrop-cloud/cloud-concierge/main/internal/interfaces"
 )
-
-type InferredData struct {
-	// Provider is the name of the cloud provider (aws, azurerm, google, etc.).
-	Provider terraformValueObjects.Provider `required:"true"`
-
-	// VCSSystem is the name of the version control system (github, gitlab, bitbucket, etc.).
-	VCSSystem string `required:"true"`
-
-	// WorkspaceToDirectory is a map between a workspace and the directory that contains the terraform state file
-	WorkspaceToDirectory map[documentize.Workspace]documentize.Directory `required:"true"`
-}
 
 // Job is an instance of a runnable dragondrop job.
 type Job struct {
@@ -249,6 +234,10 @@ func InitializeJobDependencies(ctx context.Context, env string) (*Job, error) {
 		return nil, fmt.Errorf("[cannot create job config]%w", err)
 	}
 
+	jobConfig.CloudCredential = inferredData.CloudCredential
+	// TODO: Remove this line once done testing E2E in dev environment prior to push to prod release
+	fmt.Printf("formatted credential: %v", inferredData.CloudCredential)
+
 	dragonDropInstance, err := (&dragonDrop.Factory{}).Instantiate(env, jobConfig.getDragonDropConfig())
 	if err != nil {
 		return nil, err
@@ -310,58 +299,4 @@ func InitializeJobDependencies(ctx context.Context, env string) (*Job, error) {
 		config:                            jobConfig,
 		terraformSecurity:                 tfSec,
 	}, nil
-}
-
-// getInferredData calculates needed inferred data from the input job config
-func getInferredData(config JobConfig) (InferredData, error) {
-	provider, err := getProviderFromCredential(config.CloudCredential)
-	if err != nil {
-		return InferredData{}, fmt.Errorf("[error getting the inferred data][%w]", err)
-	}
-
-	vcsSystem, err := getVCSSystemFromRepoURL(config.VCSRepo)
-	if err != nil {
-		return InferredData{}, fmt.Errorf("[error getting the inferred data][%w]", err)
-	}
-
-	return InferredData{
-		Provider:  provider,
-		VCSSystem: vcsSystem,
-	}, nil
-}
-
-// getProviderFromCredential determines the provider from the input credential
-func getProviderFromCredential(credential terraformValueObjects.Credential) (terraformValueObjects.Provider, error) {
-	var credentialMapped map[string]string
-	err := json.Unmarshal([]byte(credential), &credentialMapped)
-	if err != nil {
-		return "", fmt.Errorf("[poorly formatted credential is an invalid json object][%w]", err)
-	}
-
-	if strings.Trim(credentialMapped["client_id"], "") != "" && strings.Trim(credentialMapped["client_secret"], "") != "" &&
-		strings.Trim(credentialMapped["tenant_id"], "") != "" && strings.Trim(credentialMapped["subscription_id"], "") != "" {
-		return "azurerm", nil
-	}
-
-	if strings.Trim(credentialMapped["awsAccessKeyID"], "") != "" && strings.Trim(credentialMapped["awsSecretAccessKey"], "") != "" {
-		return "aws", nil
-	}
-
-	if strings.Trim(credentialMapped["type"], "") != "" && strings.Trim(credentialMapped["project_id"], "") != "" &&
-		strings.Trim(credentialMapped["private_key_id"], "") != "" && strings.Trim(credentialMapped["private_key"], "") != "" &&
-		strings.Trim(credentialMapped["client_email"], "") != "" && strings.Trim(credentialMapped["client_id"], "") != "" &&
-		strings.Trim(credentialMapped["auth_uri"], "") != "" && strings.Trim(credentialMapped["token_uri"], "") != "" &&
-		strings.Trim(credentialMapped["auth_provider_x509_cert_url"], "") != "" && strings.Trim(credentialMapped["client_x509_cert_url"], "") != "" {
-		return "google", nil
-	}
-
-	return "", fmt.Errorf("provider not supported")
-}
-
-// getVCSSystemFromRepoURL determines the VCS system from the input repo URL
-func getVCSSystemFromRepoURL(repoURL string) (string, error) {
-	if strings.Contains(repoURL, "github.com/") {
-		return "github", nil
-	}
-	return "", fmt.Errorf("VCS system inferred from %v repo is not supported", repoURL)
 }

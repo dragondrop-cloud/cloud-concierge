@@ -20,6 +20,9 @@ type TerraformerExecutorConfig struct {
 	// CloudCredential is a cloud credential with read-only access to a cloud division and, if applicable, access to read Terraform state files.
 	CloudCredential terraformValueObjects.Credential `required:"true"`
 
+	// Division is the name of a cloud division. In AWS this is an account, in GCP this is a project name, and in Azure this is a subscription.
+	Division terraformValueObjects.Division `required:"true"`
+
 	// Provider is a map between a cloud provider and the version for that provider.
 	Provider map[terraformValueObjects.Provider]string `required:"true"`
 
@@ -119,7 +122,7 @@ func (e *TerraformerExecutor) Execute(ctx context.Context) error {
 
 	e.dragonDrop.PostLog(ctx, "Done with running `terraform init`.\n Beginning to scan existing cloud environment.")
 
-	err = e.scanner.Scan("", e.config.CloudCredential) // TODO: Will need to load division name from config in a future PR.
+	err = e.scanner.Scan(e.config.Division, e.config.CloudCredential)
 	if err != nil {
 		return fmt.Errorf("[terraformer_executor][set_up][error scanning all providers]%w", err)
 	}

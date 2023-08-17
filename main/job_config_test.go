@@ -21,6 +21,8 @@ func validJobConfig() *JobConfig {
 		IsManagedDriftOnly: false,
 		InfracostAPIToken:  "InfracostAPIToken",
 		APIPath:            "https://api.dragondrop.cloud",
+		CloudRegions:       terraformValueObjects.CloudRegionsDecoder{"us-east1"},
+		CloudCredential:    "{}",
 		JobID:              "JobID",
 		OrgToken:           "OrgToken",
 		MigrationHistoryStorage: hclcreate.MigrationHistory{
@@ -94,7 +96,9 @@ func TestGetTerraformWorkspaceConfig(t *testing.T) {
 	got := jobConfig.getTerraformWorkspaceConfig()
 
 	// Then
-	want := terraformWorkspace.TerraformCloudConfig{
+	want := terraformWorkspace.TfStackConfig{
+		AWSRegion:                  "us-east1",
+		CloudCredential:            "{}",
 		StateBackend:               jobConfig.StateBackend,
 		TerraformCloudOrganization: jobConfig.TerraformCloudOrganization,
 		TerraformCloudToken:        jobConfig.TerraformCloudToken,
@@ -129,6 +133,7 @@ func TestGetTerraformerConfig(t *testing.T) {
 
 	// Then
 	want := terraformerCli.TerraformerExecutorConfig{
+		CloudCredential:  "{}",
 		Provider:         jobConfig.Provider,
 		TerraformVersion: terraformValueObjects.Version(jobConfig.TerraformVersion),
 		CloudRegions:     jobConfig.CloudRegions,
@@ -161,7 +166,9 @@ func TestGetTerraformImportMigrationGeneratorConfig(t *testing.T) {
 	got := jobConfig.getTerraformImportMigrationGeneratorConfig()
 
 	// Then
-	want := terraformImportMigrationGenerator.Config{}
+	want := terraformImportMigrationGenerator.Config{
+		CloudCredential: "{}",
+	}
 
 	assert.Equal(t, want, got, "TerraformImportMigrationGeneratorConfig should be equal")
 }
@@ -175,6 +182,7 @@ func TestGetCostEstimationConfig(t *testing.T) {
 
 	// Then
 	want := costEstimation.CostEstimatorConfig{
+		CloudCredential:   "{}",
 		InfracostAPIToken: jobConfig.InfracostAPIToken,
 	}
 
@@ -189,7 +197,9 @@ func TestGetIdentifyCloudActorsConfig(t *testing.T) {
 	got := jobConfig.getIdentifyCloudActorsConfig()
 
 	// Then
-	want := identifyCloudActors.Config{}
+	want := identifyCloudActors.Config{
+		CloudCredential: "{}",
+	}
 
 	assert.Equal(t, want, got, "IdentifyCloudActorsConfig should be equal")
 }

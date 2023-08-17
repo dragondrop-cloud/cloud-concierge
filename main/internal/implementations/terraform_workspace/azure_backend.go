@@ -16,7 +16,7 @@ import (
 // AzureBlobBackend is an implementation of the interfaces.TerraformWorkspace interface that uses Azure Blob Storage as the backend.
 type AzureBlobBackend struct {
 	// config is the configuration for the Azure Blob Storage backend.
-	config ContainerBackendConfig
+	config TfStackConfig
 
 	// dragonDrop is the DragonDrop interface that is used to communicate with the DragonDrop API.
 	dragonDrop interfaces.DragonDrop
@@ -37,7 +37,7 @@ func (b *AzureBlobBackend) FindTerraformWorkspaces(ctx context.Context) (map[str
 }
 
 // NewAzurermBlobBackend creates a new AzureBlobBackend instance.
-func NewAzurermBlobBackend(ctx context.Context, config ContainerBackendConfig, dragonDrop interfaces.DragonDrop) interfaces.TerraformWorkspace {
+func NewAzurermBlobBackend(ctx context.Context, config TfStackConfig, dragonDrop interfaces.DragonDrop) interfaces.TerraformWorkspace {
 	dragonDrop.PostLog(ctx, "Created TFWorkspace client.")
 
 	return &AzureBlobBackend{config: config, dragonDrop: dragonDrop}

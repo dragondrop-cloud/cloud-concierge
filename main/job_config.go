@@ -21,8 +21,9 @@ type JobConfig struct {
 	// IsManagedDriftOnly represents the option for the user to only scan drifted resources and not new resources
 	IsManagedDriftOnly bool `default:"false"`
 
-	// CloudCredential is a cloud credential from which to infer the division to provider.
-	CloudCredential terraformValueObjects.Credential `required:"true"`
+	// CloudCredential is a cloud credential that is used to authenticate with a cloud provider. Credential should
+	// only require read-only access.
+	CloudCredential terraformValueObjects.Credential `required:"false"`
 
 	// Division is the name of a cloud division. In AWS this is an account, in GCP this is a project name, and in Azure this is a subscription.
 	Division terraformValueObjects.Division `required:"true"`
@@ -120,8 +121,10 @@ func (c JobConfig) getVCSConfig() vcs.Config {
 	}
 }
 
-func (c JobConfig) getTerraformWorkspaceConfig() terraformWorkspace.TerraformCloudConfig {
-	return terraformWorkspace.TerraformCloudConfig{
+func (c JobConfig) getTerraformWorkspaceConfig() terraformWorkspace.TfStackConfig {
+	return terraformWorkspace.TfStackConfig{
+		AWSRegion:                  string(c.CloudRegions[0]),
+		CloudCredential:            c.CloudCredential,
 		StateBackend:               c.StateBackend,
 		TerraformCloudOrganization: c.TerraformCloudOrganization,
 		TerraformCloudToken:        c.TerraformCloudToken,
@@ -139,6 +142,7 @@ func (c JobConfig) getHCLCreateConfig() hclcreate.Config {
 func (c JobConfig) getTerraformerConfig() terraformerCli.TerraformerExecutorConfig {
 	return terraformerCli.TerraformerExecutorConfig{
 		CloudCredential:  c.CloudCredential,
+		Division:         c.Division,
 		Provider:         c.Provider,
 		TerraformVersion: terraformValueObjects.Version(c.TerraformVersion),
 		CloudRegions:     c.CloudRegions,

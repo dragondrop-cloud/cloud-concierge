@@ -17,7 +17,7 @@ import (
 
 type S3Backend struct {
 	// config contains the variables that determine the specific behavior of the ContainerBackendConfig struct
-	config ContainerBackendConfig
+	config TfStackConfig
 
 	// dragonDrop is an implementation of the interfaces.dragonDrop interface for communicating with the
 	// dragondrop API.
@@ -31,7 +31,7 @@ type S3Backend struct {
 }
 
 // NewS3Backend creates a new instance of the TerraformCloud struct.
-func NewS3Backend(ctx context.Context, config ContainerBackendConfig, dragonDrop interfaces.DragonDrop) interfaces.TerraformWorkspace {
+func NewS3Backend(ctx context.Context, config TfStackConfig, dragonDrop interfaces.DragonDrop) interfaces.TerraformWorkspace {
 	dragonDrop.PostLog(ctx, "Created TFWorkspace client.")
 
 	sess := session.Must(session.NewSession(&aws.Config{

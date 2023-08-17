@@ -11,20 +11,8 @@ import (
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	log "github.com/sirupsen/logrus"
 
-	terraformValueObjects "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_value_objects"
 	"github.com/dragondrop-cloud/cloud-concierge/main/internal/interfaces"
 )
-
-type ContainerBackendConfig struct {
-	// AWSRegion is the region of the AWS account that contains the S3 bucket.
-	AWSRegion string
-
-	// WorkspaceDirectories is a slice of directories that contains terraform workspaces within the user repo.
-	WorkspaceDirectories WorkspaceDirectoriesDecoder `required:"true"`
-
-	// CloudCredential is a cloud credential with read-only access to a cloud division and, if applicable, access to read Terraform state files.
-	CloudCredential terraformValueObjects.Credential `required:"true"`
-}
 
 // outFileCloser closes the outFile and returns an error if one occurred.
 func outFileCloser(outFile *os.File) error {
@@ -98,7 +86,7 @@ func cleanDirectoryName(directory string) string {
 	return directory
 }
 
-// getWorkspaceByFile searches a given file for a terraform workspace.
+// getWorkspaceByFile searches a given file for a Terraform workspace.
 func getWorkspaceByFile(ctx context.Context, directory string, fileName string, backendType string) (string, interface{}, bool) {
 	filePath := fmt.Sprintf("repo/%s/%s", directory, fileName)
 	fileContent, err := os.ReadFile(filePath)
