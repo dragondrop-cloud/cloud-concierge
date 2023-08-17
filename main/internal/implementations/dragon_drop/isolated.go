@@ -89,3 +89,7 @@ func (d *IsolatedDragonDrop) PostLog(ctx context.Context, log string) {}
 func (d *IsolatedDragonDrop) PutJobPullRequestURL(ctx context.Context, prURL string) error {
 	return nil
 }
+
+func (d *IsolatedDragonDrop) SendCloudPerchData(ctx context.Context) error {
+	return nil
+}

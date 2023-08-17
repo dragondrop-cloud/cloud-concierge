@@ -246,6 +246,7 @@ func TestRunJob_Success(t *testing.T) {
 
 	// When
 	mocks.dragonDrop.On("PutJobPullRequestURL", ctx, "").Return(nil)
+	mocks.dragonDrop.On("SendCloudPerchData", ctx).Return(nil)
 	mocks.dragonDrop.On("InformComplete", ctx).Return(nil)
 	mocks.dragonDrop.On("InformRepositoryCloned", ctx).Return(nil)
 	mocks.dragonDrop.On("InformCloudActorIdentification", ctx).Return(nil)
@@ -714,6 +715,7 @@ func TestRunJob_CannotInformCompleteStatus(t *testing.T) {
 	mocks.resourcesWriter.On("Execute").Return("", nil)
 	mocks.dragonDrop.On("PutJobPullRequestURL", ctx, "").Return(nil)
 	mocks.dragonDrop.On("InformComplete", ctx).Return(informCompleteErr)
+	mocks.dragonDrop.On("SendCloudPerchData", ctx).Return(nil)
 	mocks.driftDetector.On("Execute", ctx, divisionToProvider).Return(true, nil)
 	mocks.terraformSecurity.On("ExecuteScan", ctx).Return(nil)
 
@@ -760,6 +762,7 @@ func TestRunJob_NotFoundNewResources_ButFoundManagedDriftedResources(t *testing.
 	mocks.resourcesWriter.On("Execute").Return("", nil)
 	mocks.dragonDrop.On("PutJobPullRequestURL", ctx, "").Return(nil)
 	mocks.dragonDrop.On("InformComplete", ctx).Return(nil)
+	mocks.dragonDrop.On("SendCloudPerchData", ctx).Return(nil)
 	mocks.dragonDrop.On("InformRepositoryCloned", ctx).Return(nil)
 	mocks.driftDetector.On("Execute", ctx, divisionToProvider).Return(true, nil)
 	mocks.terraformSecurity.On("ExecuteScan", ctx).Return(nil)
