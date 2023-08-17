@@ -230,6 +230,8 @@ func InitializeJobDependencies(ctx context.Context, env string) (*Job, error) {
 	}
 
 	jobConfig.CloudCredential = inferredData.CloudCredential
+	// TODO: Remove this line once done testing E2E in dev environment prior to push to prod release
+	fmt.Printf("formatted credential: %v", inferredData.CloudCredential)
 
 	dragonDropInstance, err := (&dragonDrop.Factory{}).Instantiate(env, jobConfig.getDragonDropConfig())
 	if err != nil {

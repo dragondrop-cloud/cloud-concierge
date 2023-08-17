@@ -114,8 +114,8 @@ func parseAWSCredentialValues(credentialBytes []byte) (terraformValueObjects.Cre
 	re := regexp.MustCompile(`\naws_access_key_id = (.*)\naws_secret_access_key = (.*)`)
 	credentialValues := re.FindStringSubmatch(string(credentialBytes))
 	AWSCredentialLocal := awsCredentialLocal{
-		AwsAccessKeyID:     credentialValues[1],
-		AwsSecretAccessKey: credentialValues[2],
+		AwsAccessKeyID:     strings.Replace(credentialValues[1], "\r", "", -1),
+		AwsSecretAccessKey: strings.Replace(credentialValues[2], "\r", "", -1),
 	}
 	credential, err := json.Marshal(AWSCredentialLocal)
 	if err != nil {
@@ -144,6 +144,7 @@ func loadAWSCredentialWithinECS() (terraformValueObjects.Credential, error) {
 	if err != nil {
 		return "", fmt.Errorf("[client.Do][%w]", err)
 	}
+	// TODO: Remove this line once done testing E2E in dev environment prior to push to prod release
 	fmt.Printf("response: %v", response)
 
 	credential := &awsCredentialRemote{}
