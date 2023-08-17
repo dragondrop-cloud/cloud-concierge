@@ -105,9 +105,10 @@ func validateJobConfig(config JobConfig) error {
 // getDragonDropConfig returns the configuration for the DragonDrop client.
 func (c JobConfig) getDragonDropConfig() dragonDrop.HTTPDragonDropClientConfig {
 	return dragonDrop.HTTPDragonDropClientConfig{
-		APIPath:  c.APIPath,
-		JobID:    c.JobID,
-		OrgToken: c.OrgToken,
+		APIPath:              c.APIPath,
+		JobID:                c.JobID,
+		OrgToken:             c.OrgToken,
+		WorkspaceDirectories: c.WorkspaceDirectories,
 	}
 }
 
