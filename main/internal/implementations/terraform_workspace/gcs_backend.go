@@ -15,7 +15,7 @@ import (
 // GCSBackend is an implementation of the interfaces.TerraformWorkspace interface that uses GCS as a backend.
 type GCSBackend struct {
 	// config is the configuration for the Azure Blob Storage backend.
-	config ContainerBackendConfig
+	config TfStackConfig
 
 	// dragonDrop is the DragonDrop interface that is used to communicate with the DragonDrop API.
 	dragonDrop interfaces.DragonDrop
@@ -36,7 +36,7 @@ func (b *GCSBackend) FindTerraformWorkspaces(ctx context.Context) (map[string]st
 }
 
 // NewGCSBackend creates a new GCSBackend instance.
-func NewGCSBackend(ctx context.Context, config ContainerBackendConfig, dragonDrop interfaces.DragonDrop) interfaces.TerraformWorkspace {
+func NewGCSBackend(ctx context.Context, config TfStackConfig, dragonDrop interfaces.DragonDrop) interfaces.TerraformWorkspace {
 	dragonDrop.PostLog(ctx, "Created TFWorkspace client.")
 
 	return &GCSBackend{config: config, dragonDrop: dragonDrop}

@@ -229,6 +229,8 @@ func InitializeJobDependencies(ctx context.Context, env string) (*Job, error) {
 		return nil, fmt.Errorf("[cannot create job config]%w", err)
 	}
 
+	jobConfig.CloudCredential = inferredData.CloudCredential
+
 	dragonDropInstance, err := (&dragonDrop.Factory{}).Instantiate(env, jobConfig.getDragonDropConfig())
 	if err != nil {
 		return nil, err

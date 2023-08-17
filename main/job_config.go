@@ -120,8 +120,10 @@ func (c JobConfig) getVCSConfig() vcs.Config {
 	}
 }
 
-func (c JobConfig) getTerraformWorkspaceConfig() terraformWorkspace.TerraformCloudConfig {
-	return terraformWorkspace.TerraformCloudConfig{
+func (c JobConfig) getTerraformWorkspaceConfig() terraformWorkspace.TfStackConfig {
+	return terraformWorkspace.TfStackConfig{
+		AWSRegion:                  string(c.CloudRegions[0]),
+		CloudCredential:            c.CloudCredential,
 		StateBackend:               c.StateBackend,
 		TerraformCloudOrganization: c.TerraformCloudOrganization,
 		TerraformCloudToken:        c.TerraformCloudToken,
@@ -139,6 +141,7 @@ func (c JobConfig) getHCLCreateConfig() hclcreate.Config {
 func (c JobConfig) getTerraformerConfig() terraformerCli.TerraformerExecutorConfig {
 	return terraformerCli.TerraformerExecutorConfig{
 		CloudCredential:  c.CloudCredential,
+		Division:         c.Division,
 		Provider:         c.Provider,
 		TerraformVersion: terraformValueObjects.Version(c.TerraformVersion),
 		CloudRegions:     c.CloudRegions,

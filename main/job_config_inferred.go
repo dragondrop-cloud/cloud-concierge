@@ -14,6 +14,11 @@ import (
 )
 
 type InferredData struct {
+
+	// CloudCredential is a cloud credential that is used to authenticate with a cloud provider. Credential should
+	// only require read-only access.
+	CloudCredential terraformValueObjects.Credential `required:"false"`
+
 	// Provider is the name of the cloud provider (aws, azurerm, google, etc.).
 	Provider terraformValueObjects.Provider `required:"true"`
 
@@ -36,18 +41,18 @@ func getInferredData(config JobConfig) (InferredData, error) {
 		return InferredData{}, fmt.Errorf("[error getting vcs system from repo url][%w]", err)
 	}
 
+	cloudCredential := terraformValueObjects.Credential("")
 	if config.JobID != "test-pull" {
-		cloudCredential, err := getCloudCredential(provider, config.JobID)
+		cloudCredential, err = getCloudCredential(provider, config.JobID)
 		if err != nil {
 			return InferredData{}, fmt.Errorf("[error getting cloud credential for %v][%w]", provider, err)
 		}
-
-		config.CloudCredential = cloudCredential
 	}
 
 	return InferredData{
-		Provider:  provider,
-		VCSSystem: vcsSystem,
+		CloudCredential: cloudCredential,
+		Provider:        provider,
+		VCSSystem:       vcsSystem,
 	}, nil
 }
 
