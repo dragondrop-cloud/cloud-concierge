@@ -137,7 +137,7 @@ func loadAWSCredentialWithinECS() (terraformValueObjects.Credential, error) {
 	// Adapted from https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/using-sts.html
 	// Specifically, within ECS, run curl 169.254.170.2$AWS_CONTAINER_CREDENTIALS_RELATIVE_URI
 
-	response, err := http.Get(os.ExpandEnv("https://169.254.170.2$AWS_CONTAINER_CREDENTIALS_RELATIVE_URI"))
+	response, err := http.Get(os.ExpandEnv("http://169.254.170.2$AWS_CONTAINER_CREDENTIALS_RELATIVE_URI"))
 	if err != nil {
 		return "", fmt.Errorf("[http.Get]%w", err)
 	}
