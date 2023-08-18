@@ -33,19 +33,19 @@ type InferredData struct {
 func getInferredData(config JobConfig) (InferredData, error) {
 	provider, err := getProviderFromProviderVersion(config.Provider)
 	if err != nil {
-		return InferredData{}, fmt.Errorf("[error getting the provider value from provider version][%w]", err)
+		return InferredData{}, fmt.Errorf("[error getting the provider value from provider version]%w", err)
 	}
 
 	vcsSystem, err := getVCSSystemFromRepoURL(config.VCSRepo)
 	if err != nil {
-		return InferredData{}, fmt.Errorf("[error getting vcs system from repo url][%w]", err)
+		return InferredData{}, fmt.Errorf("[error getting vcs system from repo url]%w", err)
 	}
 
 	cloudCredential := terraformValueObjects.Credential("")
 	if config.JobID != "test-pull" {
 		cloudCredential, err = getCloudCredential(provider, config.JobID)
 		if err != nil {
-			return InferredData{}, fmt.Errorf("[error getting cloud credential for %v][%w]", provider, err)
+			return InferredData{}, fmt.Errorf("[error getting cloud credential for %v]%w", provider, err)
 		}
 	}
 
@@ -135,11 +135,11 @@ type awsCredentialLocal struct {
 // an ECS task definition.
 func loadAWSCredentialWithinECS() (terraformValueObjects.Credential, error) {
 	// Adapted from https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/using-sts.html
-	// curl 169.254.170.2$AWS_CONTAINER_CREDENTIALS_RELATIVE_URI
+	// Specifically, within ECS, run curl 169.254.170.2$AWS_CONTAINER_CREDENTIALS_RELATIVE_URI
 
-	response, err := http.Get(os.ExpandEnv("169.254.170.2$AWS_CONTAINER_CREDENTIALS_RELATIVE_URI"))
+	response, err := http.Get(os.ExpandEnv("https://169.254.170.2$AWS_CONTAINER_CREDENTIALS_RELATIVE_URI"))
 	if err != nil {
-		return "", fmt.Errorf("[http.Get][%w]", err)
+		return "", fmt.Errorf("[http.Get]%w", err)
 	}
 	//client := &http.Client{}
 	//request, err := http.NewRequest("GET", fmt.Sprintf("169.254.160.2%v", os.Getenv("AWS_CONTAINER_CREDENTIALS_RELATIVE_URI")), nil)
