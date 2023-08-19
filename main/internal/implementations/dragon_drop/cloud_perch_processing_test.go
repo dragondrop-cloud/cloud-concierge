@@ -2,6 +2,7 @@ package dragonDrop
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -39,36 +40,36 @@ func writeCurrentCloudFile(filename string, content []byte) error {
 	return writeFile(filename, content, "current_cloud")
 }
 
-func cleanMockedDirectory() {
+func cleanMockedDirectories(t *testing.T) {
 	cmd := exec.Command("rm", "-rf", "outputs")
 	err := cmd.Run()
 	if err != nil {
-		return
+		t.Logf("Error cleaning mocked directories outputs: %v", err)
 	}
 
 	cmd = exec.Command("rm", "-rf", "current_cloud")
 	err = cmd.Run()
 	if err != nil {
-		return
+		t.Logf("Error cleaning mocked directories current_cloud: %v", err)
 	}
 
 	cmd = exec.Command("rm", "-rf", "repo")
 	err = cmd.Run()
 	if err != nil {
-		return
+		t.Logf("Error cleaning mocked directories repo: %v", err)
 	}
 }
 
 func TestHTTPDragonDropClient_getResourceInventoryData(t *testing.T) {
-	// Given
-	defer cleanMockedDirectory()
+	defer cleanMockedDirectories(t)
 
+	// Given
 	ctx := context.Background()
 	client := HTTPDragonDropClient{}
 
 	err := writeOutputFile("new-resources.json", []byte(`
 		{
-  			"resource_id_1": {
+ 			"resource_id_1": {
 				"ResourceType": "resource_type_1",
 				"ResourceTerraformerName": "resource_terraformer_name_1",
 				"Region": "region_1"
@@ -84,7 +85,7 @@ func TestHTTPDragonDropClient_getResourceInventoryData(t *testing.T) {
 
 	err = writeOutputFile("drift-resources-differences.json", []byte(`
 		[
-  			{
+ 			{
 				"RecentActor": "root",
 				"RecentActionTimestamp": "2023-08-09",
 				"AttributeName": "access_logs.s3.enabled",
@@ -114,40 +115,21 @@ func TestHTTPDragonDropClient_getResourceInventoryData(t *testing.T) {
 	`))
 	require.NoError(t, err)
 
-	err = writeOutputFile("drift-resources-deleted.json", []byte(`
-		[
-  			{
-				"InstanceID": "instance_id_3",
-				"StateFileName": "state_file_name_1",
-				"ModuleName": "module_name_1",
-				"ResourceType": "resource_type_1",
-				"ResourceName": "resource_name_1"
-			},
-			{
-				"InstanceID": "instance_id_4",
-				"StateFileName": "state_file_name_2",
-				"ModuleName": "module_name_2",
-				"ResourceType": "resource_type_2",
-				"ResourceName": "resource_name_2"
-			}
-		]
-	`))
-	require.NoError(t, err)
-
 	// When
 	resourceInventory, newResources, err := client.getResourceInventoryData(ctx)
 
 	// Then
 	require.NoError(t, err)
-	require.Equal(t, 4, resourceInventory.DriftedResources)
+	require.Equal(t, 2, resourceInventory.DriftedResources)
 	require.Equal(t, 2, resourceInventory.ResourcesOutsideTerraformControl)
 	require.NotNil(t, newResources["resource_id_1"])
 	require.NotNil(t, newResources["resource_id_2"])
+
 }
 
 func TestHTTPDragonDropClient_getCloudSecurityData(t *testing.T) {
 	// Given
-	defer cleanMockedDirectory()
+	defer cleanMockedDirectories(t)
 
 	ctx := context.Background()
 	client := HTTPDragonDropClient{}
@@ -180,7 +162,7 @@ func TestHTTPDragonDropClient_getCloudSecurityData(t *testing.T) {
 			  "severity": "LOW"
 			}
 		]
-    }`))
+   }`))
 	require.NoError(t, err)
 
 	// When
@@ -196,7 +178,7 @@ func TestHTTPDragonDropClient_getCloudSecurityData(t *testing.T) {
 
 func TestHTTPDragonDropClient_getCloudCostsData(t *testing.T) {
 	// Given
-	defer cleanMockedDirectory()
+	defer cleanMockedDirectories(t)
 
 	ctx := context.Background()
 	client := HTTPDragonDropClient{}
@@ -274,7 +256,7 @@ func TestHTTPDragonDropClient_getCloudCostsData(t *testing.T) {
 
 func Test_formatResources(t *testing.T) {
 	// Given
-	defer cleanMockedDirectory()
+	defer cleanMockedDirectories(t)
 
 	newResources := map[string]interface{}{
 		"instance_id_1": interface{}(
@@ -318,7 +300,7 @@ func Test_formatResources(t *testing.T) {
 
 func TestHTTPDragonDropClient_getTerraformFootprintData_main_tf_no_modules_aws(t *testing.T) {
 	// Given
-	defer cleanMockedDirectory()
+	defer cleanMockedDirectories(t)
 
 	ctx := context.Background()
 	client := HTTPDragonDropClient{}
@@ -326,13 +308,13 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_main_tf_no_modules_aws(t
 	err := writeCurrentCloudFile("main.tf", []byte(`
 		terraform {
 		  required_version = "1.5.1"
-		
+
 		  required_providers {
 			aws = {
 			  source  = "hashicorp/aws"
 			  version = "~>4.59.0"
 			}
-		
+
 		  }
 		}
 	`))
@@ -350,7 +332,7 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_main_tf_no_modules_aws(t
 
 func TestHTTPDragonDropClient_getTerraformFootprintData_main_tf_no_modules_azure(t *testing.T) {
 	// Given
-	defer cleanMockedDirectory()
+	defer cleanMockedDirectories(t)
 
 	ctx := context.Background()
 	client := HTTPDragonDropClient{}
@@ -358,7 +340,7 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_main_tf_no_modules_azure
 	err := writeCurrentCloudFile("main.tf", []byte(`
 		terraform {
 		  required_version = "1.5.1"
-		
+
 		  required_providers {
 			azurerm = {
 			  source  = "hashicorp/azurerm"
@@ -381,7 +363,7 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_main_tf_no_modules_azure
 
 func TestHTTPDragonDropClient_getTerraformFootprintData_main_tf_no_modules_google(t *testing.T) {
 	// Given
-	defer cleanMockedDirectory()
+	defer cleanMockedDirectories(t)
 
 	ctx := context.Background()
 	client := HTTPDragonDropClient{}
@@ -389,7 +371,7 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_main_tf_no_modules_googl
 	err := writeCurrentCloudFile("main.tf", []byte(`
 		terraform {
 		  required_version = "1.5.1"
-		
+
 		  required_providers {
 			google = {
 			  source  = "hashicorp/google"
@@ -412,7 +394,7 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_main_tf_no_modules_googl
 
 func TestHTTPDragonDropClient_getTerraformFootprintData_versions_tf_no_modules(t *testing.T) {
 	// Given
-	defer cleanMockedDirectory()
+	defer cleanMockedDirectories(t)
 
 	ctx := context.Background()
 	client := HTTPDragonDropClient{}
@@ -420,7 +402,7 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_versions_tf_no_modules(t
 	err := writeCurrentCloudFile("versions.tf", []byte(`
 		terraform {
 		  required_version = "1.5.1"
-		
+
 		  required_providers {
 			google = {
 			  source  = "hashicorp/google"
@@ -443,7 +425,7 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_versions_tf_no_modules(t
 
 func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_no_modules(t *testing.T) {
 	// Given
-	defer cleanMockedDirectory()
+	defer cleanMockedDirectories(t)
 
 	ctx := context.Background()
 	client := HTTPDragonDropClient{
@@ -455,7 +437,7 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_no_modul
 	err := writeFile("another.tf", []byte(`
 		terraform {
 		  required_version = "1.5.1"
-		
+
 		  required_providers {
 			google = {
 			  source  = "hashicorp/google"
@@ -478,7 +460,7 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_no_modul
 
 func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_one_module(t *testing.T) {
 	// Given
-	defer cleanMockedDirectory()
+	defer cleanMockedDirectories(t)
 
 	ctx := context.Background()
 	client := HTTPDragonDropClient{
@@ -490,7 +472,7 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_one_modu
 	err := writeFile("another.tf", []byte(`
 		terraform {
 		  required_version = "1.5.1"
-		
+
 		  required_providers {
 			google = {
 			  source  = "hashicorp/google"
@@ -505,7 +487,7 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_one_modu
 		module "servers" {
 			source = "./app-cluster"
 			version = "0.0.5"
-		
+
 			servers = 5
 		}
 	`), "repo/workspace1")
@@ -523,7 +505,7 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_one_modu
 
 func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_two_modules_in_a_file(t *testing.T) {
 	// Given
-	defer cleanMockedDirectory()
+	defer cleanMockedDirectories(t)
 
 	ctx := context.Background()
 	client := HTTPDragonDropClient{
@@ -535,7 +517,7 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_two_modu
 	err := writeFile("another.tf", []byte(`
 		terraform {
 		  required_version = "1.5.1"
-		
+
 		  required_providers {
 			google = {
 			  source  = "hashicorp/google"
@@ -550,14 +532,14 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_two_modu
 		module "servers" {
 			source = "./app-cluster"
 			version = "0.0.5"
-		
+
 			servers = 5
 		}
 
 		module "servers2" {
 			source = "./app-cluster"
 			version = "0.0.6"
-		
+
 			servers = 5
 		}
 	`), "repo/workspace1")
@@ -575,7 +557,7 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_two_modu
 
 func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_multiple_modules_multiple_files(t *testing.T) {
 	// Given
-	defer cleanMockedDirectory()
+	defer cleanMockedDirectories(t)
 
 	ctx := context.Background()
 	client := HTTPDragonDropClient{
@@ -587,7 +569,7 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_multiple
 	err := writeFile("another.tf", []byte(`
 		terraform {
 		  required_version = "1.5.1"
-		
+
 		  required_providers {
 			google = {
 			  source  = "hashicorp/google"
@@ -602,14 +584,14 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_multiple
 		module "servers" {
 			source = "./app-cluster"
 			version = "0.0.5"
-		
+
 			servers = 5
 		}
 
 		module "servers2" {
 			source = "./app-cluster"
 			version = "0.0.6"
-		
+
 			servers = 5
 		}
 	`), "repo/workspace1")
@@ -619,14 +601,14 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_multiple
 		module "server4" {
 			source = "./app-cluster"
 			version = "0.0.7"
-		
+
 			servers = 5
 		}
 
 		module "servers3" {
 			source = "./app-cluster"
 			version = "0.0.8"
-		
+
 			servers = 5
 		}
 	`), "repo/workspace1")
@@ -644,7 +626,7 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_multiple
 
 func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_sum_module_versions(t *testing.T) {
 	// Given
-	defer cleanMockedDirectory()
+	defer cleanMockedDirectories(t)
 
 	ctx := context.Background()
 	client := HTTPDragonDropClient{
@@ -656,7 +638,7 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_sum_modu
 	err := writeFile("another.tf", []byte(`
 		terraform {
 		  required_version = "1.5.1"
-		
+
 		  required_providers {
 			google = {
 			  source  = "hashicorp/google"
@@ -671,14 +653,14 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_sum_modu
 		module "servers" {
 			source = "./app-cluster"
 			version = "0.0.5"
-		
+
 			servers = 5
 		}
 
 		module "servers2" {
 			source = "./app-cluster"
 			version = "0.0.6"
-		
+
 			servers = 5
 		}
 	`), "repo/workspace1")
@@ -688,14 +670,14 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_sum_modu
 		module "server4" {
 			source = "./app-cluster"
 			version = "0.0.5"
-		
+
 			servers = 5
 		}
 
 		module "servers3" {
 			source = "./app-cluster"
 			version = "0.0.6"
-		
+
 			servers = 5
 		}
 	`), "repo/workspace1")
@@ -713,7 +695,7 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_sum_modu
 
 func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_more_than_one_source(t *testing.T) {
 	// Given
-	defer cleanMockedDirectory()
+	defer cleanMockedDirectories(t)
 
 	ctx := context.Background()
 	client := HTTPDragonDropClient{
@@ -725,7 +707,7 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_more_tha
 	err := writeFile("another.tf", []byte(`
 		terraform {
 		  required_version = "1.5.1"
-		
+
 		  required_providers {
 			google = {
 			  source  = "hashicorp/google"
@@ -740,14 +722,14 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_more_tha
 		module "servers" {
 			source = "./app-cluster"
 			version = "0.0.5"
-		
+
 			servers = 5
 		}
 
 		module "servers2" {
 			source = "./app-cluster2"
 			version = "0.0.6"
-		
+
 			servers = 5
 		}
 	`), "repo/workspace1")
@@ -757,14 +739,14 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_more_tha
 		module "server4" {
 			source = "./app-cluster"
 			version = "0.0.5"
-		
+
 			servers = 5
 		}
 
 		module "servers3" {
 			source = "./app-cluster2"
 			version = "0.0.6"
-		
+
 			servers = 5
 		}
 	`), "repo/workspace1")
@@ -782,7 +764,7 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_more_tha
 
 func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_more_than_one_source_multiple_versions(t *testing.T) {
 	// Given
-	defer cleanMockedDirectory()
+	defer cleanMockedDirectories(t)
 
 	ctx := context.Background()
 	client := HTTPDragonDropClient{
@@ -794,7 +776,7 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_more_tha
 	err := writeFile("another.tf", []byte(`
 		terraform {
 		  required_version = "1.5.1"
-		
+
 		  required_providers {
 			google = {
 			  source  = "hashicorp/google"
@@ -809,28 +791,28 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_more_tha
 		module "servers" {
 			source = "./app-cluster"
 			version = "0.0.5"
-		
+
 			servers = 5
 		}
 
 		module "servers2" {
 			source = "./app-cluster"
 			version = "0.0.6"
-		
+
 			servers = 5
 		}
 
 		module "servers2" {
 			source = "./app-cluster2"
 			version = "0.0.5"
-		
+
 			servers = 5
 		}
 
 		module "servers2" {
 			source = "./app-cluster2"
 			version = "0.0.6"
-		
+
 			servers = 5
 		}
 	`), "repo/workspace1")
@@ -840,28 +822,28 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_more_tha
 		module "server4" {
 			source = "./app-cluster"
 			version = "0.0.5"
-		
+
 			servers = 5
 		}
 
 		module "servers3" {
 			source = "./app-cluster"
 			version = "0.0.6"
-		
+
 			servers = 5
 		}
 
 		module "servers2" {
 			source = "./app-cluster2"
 			version = "0.0.5"
-		
+
 			servers = 5
 		}
 
 		module "servers2" {
 			source = "./app-cluster2"
 			version = "0.0.6"
-		
+
 			servers = 5
 		}
 	`), "repo/workspace1")
@@ -1016,4 +998,38 @@ func Test_getAttributeValue(t *testing.T) {
 	// Then
 	require.Equal(t, "hashicorp/google", sourceValue)
 	require.Equal(t, ">=4.77.0", versionValue)
+}
+
+func Test_getUniqueDriftedResourceCount(t *testing.T) {
+	// Given
+	terraformState := []byte(`[
+ {
+   "InstanceID": "arn:aws:elasticloadbalancing:us-east-1:6"
+ },
+ {
+   "InstanceID": "arn:aws:elasticloadbalancing:us-east-1:6"
+ },
+ {
+   "InstanceID": "arn:aws:elasticloadbalancing:us-east-1:7"
+ },
+ {
+   "InstanceID": "arn:aws:elasticloadbalancing:us-east-1:7"
+ },
+ {
+   "InstanceID": "arn:aws:elasticloadbalancing:us-east-1:6"
+ }
+]`)
+	var data []interface{}
+	err := json.Unmarshal(terraformState, &data)
+	if err != nil {
+		t.Errorf("unexpected error unmarshalling value: %s", err)
+	}
+
+	// When
+	count := getUniqueDriftedResourceCount(data)
+
+	// Then
+	if count != 2 {
+		t.Errorf("expected 2, got %d", count)
+	}
 }
