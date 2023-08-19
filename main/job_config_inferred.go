@@ -136,25 +136,12 @@ type awsCredentialLocal struct {
 func loadAWSCredentialWithinECS() (terraformValueObjects.Credential, error) {
 	// Adapted from https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/using-sts.html
 	// Specifically, within ECS, run curl 169.254.170.2$AWS_CONTAINER_CREDENTIALS_RELATIVE_URI
-
 	response, err := http.Get(os.ExpandEnv("http://169.254.170.2$AWS_CONTAINER_CREDENTIALS_RELATIVE_URI"))
 	if err != nil {
 		return "", fmt.Errorf("[http.Get]%w", err)
 	}
-	//client := &http.Client{}
-	//request, err := http.NewRequest("GET", fmt.Sprintf("169.254.160.2%v", os.Getenv("AWS_CONTAINER_CREDENTIALS_RELATIVE_URI")), nil)
-	//if err != nil {
-	//	return "", fmt.Errorf("[http.NewRequest][%w]", err)
-	//}
-	//response, err := client.Do(request)
-	//if err != nil {
-	//	return "", fmt.Errorf("[client.Do][%w]", err)
-	//}
-	// TODO: Remove this line once done testing E2E in dev environment prior to push to prod release
-	fmt.Printf("response: %v", response)
-
-	credential := &awsCredentialRemote{}
 	defer response.Body.Close()
+	credential := &awsCredentialRemote{}
 	bodyBytes, err := io.ReadAll(response.Body)
 	if err != nil {
 		return "", fmt.Errorf("[io.ReadAll][%w]", err)

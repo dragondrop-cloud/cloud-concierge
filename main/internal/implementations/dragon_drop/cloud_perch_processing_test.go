@@ -2,6 +2,7 @@ package dragonDrop
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -1017,3 +1018,38 @@ func Test_getAttributeValue(t *testing.T) {
 	require.Equal(t, "hashicorp/google", sourceValue)
 	require.Equal(t, ">=4.77.0", versionValue)
 }
+
+func Test_getUniqueDriftedResourceCount(t *testing.T) {
+	// Given
+	terraformState := []byte(`[
+  {
+    "InstanceID": "arn:aws:elasticloadbalancing:us-east-1:6",
+  },
+  {
+    "InstanceID": "arn:aws:elasticloadbalancing:us-east-1:6",
+  },
+  {
+    "InstanceID": "arn:aws:elasticloadbalancing:us-east-1:7",
+  },
+  {
+    "InstanceID": "arn:aws:elasticloadbalancing:us-east-1:7",
+  },
+  {
+    "InstanceID": "arn:aws:elasticloadbalancing:us-east-1:6",
+  }
+]`)
+	var data []interface{}
+	err := json.Unmarshal(terraformState, &data)
+	if err != nil {
+		t.Errorf("unexpected error unmarshalling value: %s", err)
+	}
+
+	// When
+	count := getUniqueDriftedResourceCount(data)
+
+	// Then
+	if count != 2 {
+		t.Errorf("expected 2, got %d", count)
+	}
+}
+
