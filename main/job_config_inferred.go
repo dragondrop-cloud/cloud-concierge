@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -12,7 +11,6 @@ import (
 
 	"github.com/dragondrop-cloud/cloud-concierge/main/internal/documentize"
 	terraformValueObjects "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_value_objects"
-	"golang.org/x/oauth2/google"
 )
 
 type InferredData struct {
@@ -187,11 +185,15 @@ func getGoogleCredential(jobID string) (terraformValueObjects.Credential, error)
 		return terraformValueObjects.Credential(credentialBytes), nil
 	}
 	// Load credentials with assumption that is running in Google
-	credentialStruct, err := google.FindDefaultCredentials(context.Background())
-	if err != nil {
-		return "", fmt.Errorf("[google.FindDefaultCredentials]%w", err)
+	pathToCredentials := os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")
+	if pathToCredentials == "" {
+		return "", fmt.Errorf("missing GOOGLE_APPLICATION_CREDENTIALS environment variable: '%v'", pathToCredentials)
 	}
-	return terraformValueObjects.Credential(credentialStruct.JSON), nil
+	credentialBytes, err := os.ReadFile(pathToCredentials)
+	if err != nil {
+		return "", fmt.Errorf("[os.ReadFile]%w", err)
+	}
+	return terraformValueObjects.Credential(credentialBytes), nil
 }
 
 // getProviderFromProviderVersion determines the provider from the input provider version
