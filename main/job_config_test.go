@@ -97,7 +97,7 @@ func TestGetTerraformWorkspaceConfig(t *testing.T) {
 
 	// Then
 	want := terraformWorkspace.TfStackConfig{
-		AWSRegion:                  "us-east1",
+		Region:                     "us-east1",
 		CloudCredential:            "{}",
 		StateBackend:               jobConfig.StateBackend,
 		TerraformCloudOrganization: jobConfig.TerraformCloudOrganization,

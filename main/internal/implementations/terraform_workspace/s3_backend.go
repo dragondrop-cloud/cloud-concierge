@@ -35,7 +35,7 @@ func NewS3Backend(ctx context.Context, config TfStackConfig, dragonDrop interfac
 	dragonDrop.PostLog(ctx, "Created TFWorkspace client.")
 
 	sess := session.Must(session.NewSession(&aws.Config{
-		Region: aws.String(config.AWSRegion),
+		Region: aws.String(config.Region),
 	}))
 	s3Client := s3.New(sess)
 
@@ -90,7 +90,7 @@ func (s *S3Backend) configureS3Client(credential terraformValueObjects.Credentia
 		return err
 	}
 
-	cfg := aws.NewConfig().WithRegion(s.config.AWSRegion).WithCredentials(staticCredentials)
+	cfg := aws.NewConfig().WithRegion(s.config.Region).WithCredentials(staticCredentials)
 	newSession, err := session.NewSession(cfg)
 	if err != nil {
 		return err

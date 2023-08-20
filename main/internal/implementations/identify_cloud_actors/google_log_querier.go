@@ -10,7 +10,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/Jeffail/gabs/v2"
 	"github.com/dragondrop-cloud/cloud-concierge/main/internal/hclcreate"
 	resourcesCalculator "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/resources_calculator"
 	driftDetector "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_managed_resources_drift_detector/drift_detector"
@@ -84,9 +83,9 @@ func (glc *GoogleLogQuerier) QueryForAllResources(ctx context.Context) (terrafor
 		return resourceActions, fmt.Errorf("[glc.loadUpstreamDataToGoogleLogQuerier]%v", err)
 	}
 
-	err = glc.gcloudAuthTokenFromServiceAccount()
+	err = glc.gcloudAuthToken()
 	if err != nil {
-		return resourceActions, fmt.Errorf("[glc.gcloudAuthTokenFromServiceAccount]%v", err)
+		return resourceActions, fmt.Errorf("[glc.gcloudAuthToken]%v", err)
 	}
 
 	// Calculating cloud actors for managed resource drift
@@ -323,24 +322,14 @@ func (glc *GoogleLogQuerier) ExtractDataFromResourceResult(resourceResult []byte
 	return resourceActions, nil
 }
 
-// gcloudAuthTokenFromServiceAccount gets an authentication token for REST API requests from the
-// passed service account keys.
-func (glc *GoogleLogQuerier) gcloudAuthTokenFromServiceAccount() error {
-	account, err := glc.parseGCPServiceAccountEmailAddress()
+// gcloudAuthToken gets an authentication token for REST API requests.
+func (glc *GoogleLogQuerier) gcloudAuthToken() error {
+	err := os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", "current_cloud/credentials/google.json")
 	if err != nil {
-		return fmt.Errorf("[gcloud_authentication][error parsing service account email address]%w", err)
+		return fmt.Errorf("[os.Setenv][error in setting GOOGLE_APPLICATION_CREDENTIALS]%w", err)
 	}
 
-	// Authenticate gcloud for current division
-	keyFilePath := "--key-file=current_cloud/credentials/google.json"
-	authArgs := []string{"auth", "activate-service-account", string(account), keyFilePath}
-
-	_, err = executeCommand("gcloud", authArgs...)
-	if err != nil {
-		return fmt.Errorf("[gcloud_authentication][gcloud auth activate-service-account, failed to authenticate]%w", err)
-	}
-
-	printAccessTokenArgs := []string{"auth", "print-access-token", string(account)}
+	printAccessTokenArgs := []string{"auth", "application-default", "print-access-token"}
 	token, err := executeCommand("gcloud", printAccessTokenArgs...)
 	if err != nil {
 		return fmt.Errorf("[executeCommand][gcloud auth print-access-token]%w", err)
@@ -349,20 +338,4 @@ func (glc *GoogleLogQuerier) gcloudAuthTokenFromServiceAccount() error {
 	glc.authToken = strings.Replace(token, "\n", "", -1)
 
 	return nil
-}
-
-// parseGCPServiceAccountEmailAddress pulls out the service account email address from the service account
-// key file.
-func (glc *GoogleLogQuerier) parseGCPServiceAccountEmailAddress() (terraformValueObjects.Account, error) {
-	serviceAccountParsed, err := gabs.ParseJSON([]byte(glc.cloudCredential))
-	if err != nil {
-		return "", fmt.Errorf("[parse_gcp_service_account_email_address][error parsing JSON with gabs.ParseJSON]%w", err)
-	}
-
-	account, ok := serviceAccountParsed.Path("client_email").Data().(string)
-	if !ok {
-		return "", fmt.Errorf("[parse_gcp_service_account_email_address][client_email not found within service account key]")
-	}
-
-	return terraformValueObjects.Account(account), nil
 }
