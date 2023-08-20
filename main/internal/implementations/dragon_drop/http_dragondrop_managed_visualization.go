@@ -9,6 +9,9 @@ import (
 
 // SendCloudPerchData sends CloudPerchData to DragonDrop.
 func (c *HTTPDragonDropClient) SendCloudPerchData(ctx context.Context) error {
+	if c.config.JobID == "empty" || c.config.JobID == "" {
+		return nil
+	}
 	resourceInventoryData, newResources, err := c.getResourceInventoryData(ctx)
 	if err != nil {
 		return fmt.Errorf("[error getting ResourceInventoryData]%w", err)

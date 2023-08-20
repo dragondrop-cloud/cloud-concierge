@@ -30,8 +30,8 @@ func (d *WorkspaceDirectoriesDecoder) Decode(value string) error {
 
 // TfStackConfig is a struct containing the variables that define the Terraform operating environment (backend, workspaces, etc.).
 type TfStackConfig struct {
-	// AWSRegion is the region of the AWS account that contains the S3 bucket.
-	AWSRegion string
+	// Region is the region of that contains the state storage bucket (or container if Azure).
+	Region string
 
 	// CloudCredential is a cloud credential that is used to authenticate with a cloud provider. Credential should
 	// only require read-only access.

@@ -31,6 +31,10 @@ services:
     volumes:
       - main:/main
       - ~/.aws:/main/credentials/aws:ro
+      # - ~/.config/gcloud:/main/credentials/gcp:ro
+      # When running locally on Windows, the path to the gcloud credentials is different
+      - ~/AppData/Roaming/gcloud:/main/credentials/gcp:ro
+
 
 networks:
   network:

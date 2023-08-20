@@ -86,7 +86,7 @@ type JobConfig struct {
 	ResourcesBlackList terraformValueObjects.ResourceNameList
 
 	// CloudRegions represents the list of cloud regions that will be considered for inclusion in the import statement.
-	CloudRegions terraformValueObjects.CloudRegionsDecoder
+	CloudRegions terraformValueObjects.CloudRegionsDecoder `default:"['us-east-1]"`
 }
 
 // validateJobConfig validates the JobConfig struct with the values as expected.
@@ -123,7 +123,7 @@ func (c JobConfig) getVCSConfig() vcs.Config {
 
 func (c JobConfig) getTerraformWorkspaceConfig() terraformWorkspace.TfStackConfig {
 	return terraformWorkspace.TfStackConfig{
-		AWSRegion:                  string(c.CloudRegions[0]),
+		Region:                     string(c.CloudRegions[0]),
 		CloudCredential:            c.CloudCredential,
 		StateBackend:               c.StateBackend,
 		TerraformCloudOrganization: c.TerraformCloudOrganization,
