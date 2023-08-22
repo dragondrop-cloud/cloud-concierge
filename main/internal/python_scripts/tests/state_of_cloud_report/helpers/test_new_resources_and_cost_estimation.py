@@ -2,7 +2,6 @@
 Unit tests for helpers in estimating the cost of cloud resources
 within the state of cloud report.
 """
-from unittest import TestCase
 import pandas as pd
 from main.internal.python_scripts.state_of_cloud_report.helpers.new_resources_and_cost_estimation import (
     process_new_resources,
@@ -106,9 +105,9 @@ def test_dataframe_from_cost_estimates_json():
     ]
 
     input_new_resources = {
-        "google-dragondrop-dev.google_sql_database.tfer--outside-of-terraform-control-db-postgres": "terraform name of tfer  outs",
-        "google-dragondrop-dev.google_sql_database_instance.tfer--outside-of-terraform-control-db": "ter. ",
-        "google-dragondrop-dev.google_storage_bucket.tfer--testing-out-this-bucket": "terraform name ",
+        "google_sql_database.tfer--outside-of-terraform-control-db-postgres": "terraform name of tfer  outs",
+        "google_sql_database_instance.tfer--outside-of-terraform-control-db": "ter. ",
+        "google_storage_bucket.tfer--testing-out-this-bucket": "terraform name ",
     }
 
     expected_output_df = _create_baseline_expected_df(is_extra_row=True)
