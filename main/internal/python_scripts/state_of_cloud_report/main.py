@@ -32,19 +32,20 @@ from helpers.security_scanning import (
 
 def create_markdown_file(job_name: str, markdown_text_output_path):
     """Generate and save a state-of-cloud markdown report"""
-    with open("outputs/new-resources-to-documents.json", "r") as json_file:
+    file_path_root = "outputs/"
+    with open(f"{file_path_root}new-resources-to-documents.json", "r") as json_file:
         new_resources = json.loads(json_file.read())
 
-    with open("outputs/resources-to-cloud-actions.json", "r") as json_file:
+    with open(f"{file_path_root}resources-to-cloud-actions.json", "r") as json_file:
         resources_to_cloud_actions = json.loads(json_file.read())
 
-    with open("outputs/cost-estimates.json", "r") as json_file:
+    with open(f"{file_path_root}cost-estimates.json", "r") as json_file:
         cost_estimates = json.loads(json_file.read())
 
-    with open("outputs/security-scan.json", "r") as json_file:
+    with open(f"{file_path_root}security-scan.json", "r") as json_file:
         security_scan = json.loads(json_file.read())
 
-    with open("outputs/drift-resources-differences.json", "r") as json_file:
+    with open(f"{file_path_root}drift-resources-differences.json", "r") as json_file:
         managed_drift_list_of_dicts = json.loads(json_file.read())
 
     if managed_drift_list_of_dicts:
