@@ -2,9 +2,7 @@
 Unit tests for helpers in estimating the cost of cloud resources
 within the state of cloud report.
 """
-from unittest import TestCase
 import pandas as pd
-from mdutils.mdutils import MdUtils
 from main.internal.python_scripts.state_of_cloud_report.helpers.new_resources_and_cost_estimation import (
     process_new_resources,
     _calculate_aggregate_costs_across_scan,
@@ -14,37 +12,55 @@ from main.internal.python_scripts.state_of_cloud_report.helpers.new_resources_an
 )
 
 
-def _create_baseline_expected_df(is_new_resource: bool = True) -> pd.DataFrame:
-    return pd.DataFrame(
-        [
+def _create_baseline_expected_df(
+    is_new_resource: bool = True, is_extra_row: bool = False
+) -> pd.DataFrame:
+    list_of_dicts = [
+        {
+            "cost_component": "SQL instance (db-f1-micro, zonal)",
+            "is_usage_based": False,
+            "monthly_cost": 7.665,
+            "monthly_quantity": 730.0,
+            "price": "hours",
+            "resource_name": "google_sql_database_instance.tfer--outside-of-terraform-control-db",
+            "sub_resource_name": "",
+            "unit": "hours",
+            "provider": "google",
+            "resource_type": "google_sql_database_instance",
+            "is_new_resource": is_new_resource,
+        },
+        {
+            "cost_component": "Storage (SSD, zonal)",
+            "is_usage_based": False,
+            "monthly_cost": 1.7,
+            "monthly_quantity": 10.0,
+            "price": "GB",
+            "resource_name": "google_sql_database_instance.tfer--outside-of-terraform-control-db",
+            "sub_resource_name": "",
+            "unit": "GB",
+            "provider": "google",
+            "resource_type": "google_sql_database_instance",
+            "is_new_resource": is_new_resource,
+        },
+    ]
+    if is_extra_row:
+        list_of_dicts.append(
             {
-                "cost_component": "SQL instance (db-f1-micro, zonal)",
+                "cost_component": "Extra Component",
                 "is_usage_based": False,
-                "monthly_cost": 7.665,
-                "monthly_quantity": 730.0,
-                "price": "hours",
-                "resource_name": "google_sql_database_instance.tfer--outside-of-terraform-control-db",
-                "sub_resource_name": "",
-                "unit": "hours",
-                "provider": "google",
-                "resource_type": "google_sql_database_instance",
-                "is_new_resource": is_new_resource,
-            },
-            {
-                "cost_component": "Storage (SSD, zonal)",
-                "is_usage_based": False,
-                "monthly_cost": 1.7,
+                "monthly_cost": 50.00,
                 "monthly_quantity": 10.0,
-                "price": "GB",
+                "price": "50.00",
                 "resource_name": "google_sql_database_instance.tfer--outside-of-terraform-control-db",
                 "sub_resource_name": "",
                 "unit": "GB",
                 "provider": "google",
                 "resource_type": "google_sql_database_instance",
                 "is_new_resource": is_new_resource,
-            },
-        ]
-    )
+            }
+        )
+
+    return pd.DataFrame(list_of_dicts)
 
 
 def test_dataframe_from_cost_estimates_json():
@@ -74,15 +90,27 @@ def test_dataframe_from_cost_estimates_json():
             "provider": "google",
             "resource_type": "google_sql_database_instance",
         },
+        {
+            "cost_component": "Extra Component",
+            "is_usage_based": False,
+            "monthly_cost": "",
+            "monthly_quantity": "10",
+            "price": "50.00",
+            "resource_name": "google_sql_database_instance.tfer--outside-of-terraform-control-db",
+            "sub_resource_name": "",
+            "unit": "GB",
+            "provider": "google",
+            "resource_type": "google_sql_database_instance",
+        },
     ]
 
     input_new_resources = {
-        "google-dragondrop-dev.google_sql_database.tfer--outside-of-terraform-control-db-postgres": "terraform name of tfer  outs",
-        "google-dragondrop-dev.google_sql_database_instance.tfer--outside-of-terraform-control-db": "ter. ",
-        "google-dragondrop-dev.google_storage_bucket.tfer--testing-out-this-bucket": "terraform name ",
+        "google_sql_database.tfer--outside-of-terraform-control-db-postgres": "terraform name of tfer  outs",
+        "google_sql_database_instance.tfer--outside-of-terraform-control-db": "ter. ",
+        "google_storage_bucket.tfer--testing-out-this-bucket": "terraform name ",
     }
 
-    expected_output_df = _create_baseline_expected_df()
+    expected_output_df = _create_baseline_expected_df(is_extra_row=True)
 
     output_df = _dataframe_from_cost_estimates_json(
         cost_estimates_json=input_cost_estimates,

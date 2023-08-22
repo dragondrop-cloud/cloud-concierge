@@ -94,7 +94,8 @@ func getUniqueDriftedResourceCount(jsonInput []interface{}) int {
 	return len(uniqueDriftedResources)
 }
 
-// getCloudCostsData returns the costs of the resources outside of terraform control and the costs of the resources
+// getCloudCostsData returns the costs of the resources outside of Terraform control and the costs of the resources
+// already controlled by Terraform.
 func (c *HTTPDragonDropClient) getCloudCostsData(ctx context.Context, newResources map[string]interface{}) (CloudCostsData, error) {
 	costEstimation, err := readOutputFileAsSlice("cost-estimates.json")
 	if err != nil {

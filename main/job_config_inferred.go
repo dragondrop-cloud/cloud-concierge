@@ -184,7 +184,7 @@ func getGoogleCredential(jobID string) (terraformValueObjects.Credential, error)
 		}
 		return terraformValueObjects.Credential(credentialBytes), nil
 	}
-	// Load credentials with assumption that is running in Google
+	// Load credentials with assumption that is running in Google Cloud Run
 	pathToCredentials := os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")
 	if pathToCredentials == "" {
 		return "", fmt.Errorf("missing GOOGLE_APPLICATION_CREDENTIALS environment variable: '%v'", pathToCredentials)
