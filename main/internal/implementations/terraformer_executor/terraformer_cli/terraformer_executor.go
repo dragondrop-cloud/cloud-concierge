@@ -17,11 +17,14 @@ import (
 // TerraformerExecutorConfig is a struct containing the variables that determine the specific
 // behavior of the TerraformerExecutor.
 type TerraformerExecutorConfig struct {
-	// DivisionCloudCredentials is a map between a division and request cloud credentials.
-	DivisionCloudCredentials terraformValueObjects.DivisionCloudCredentialDecoder `required:"true"`
+	// CloudCredential is a cloud credential with read-only access to a cloud division and, if applicable, access to read Terraform state files.
+	CloudCredential terraformValueObjects.Credential `required:"true"`
 
-	// Providers is a map between a cloud provider and the version for that provider.
-	Providers map[terraformValueObjects.Provider]string `required:"true"`
+	// Division is the name of a cloud division. In AWS this is an account, in GCP this is a project name, and in Azure this is a subscription.
+	Division terraformValueObjects.Division `required:"true"`
+
+	// Provider is a map between a cloud provider and the version for that provider.
+	Provider map[terraformValueObjects.Provider]string `required:"true"`
 
 	// TerraformVersion is the version of Terraform used.
 	TerraformVersion terraformValueObjects.Version `required:"true"`
@@ -35,8 +38,8 @@ type TerraformerExecutor struct {
 	// hclCreate implements the hclcreate.HCLCreate interface
 	hclCreate hclcreate.HCLCreate
 
-	// scanners is a map between each provider and an instantiation of that provider's scanner.
-	scanners map[terraformValueObjects.Provider]Scanner
+	// scanner is an instantiation of the current provider's scanner.
+	scanner Scanner
 
 	// dragonDrop is needed to inform scanned
 	dragonDrop interfaces.DragonDrop
@@ -46,86 +49,51 @@ type TerraformerExecutor struct {
 }
 
 // NewTerraformerExecutor creates and returns a new instance of TerraformerExecutor.
-func NewTerraformerExecutor(ctx context.Context, hclCreate hclcreate.HCLCreate, dragonDrop interfaces.DragonDrop, config TerraformerExecutorConfig, cliConfig Config, divisionToProvider map[terraformValueObjects.Division]terraformValueObjects.Provider) (interfaces.TerraformerExecutor, error) {
-	scanners, err := getScanners(config, cliConfig, divisionToProvider)
+func NewTerraformerExecutor(ctx context.Context, hclCreate hclcreate.HCLCreate, dragonDrop interfaces.DragonDrop, config TerraformerExecutorConfig, cliConfig Config, provider terraformValueObjects.Provider) (interfaces.TerraformerExecutor, error) {
+	scanner, err := getScanner(config, cliConfig, provider)
 	if err != nil {
 		return nil, err
 	}
 
 	dragonDrop.PostLog(ctx, "Created TFExec.")
-	return &TerraformerExecutor{hclCreate: hclCreate, scanners: scanners, config: config, dragonDrop: dragonDrop}, nil
+	return &TerraformerExecutor{hclCreate: hclCreate, scanner: scanner, config: config, dragonDrop: dragonDrop}, nil
 }
 
-// getScanners provisions all needed cloud environment scanners by Terraform provider to scan.
-func getScanners(config TerraformerExecutorConfig, cliConfig Config, divisionToProvider map[terraformValueObjects.Division]terraformValueObjects.Provider) (map[terraformValueObjects.Provider]Scanner, error) {
-	providerSet := make(map[terraformValueObjects.Provider]bool)
-	scanners := make(map[terraformValueObjects.Provider]Scanner)
-	for p := range config.Providers {
-		providerSet[p] = true
-	}
+// getScanner provisions the cloud environment scanner for the specified provider.
+func getScanner(config TerraformerExecutorConfig, cliConfig Config, provider terraformValueObjects.Provider) (Scanner, error) {
 
-	for p := range providerSet {
-		switch p {
-		case "google":
-			googleScannerConfig := subsetMapOfDivisionToCredentials(config.DivisionCloudCredentials, divisionToProvider, p)
-			googleScanner, err := NewGoogleScanner(googleScannerConfig, cliConfig, config.CloudRegions)
+	switch provider {
+	case "google":
+		googleScanner, err := NewGoogleScanner(config.CloudCredential, cliConfig, config.CloudRegions)
 
-			if err != nil {
-				log.Errorf("[NewTerraformerExec] Error in NewGoogleScanner(): %s", err.Error())
-				return nil, fmt.Errorf("[NewTerraformerExec] Error in NewGoogleScanner(): %w", err)
-			}
-
-			scanners[p] = googleScanner
-		case "aws":
-			awsScannerConfig := subsetMapOfDivisionToCredentials(config.DivisionCloudCredentials, divisionToProvider, p)
-			awsScanner, err := NewAWSScanner(awsScannerConfig, cliConfig, config.CloudRegions)
-
-			if err != nil {
-				log.Errorf("[NewTerraformerExec] Error in NewAWSScanner(): %s", err.Error())
-				return nil, fmt.Errorf("[NewTerraformerExec] Error in NewAWSScanner(): %w", err)
-			}
-
-			scanners[p] = awsScanner
-		case "azurerm":
-			azureScannerConfig := subsetMapOfDivisionToCredentials(config.DivisionCloudCredentials, divisionToProvider, p)
-			azureScanner, err := NewAzureScanner(azureScannerConfig, cliConfig, config.CloudRegions)
-
-			if err != nil {
-				log.Errorf("[NewTerraformerExec] Error in NewAzureScanner(): %s", err.Error())
-				return nil, fmt.Errorf("[NewTerraformerExec] Error in NewAzureScanner(): %w", err)
-			}
-
-			scanners[p] = azureScanner
-		default:
-			log.Errorf("currently only a scanner for [google, aws, azurerm] is supported. Specified %s", p)
-			return nil, fmt.Errorf("currently only a scanner for [google, aws, azurerm] is supported. Specified %s", p)
+		if err != nil {
+			log.Errorf("[NewTerraformerExec] Error in NewGoogleScanner(): %s", err.Error())
+			return nil, fmt.Errorf("[NewTerraformerExec] Error in NewGoogleScanner(): %w", err)
 		}
-	}
 
-	return scanners, nil
-}
+		return googleScanner, nil
+	case "aws":
+		awsScanner, err := NewAWSScanner(config.CloudCredential, cliConfig, config.CloudRegions)
 
-// subsetMapOfDivisionToCredentials extracts all the division to cloud credentials pairings for
-// a given cloud provider.
-func subsetMapOfDivisionToCredentials(divisionCloudCredentials terraformValueObjects.DivisionCloudCredentialDecoder, divisionToProvider map[terraformValueObjects.Division]terraformValueObjects.Provider, provider terraformValueObjects.Provider) map[terraformValueObjects.Division]terraformValueObjects.Credential {
-	divisionSet := make(map[terraformValueObjects.Division]bool)
-
-	// Unique divisions for the current provider.
-	for div, p := range divisionToProvider {
-		if p == provider {
-			divisionSet[div] = true
+		if err != nil {
+			log.Errorf("[NewTerraformerExec] Error in NewAWSScanner(): %s", err.Error())
+			return nil, fmt.Errorf("[NewTerraformerExec] Error in NewAWSScanner(): %w", err)
 		}
-	}
 
-	// Filter down division to credential dictionary to subset corresponding with the unique divisions.
-	subsetDivisionToCredentials := make(map[terraformValueObjects.Division]terraformValueObjects.Credential)
+		return awsScanner, nil
+	case "azurerm":
+		azureScanner, err := NewAzureScanner(config.CloudCredential, cliConfig, config.CloudRegions)
 
-	for div, cred := range divisionCloudCredentials {
-		if divisionSet[div] {
-			subsetDivisionToCredentials[div] = cred
+		if err != nil {
+			log.Errorf("[NewTerraformerExec] Error in NewAzureScanner(): %s", err.Error())
+			return nil, fmt.Errorf("[NewTerraformerExec] Error in NewAzureScanner(): %w", err)
 		}
+
+		return azureScanner, nil
+	default:
+		log.Errorf("currently only a scanner for [google, aws, azurerm] is supported. Specified %s", provider)
+		return nil, fmt.Errorf("currently only a scanner for [google, aws, azurerm] is supported. Specified %s", provider)
 	}
-	return subsetDivisionToCredentials
 }
 
 // Execute runs the workflow needed to capture the current state of an
@@ -154,7 +122,7 @@ func (e *TerraformerExecutor) Execute(ctx context.Context) error {
 
 	e.dragonDrop.PostLog(ctx, "Done with running `terraform init`.\n Beginning to scan existing cloud environment.")
 
-	err = e.scanAllProviders()
+	err = e.scanner.Scan(e.config.Division, e.config.CloudCredential)
 	if err != nil {
 		return fmt.Errorf("[terraformer_executor][set_up][error scanning all providers]%w", err)
 	}
@@ -164,25 +132,6 @@ func (e *TerraformerExecutor) Execute(ctx context.Context) error {
 	err = e.dragonDrop.InformCloudEnvironmentScanned(ctx)
 	if err != nil {
 		return fmt.Errorf("[terraformer_executor][set_up][error informing cloud environment scanned]%w", err)
-	}
-
-	return nil
-}
-
-// scanAllProviders runs terraformer against all specified providers and all divisions,
-// within each provider.
-func (e *TerraformerExecutor) scanAllProviders() error {
-	scanOutput := make(map[terraformValueObjects.Provider]*MultiScanResult)
-
-	for provider, s := range e.scanners {
-		currentMultiScan, err := s.ScanAll()
-
-		if err != nil {
-			return fmt.Errorf(
-				"[scan_all_providers][error in s.ScanAll() for provider %s]%w", provider, err,
-			)
-		}
-		scanOutput[provider] = currentMultiScan
 	}
 
 	return nil
@@ -231,7 +180,7 @@ func (e *TerraformerExecutor) setTerraformVersion() error {
 func (e *TerraformerExecutor) makeProviderVersionFile() error {
 	genericProviders := make(map[string]string)
 
-	for provider, version := range e.config.Providers {
+	for provider, version := range e.config.Provider {
 		genericProviders[string(provider)] = string(version)
 	}
 

@@ -41,25 +41,24 @@ func TestAWSImportMigrationGenerator_mapResourcesToImportLocation(t *testing.T) 
 			}
 		]
 	}`)
-	division := terraformValueObjects.Division("DivisionExample")
 	provider := terraformValueObjects.Provider("aws")
 
+	i := TerraformImportMigrationGenerator{}
+
 	// When
-	divisionToResourceImportMap, err := mapResourcesToImportLocation(division, provider, stateFileContent)
+	divisionToResourceImportMap, err := i.mapResourcesToImportLocation(provider, stateFileContent)
 
 	// Then
 	assert.Nil(t, err)
 
-	expectedDivisionToResourceImportMap := map[terraformValueObjects.Division]terraformValueObjects.ResourceImportMap{
-		terraformValueObjects.Division("DivisionExample"): {
-			terraformValueObjects.ResourceName("aws_s3_bucket.tfer--dragondrop-example"): terraformValueObjects.ImportMigration{
-				TerraformConfigLocation: terraformValueObjects.TerraformConfigLocation("aws_s3_bucket.tfer--dragondrop-example"),
-				RemoteCloudReference:    terraformValueObjects.RemoteCloudReference("dragondrop-example"),
-			},
-			terraformValueObjects.ResourceName("aws_s3_bucket.tfer--dragondrop-example-2"): terraformValueObjects.ImportMigration{
-				TerraformConfigLocation: terraformValueObjects.TerraformConfigLocation("aws_s3_bucket.tfer--dragondrop-example-2"),
-				RemoteCloudReference:    terraformValueObjects.RemoteCloudReference("dragondrop-example-2"),
-			},
+	expectedDivisionToResourceImportMap := terraformValueObjects.ResourceImportMap{
+		terraformValueObjects.ResourceName("aws_s3_bucket.tfer--dragondrop-example"): terraformValueObjects.ImportMigration{
+			TerraformConfigLocation: terraformValueObjects.TerraformConfigLocation("aws_s3_bucket.tfer--dragondrop-example"),
+			RemoteCloudReference:    terraformValueObjects.RemoteCloudReference("dragondrop-example"),
+		},
+		terraformValueObjects.ResourceName("aws_s3_bucket.tfer--dragondrop-example-2"): terraformValueObjects.ImportMigration{
+			TerraformConfigLocation: terraformValueObjects.TerraformConfigLocation("aws_s3_bucket.tfer--dragondrop-example-2"),
+			RemoteCloudReference:    terraformValueObjects.RemoteCloudReference("dragondrop-example-2"),
 		},
 	}
 	assert.Equal(t, expectedDivisionToResourceImportMap, divisionToResourceImportMap)
@@ -67,7 +66,6 @@ func TestAWSImportMigrationGenerator_mapResourcesToImportLocation(t *testing.T) 
 
 func TestImportMigrationGenerator_mapResourcesToImportLocation_GCP_DifferentResources(t *testing.T) {
 	// Given
-	division := terraformValueObjects.Division("DivisionExample")
 	stateFileContent := []byte(`{
 		"version": 4,
 		"terraform_version": "1.2.6",
@@ -102,23 +100,22 @@ func TestImportMigrationGenerator_mapResourcesToImportLocation_GCP_DifferentReso
 		]
 	}`)
 	provider := terraformValueObjects.Provider("google")
+	i := TerraformImportMigrationGenerator{}
 
 	// When
-	divisionToResourceImportMap, err := mapResourcesToImportLocation(division, provider, stateFileContent)
+	divisionToResourceImportMap, err := i.mapResourcesToImportLocation(provider, stateFileContent)
 
 	// Then
 	assert.Nil(t, err)
 
-	expectedDivisionToResourceImportMap := map[terraformValueObjects.Division]terraformValueObjects.ResourceImportMap{
-		terraformValueObjects.Division("DivisionExample"): {
-			terraformValueObjects.ResourceName("google_storage_bucket.tfer--dragondrop-example"): terraformValueObjects.ImportMigration{
-				TerraformConfigLocation: terraformValueObjects.TerraformConfigLocation("google_storage_bucket.tfer--dragondrop-example"),
-				RemoteCloudReference:    terraformValueObjects.RemoteCloudReference("example-project/dragondrop-example-2"),
-			},
-			terraformValueObjects.ResourceName("google_storage_bucket_iam_policy.tfer--dragondrop-iam-example"): terraformValueObjects.ImportMigration{
-				TerraformConfigLocation: terraformValueObjects.TerraformConfigLocation("google_storage_bucket_iam_policy.tfer--dragondrop-iam-example"),
-				RemoteCloudReference:    terraformValueObjects.RemoteCloudReference(`b/dragondrop-example`),
-			},
+	expectedDivisionToResourceImportMap := terraformValueObjects.ResourceImportMap{
+		terraformValueObjects.ResourceName("google_storage_bucket.tfer--dragondrop-example"): terraformValueObjects.ImportMigration{
+			TerraformConfigLocation: terraformValueObjects.TerraformConfigLocation("google_storage_bucket.tfer--dragondrop-example"),
+			RemoteCloudReference:    terraformValueObjects.RemoteCloudReference("example-project/dragondrop-example-2"),
+		},
+		terraformValueObjects.ResourceName("google_storage_bucket_iam_policy.tfer--dragondrop-iam-example"): terraformValueObjects.ImportMigration{
+			TerraformConfigLocation: terraformValueObjects.TerraformConfigLocation("google_storage_bucket_iam_policy.tfer--dragondrop-iam-example"),
+			RemoteCloudReference:    terraformValueObjects.RemoteCloudReference(`b/dragondrop-example`),
 		},
 	}
 	assert.Equal(t, expectedDivisionToResourceImportMap, divisionToResourceImportMap)

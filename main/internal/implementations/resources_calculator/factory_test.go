@@ -13,13 +13,13 @@ import (
 func TestCreateNotIsolated(t *testing.T) {
 	// Given
 	ctx := context.Background()
-	provider := "not_isolated"
+	environment := "not_isolated"
 	resourcesCalculatorFactory := new(Factory)
 	dragonDrop := new(interfaces.DragonDropMock)
-	divisionToProvider := make(map[terraformValueObjects.Division]terraformValueObjects.Provider)
+	provider := terraformValueObjects.Provider("provider")
 
 	// When
-	calculator, err := resourcesCalculatorFactory.Instantiate(ctx, provider, dragonDrop, divisionToProvider)
+	calculator, err := resourcesCalculatorFactory.Instantiate(ctx, environment, dragonDrop, provider)
 
 	// Then
 	assert.Nil(t, err)
@@ -29,13 +29,13 @@ func TestCreateNotIsolated(t *testing.T) {
 func TestCreateIsolatedResourcesCalculator(t *testing.T) {
 	// Given
 	ctx := context.Background()
-	provider := "isolated"
+	environment := "isolated"
 	resourcesCalculatorFactory := new(Factory)
 	dragonDrop := new(interfaces.DragonDropMock)
-	divisionToProvider := make(map[terraformValueObjects.Division]terraformValueObjects.Provider)
+	provider := terraformValueObjects.Provider("")
 
 	// When
-	calculator, err := resourcesCalculatorFactory.Instantiate(ctx, provider, dragonDrop, divisionToProvider)
+	calculator, err := resourcesCalculatorFactory.Instantiate(ctx, environment, dragonDrop, provider)
 
 	// Then
 	assert.Nil(t, err)

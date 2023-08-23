@@ -43,10 +43,5 @@ type ResourceActions struct {
 	Modifier CloudActorTimeStamp
 }
 
-// DivisionResourceActions is a mapping between a division name and a map between resource
-// names and resource actions. Captures all resource actions for a particular division.
-type DivisionResourceActions map[Division]map[ResourceName]ResourceActions
-
-// ProviderResourceActions is a mapping between a provider name and DivisionResourceActions.
-// Captures all resource actions for a particular provider.
-type ProviderResourceActions map[Provider]DivisionResourceActions
+// ResourceActionMap is a mapping between a resource name and resource actions.
+type ResourceActionMap map[ResourceName]ResourceActions

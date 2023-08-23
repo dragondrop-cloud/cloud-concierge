@@ -21,10 +21,10 @@ func TestCreateIsolatedTerraformerExecutor(t *testing.T) {
 	terraformerExecutorProvider := "isolated"
 	terraformerExecutorFactory := new(Factory)
 	dragonDrop := new(interfaces.DragonDropMock)
-	divisionToProvider := make(map[terraformValueObjects.Division]terraformValueObjects.Provider)
+	provider := terraformValueObjects.Provider("")
 
 	// When
-	terraformerExecutor, err := terraformerExecutorFactory.Instantiate(ctx, terraformerExecutorProvider, dragonDrop, divisionToProvider, hclConfig, executorConfig, cliConfig)
+	terraformerExecutor, err := terraformerExecutorFactory.Instantiate(ctx, terraformerExecutorProvider, dragonDrop, provider, hclConfig, executorConfig, cliConfig)
 
 	// Then
 	assert.Nil(t, err)

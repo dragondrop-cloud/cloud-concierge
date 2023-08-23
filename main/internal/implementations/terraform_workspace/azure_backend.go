@@ -16,7 +16,7 @@ import (
 // AzureBlobBackend is an implementation of the interfaces.TerraformWorkspace interface that uses Azure Blob Storage as the backend.
 type AzureBlobBackend struct {
 	// config is the configuration for the Azure Blob Storage backend.
-	config ContainerBackendConfig
+	config TfStackConfig
 
 	// dragonDrop is the DragonDrop interface that is used to communicate with the DragonDrop API.
 	dragonDrop interfaces.DragonDrop
@@ -37,7 +37,7 @@ func (b *AzureBlobBackend) FindTerraformWorkspaces(ctx context.Context) (map[str
 }
 
 // NewAzurermBlobBackend creates a new AzureBlobBackend instance.
-func NewAzurermBlobBackend(ctx context.Context, config ContainerBackendConfig, dragonDrop interfaces.DragonDrop) interfaces.TerraformWorkspace {
+func NewAzurermBlobBackend(ctx context.Context, config TfStackConfig, dragonDrop interfaces.DragonDrop) interfaces.TerraformWorkspace {
 	dragonDrop.PostLog(ctx, "Created TFWorkspace client.")
 
 	return &AzureBlobBackend{config: config, dragonDrop: dragonDrop}
@@ -48,9 +48,9 @@ func (b *AzureBlobBackend) DownloadWorkspaceState(ctx context.Context, workspace
 	b.dragonDrop.PostLog(ctx, "Beginning download of state files to local memory.")
 
 	for workspaceName := range workspaceToDirectory {
-		err := b.getWorkspaceStateByTestingAllAzureCredentials(ctx, workspaceName)
-		if err == nil {
-			break
+		err := b.getWorkspaceStateFromAzureCredentials(ctx, workspaceName)
+		if err != nil {
+			return err
 		}
 	}
 
@@ -58,36 +58,35 @@ func (b *AzureBlobBackend) DownloadWorkspaceState(ctx context.Context, workspace
 	return nil
 }
 
-// getWorkspaceStateByTestingAllAzureCredentials downloads the state file for the given workspace from the Azure Blob Storage backend.
-func (b *AzureBlobBackend) getWorkspaceStateByTestingAllAzureCredentials(ctx context.Context, workspaceName string) error {
-	for _, credential := range b.config.DivisionCloudCredentials {
-		serviceURL, err := b.configureAzureBlobURL(ctx, credential, b.workspaceToBackendDetails[workspaceName].(AzureBackendBlock))
-		if err != nil {
-			continue
-		}
-
-		stateFileName := fmt.Sprintf("%v.json", workspaceName)
-
-		fileOutPath := fmt.Sprintf("state_files/%v", stateFileName)
-
-		outFile, err := os.Create(fileOutPath)
-		if err != nil {
-			continue
-		}
-
-		azureBackendDetails := b.workspaceToBackendDetails[workspaceName].(AzureBackendBlock)
-		blobURL := serviceURL.NewContainerURL(azureBackendDetails.ContainerName).NewBlobURL(stateFileName)
-
-		err = azblob.DownloadBlobToFile(ctx, blobURL, 0, azblob.CountToEnd, outFile, azblob.DownloadFromBlobOptions{})
-		if err != nil {
-			outFile.Close()
-			continue
-		}
-
-		outFile.Close()
+// getWorkspaceStateFromAzureCredentials downloads the state file for the given workspace from the Azure Blob Storage backend.
+func (b *AzureBlobBackend) getWorkspaceStateFromAzureCredentials(ctx context.Context, workspaceName string) error {
+	serviceURL, err := b.configureAzureBlobURL(ctx, b.config.CloudCredential, b.workspaceToBackendDetails[workspaceName].(AzureBackendBlock))
+	if err != nil {
+		return fmt.Errorf("[b.configureAzureBlobURL]%v", err)
 	}
 
-	return nil
+	stateFileName := fmt.Sprintf("%v.json", workspaceName)
+
+	fileOutPath := fmt.Sprintf("state_files/%v", stateFileName)
+
+	outFile, err := os.Create(fileOutPath)
+	if err != nil {
+		return fmt.Errorf("[os.Create]%v", err)
+	}
+
+	azureBackendDetails := b.workspaceToBackendDetails[workspaceName].(AzureBackendBlock)
+	blobURL := serviceURL.NewContainerURL(azureBackendDetails.ContainerName).NewBlobURL(stateFileName)
+
+	err = azblob.DownloadBlobToFile(ctx, blobURL, 0, azblob.CountToEnd, outFile, azblob.DownloadFromBlobOptions{})
+	if err != nil {
+		err = outFileCloser(outFile)
+		if err != nil {
+			return fmt.Errorf("[azblob.DownloadBlobToFile][outFileCloser]%v", err)
+		}
+		return fmt.Errorf("[azblob.DownloadBlobToFile]%v", err)
+	}
+
+	return outFileCloser(outFile)
 }
 
 // AzureCredentials is a struct that holds the credentials for an Azure Blob Storage backend.

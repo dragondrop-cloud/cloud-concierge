@@ -18,23 +18,23 @@ type Factory struct {
 
 // Instantiate returns an implementation of interfaces.TerraformerExecutor depending on the passed
 // environment specification.
-func (f *Factory) Instantiate(ctx context.Context, environment string, dragonDrop interfaces.DragonDrop, divisionToProvider map[terraformValueObjects.Division]terraformValueObjects.Provider, hclConfig hclcreate.Config, executorConfig terraformerCli.TerraformerExecutorConfig, cliConfig terraformerCli.Config) (interfaces.TerraformerExecutor, error) {
+func (f *Factory) Instantiate(ctx context.Context, environment string, dragonDrop interfaces.DragonDrop, provider terraformValueObjects.Provider, hclConfig hclcreate.Config, executorConfig terraformerCli.TerraformerExecutorConfig, cliConfig terraformerCli.Config) (interfaces.TerraformerExecutor, error) {
 	switch environment {
 	case "isolated":
 		return new(IsolatedTerraformerExecutor), nil
 	default:
-		return f.bootstrappedTerraformerExecutor(ctx, dragonDrop, divisionToProvider, hclConfig, executorConfig, cliConfig)
+		return f.bootstrappedTerraformerExecutor(ctx, dragonDrop, provider, hclConfig, executorConfig, cliConfig)
 	}
 }
 
 // bootstrappedTerraformerExecutor creates a complete implementation of the interfaces.TerraformerExecutor interface with
 // configuration specified via environment variables.
-func (f *Factory) bootstrappedTerraformerExecutor(ctx context.Context, dragonDrop interfaces.DragonDrop, divisionToProvider map[terraformValueObjects.Division]terraformValueObjects.Provider, hclConfig hclcreate.Config, executorConfig terraformerCli.TerraformerExecutorConfig, cliConfig terraformerCli.Config) (interfaces.TerraformerExecutor, error) {
-	hclCreate, err := hclcreate.NewHCLCreate(hclConfig, divisionToProvider)
+func (f *Factory) bootstrappedTerraformerExecutor(ctx context.Context, dragonDrop interfaces.DragonDrop, provider terraformValueObjects.Provider, hclConfig hclcreate.Config, executorConfig terraformerCli.TerraformerExecutorConfig, cliConfig terraformerCli.Config) (interfaces.TerraformerExecutor, error) {
+	hclCreate, err := hclcreate.NewHCLCreate(hclConfig, provider)
 	if err != nil {
 		log.Errorf("[cannot instantiate hclCreate config]%s", err.Error())
 		return nil, fmt.Errorf("[cannot instantiate hclCreate config]%w", err)
 	}
 
-	return terraformerCli.NewTerraformerExecutor(ctx, hclCreate, dragonDrop, executorConfig, cliConfig, divisionToProvider)
+	return terraformerCli.NewTerraformerExecutor(ctx, hclCreate, dragonDrop, executorConfig, cliConfig, provider)
 }

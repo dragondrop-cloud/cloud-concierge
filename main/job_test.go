@@ -6,12 +6,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-
 	resourcesCalculator "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/resources_calculator"
-	terraformValueObjects "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_value_objects"
 	. "github.com/dragondrop-cloud/cloud-concierge/main/internal/interfaces"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestAuthorize_Success(t *testing.T) {
@@ -246,6 +243,7 @@ func TestRunJob_Success(t *testing.T) {
 
 	// When
 	mocks.dragonDrop.On("PutJobPullRequestURL", ctx, "").Return(nil)
+	mocks.dragonDrop.On("SendCloudPerchData", ctx).Return(nil)
 	mocks.dragonDrop.On("InformComplete", ctx).Return(nil)
 	mocks.dragonDrop.On("InformRepositoryCloned", ctx).Return(nil)
 	mocks.dragonDrop.On("InformCloudActorIdentification", ctx).Return(nil)
@@ -714,6 +712,7 @@ func TestRunJob_CannotInformCompleteStatus(t *testing.T) {
 	mocks.resourcesWriter.On("Execute").Return("", nil)
 	mocks.dragonDrop.On("PutJobPullRequestURL", ctx, "").Return(nil)
 	mocks.dragonDrop.On("InformComplete", ctx).Return(informCompleteErr)
+	mocks.dragonDrop.On("SendCloudPerchData", ctx).Return(nil)
 	mocks.driftDetector.On("Execute", ctx, divisionToProvider).Return(true, nil)
 	mocks.terraformSecurity.On("ExecuteScan", ctx).Return(nil)
 
@@ -760,6 +759,7 @@ func TestRunJob_NotFoundNewResources_ButFoundManagedDriftedResources(t *testing.
 	mocks.resourcesWriter.On("Execute").Return("", nil)
 	mocks.dragonDrop.On("PutJobPullRequestURL", ctx, "").Return(nil)
 	mocks.dragonDrop.On("InformComplete", ctx).Return(nil)
+	mocks.dragonDrop.On("SendCloudPerchData", ctx).Return(nil)
 	mocks.dragonDrop.On("InformRepositoryCloned", ctx).Return(nil)
 	mocks.driftDetector.On("Execute", ctx, divisionToProvider).Return(true, nil)
 	mocks.terraformSecurity.On("ExecuteScan", ctx).Return(nil)
@@ -779,228 +779,4 @@ func TestRunJob_NotFoundNewResources_ButFoundManagedDriftedResources(t *testing.
 	mocks.resourcesWriter.AssertNumberOfCalls(t, "Execute", 1)
 	mocks.dragonDrop.AssertNumberOfCalls(t, "InformComplete", 1)
 	mocks.terraformSecurity.AssertNumberOfCalls(t, "ExecuteScan", 1)
-}
-
-func Test_getProviderByCredential(t *testing.T) {
-	type args struct {
-		credential terraformValueObjects.Credential
-	}
-	tests := []struct {
-		name    string
-		args    args
-		want    terraformValueObjects.Provider
-		wantErr bool
-	}{
-		{
-			name: "azurerm provider",
-			args: args{
-				credential: terraformValueObjects.Credential(
-					`{"client_id": "123", "client_secret": "secret", "tenant_id": "tenant", "subscription_id": "subscription1"}`,
-				),
-			},
-			want:    "azurerm",
-			wantErr: false,
-		},
-		{
-			name: "aws provider",
-			args: args{
-				credential: terraformValueObjects.Credential(
-					`{"awsAccessKeyID": "AWS123", "awsSecretAccessKey": "DUGFVGBHAJ213"}`,
-				),
-			},
-			want:    "aws",
-			wantErr: false,
-		},
-		{
-			name: "google provider",
-			args: args{
-				credential: terraformValueObjects.Credential(
-					`{  "type": "service_account", "project_id": "project", "private_key_id": "123", "private_key": "key", 
-						"client_email": "example@dragondrop.cloud", "client_id": "123456", "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-						"token_uri": "https://oauth2.googleapis.com/token", "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-						"client_x509_cert_url": "https://localhost.com"
-					}`,
-				),
-			},
-			want:    "google",
-			wantErr: false,
-		},
-		{
-			name: "error inferring provider",
-			args: args{
-				credential: terraformValueObjects.Credential(""),
-			},
-			want:    "",
-			wantErr: true,
-		},
-		{
-			name: "empty aws credentials",
-			args: args{
-				credential: terraformValueObjects.Credential(
-					`{"awsAccessKeyID": "", "awsSecretAccessKey": ""}`,
-				),
-			},
-			want:    "",
-			wantErr: true,
-		},
-		{
-			name: "empty azurerm credentials",
-			args: args{
-				credential: terraformValueObjects.Credential(
-					`{"client_id": "", "client_secret": "", "tenant_id": "", "subscription_id": ""}`,
-				),
-			},
-			want:    "",
-			wantErr: true,
-		},
-		{
-			name: "google provider",
-			args: args{
-				credential: terraformValueObjects.Credential(
-					`{  "type": "", "project_id": "", "private_key_id": "", "private_key": "", 
-						"client_email": "", "client_id": "", "auth_uri": "",
-						"token_uri": "", "auth_provider_x509_cert_url": "",
-						"client_x509_cert_url": ""
-					}`,
-				),
-			},
-			want:    "",
-			wantErr: true,
-		},
-		{
-			name: "json parsing error",
-			args: args{
-				credential: terraformValueObjects.Credential(
-					`{error]`,
-				),
-			},
-			want:    "",
-			wantErr: true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := getProviderByCredential(tt.args.credential)
-
-			if tt.wantErr {
-				require.Error(t, err)
-			} else {
-				require.NoError(t, err)
-			}
-			require.Equalf(t, tt.want, got, "getProviderByCredential(%v)", tt.args.credential)
-		})
-	}
-}
-
-func Test_getInferredData(t *testing.T) {
-	type args struct {
-		config JobConfig
-	}
-	tests := []struct {
-		name    string
-		args    args
-		want    InferredData
-		wantErr bool
-	}{
-		{
-			name: "single provider aws",
-			args: args{config: JobConfig{
-				IsManagedDriftOnly: false,
-				DivisionCloudCredentials: map[terraformValueObjects.Division]terraformValueObjects.Credential{
-					terraformValueObjects.Division("division-1"): terraformValueObjects.Credential(
-						`{"awsAccessKeyID": "AWS123", "awsSecretAccessKey": "DUGFVGBHAJ213"}`,
-					),
-				},
-			}},
-			want: InferredData{
-				DivisionToProvider: map[terraformValueObjects.Division]terraformValueObjects.Provider{
-					"division-1": "aws",
-				},
-			},
-			wantErr: false,
-		},
-		{
-			name: "two providers aws and azurerm",
-			args: args{config: JobConfig{
-				IsManagedDriftOnly: false,
-				DivisionCloudCredentials: map[terraformValueObjects.Division]terraformValueObjects.Credential{
-					terraformValueObjects.Division("division-1"): terraformValueObjects.Credential(
-						`{"awsAccessKeyID": "AWS123", "awsSecretAccessKey": "DUGFVGBHAJ213"}`,
-					),
-					terraformValueObjects.Division("division-2"): terraformValueObjects.Credential(
-						`{"client_id": "123", "client_secret": "secret", "tenant_id": "tenant", "subscription_id": "subscription1"}`,
-					),
-				},
-			}},
-			want: InferredData{
-				DivisionToProvider: map[terraformValueObjects.Division]terraformValueObjects.Provider{
-					"division-1": "aws",
-					"division-2": "azurerm",
-				},
-			},
-			wantErr: false,
-		},
-		{
-			name: "three providers aws, azurerm and google",
-			args: args{config: JobConfig{
-				IsManagedDriftOnly: false,
-				DivisionCloudCredentials: map[terraformValueObjects.Division]terraformValueObjects.Credential{
-					terraformValueObjects.Division("division-1"): terraformValueObjects.Credential(
-						`{"awsAccessKeyID": "AWS123", "awsSecretAccessKey": "DUGFVGBHAJ213"}`,
-					),
-					terraformValueObjects.Division("division-2"): terraformValueObjects.Credential(
-						`{"client_id": "123", "client_secret": "secret", "tenant_id": "tenant", "subscription_id": "subscription1"}`,
-					),
-					terraformValueObjects.Division("division-3"): terraformValueObjects.Credential(
-						`{  "type": "service_account", "project_id": "project", "private_key_id": "123", "private_key": "key", 
-							"client_email": "example@dragondrop.cloud", "client_id": "123456", "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-							"token_uri": "https://oauth2.googleapis.com/token", "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-							"client_x509_cert_url": "https://localhost.com"
-						}`,
-					),
-				},
-			}},
-			want: InferredData{
-				DivisionToProvider: map[terraformValueObjects.Division]terraformValueObjects.Provider{
-					"division-1": "aws",
-					"division-2": "azurerm",
-					"division-3": "google",
-				},
-			},
-			wantErr: false,
-		},
-		{
-			name: "two repeated divisions to provider aws",
-			args: args{config: JobConfig{
-				IsManagedDriftOnly: false,
-				DivisionCloudCredentials: map[terraformValueObjects.Division]terraformValueObjects.Credential{
-					terraformValueObjects.Division("division-1"): terraformValueObjects.Credential(
-						`{"awsAccessKeyID": "AWS123", "awsSecretAccessKey": "DUGFVGBHAJ213"}`,
-					),
-					terraformValueObjects.Division("division-2"): terraformValueObjects.Credential(
-						`{"awsAccessKeyID": "AWS123", "awsSecretAccessKey": "DUGFVGBHAJ213"}`,
-					),
-				},
-			}},
-			want: InferredData{
-				DivisionToProvider: map[terraformValueObjects.Division]terraformValueObjects.Provider{
-					"division-1": "aws",
-					"division-2": "aws",
-				},
-			},
-			wantErr: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := getInferredData(tt.args.config)
-			if tt.wantErr {
-				require.Error(t, err)
-			} else {
-				require.NoError(t, err)
-			}
-
-			assert.Equalf(t, tt.want, got, "getInferredData(%v)", tt.args.config)
-		})
-	}
 }

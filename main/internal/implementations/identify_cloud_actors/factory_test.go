@@ -16,10 +16,10 @@ func TestCreateNotIsolated(t *testing.T) {
 	env := "not_isolated"
 	identifyCloudActorsFactory := new(Factory)
 	dragonDrop := new(interfaces.DragonDropMock)
-	divisionToProvider := make(map[terraformValueObjects.Division]terraformValueObjects.Provider)
+	provider := terraformValueObjects.Provider("gcp")
 
 	// When
-	calculator, err := identifyCloudActorsFactory.Instantiate(ctx, env, dragonDrop, divisionToProvider, config)
+	calculator, err := identifyCloudActorsFactory.Instantiate(ctx, env, dragonDrop, provider, config)
 
 	// Then
 	assert.Nil(t, err)
@@ -33,10 +33,10 @@ func TestCreateIsolatedResourcesCalculator(t *testing.T) {
 	env := "isolated"
 	identifyCloudActorsFactory := new(Factory)
 	dragonDrop := new(interfaces.DragonDropMock)
-	divisionToProvider := make(map[terraformValueObjects.Division]terraformValueObjects.Provider)
+	provider := terraformValueObjects.Provider("aws")
 
 	// When
-	calculator, err := identifyCloudActorsFactory.Instantiate(ctx, env, dragonDrop, divisionToProvider, config)
+	calculator, err := identifyCloudActorsFactory.Instantiate(ctx, env, dragonDrop, provider, config)
 
 	// Then
 	assert.Nil(t, err)

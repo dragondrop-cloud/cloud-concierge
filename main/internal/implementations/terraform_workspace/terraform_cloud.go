@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/Jeffail/gabs/v2"
+	terraformValueObjects "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_value_objects"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/dragondrop-cloud/cloud-concierge/main/internal/interfaces"
@@ -27,20 +28,26 @@ func (d *WorkspaceDirectoriesDecoder) Decode(value string) error {
 	return nil
 }
 
-// TerraformCloudConfig is a struct containing the variables that determine the specific
-// behavior of the TerraformCloud struct.
-type TerraformCloudConfig struct {
+// TfStackConfig is a struct containing the variables that define the Terraform operating environment (backend, workspaces, etc.).
+type TfStackConfig struct {
+	// Region is the region of that contains the state storage bucket (or container if Azure).
+	Region string
+
+	// CloudCredential is a cloud credential that is used to authenticate with a cloud provider. Credential should
+	// only require read-only access.
+	CloudCredential terraformValueObjects.Credential
+
 	// StateBackend is the name of the backend used for storing State.
-	StateBackend string `required:"true"`
+	StateBackend string
 
 	// TerraformCloudOrganization is the name of the organization within TerraformCloudFile Cloud
-	TerraformCloudOrganization string `required:"true"`
+	TerraformCloudOrganization string
 
 	// TerraformCloudToken is the auth token to access TerraformCloudFile Cloud programmatically.
-	TerraformCloudToken string `required:"true"`
+	TerraformCloudToken string
 
 	// WorkspaceDirectories is a slice of directories that contains terraform workspaces within the user repo.
-	WorkspaceDirectories WorkspaceDirectoriesDecoder `required:"true"`
+	WorkspaceDirectories WorkspaceDirectoriesDecoder
 }
 
 // TerraformCloud is a struct that implements the interfaces.TerraformWorkspace interface.
@@ -49,7 +56,7 @@ type TerraformCloud struct {
 	httpClient http.Client
 
 	// config contains the variables that determine the specific behavior of the TerraformCloud struct
-	config TerraformCloudConfig
+	config TfStackConfig
 
 	// dragonDrop is an implementation of the interfaces.dragonDrop interface for communicating with the
 	// dragondrop API.
@@ -57,7 +64,7 @@ type TerraformCloud struct {
 }
 
 // NewTerraformCloud creates a new instance of the TerraformCloud struct.
-func NewTerraformCloud(ctx context.Context, config TerraformCloudConfig, dragonDrop interfaces.DragonDrop) interfaces.TerraformWorkspace {
+func NewTerraformCloud(ctx context.Context, config TfStackConfig, dragonDrop interfaces.DragonDrop) interfaces.TerraformWorkspace {
 	dragonDrop.PostLog(ctx, "Created TFWorkspace client.")
 	return &TerraformCloud{config: config, dragonDrop: dragonDrop}
 }

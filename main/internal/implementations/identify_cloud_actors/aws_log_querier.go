@@ -25,14 +25,17 @@ var ErrNoCloudTrailEvents = errors.New("no events found")
 // AWSLogQuerier implements the LogQuerier interface for AWS.
 type AWSLogQuerier struct {
 
-	// divisionToCredentials is a map between a division and request cloud credentials.
-	divisionToCredentials terraformValueObjects.DivisionCloudCredentialDecoder `required:"true"`
+	// cloudCredential is a map between a division and request cloud credentials.
+	cloudCredential terraformValueObjects.Credential `required:"true"`
 
-	// divisionToNewResources is a map between a division and a list of new resource objects.
-	divisionToNewResources resourcesCalculator.DivisionToNewResources
+	// division is the division that the AWSLogQuerier is querying for.
+	division terraformValueObjects.Division
 
-	// divisionToUniqueManagedDriftedResources is a map between a division and a list of unique drifted resource objects.
-	divisionToUniqueManagedDriftedResources DivisionToUniqueDriftedResources
+	// newResources is a map between a division and a list of new resource objects.
+	newResources resourcesCalculator.NewResourceMap
+
+	// uniqueManagedDriftedResources is a map between a division and a list of unique drifted resource objects.
+	uniqueManagedDriftedResources UniqueDriftedResources
 
 	// httpClient is a http client shared across all http requests within this package.
 	httpClient http.Client
@@ -75,10 +78,11 @@ type CloudTrailResource struct {
 
 // NewAWSLogQuerier instantiates a new instance of GoogleLogQuerier
 func NewAWSLogQuerier(
-	divisionToCredentials terraformValueObjects.DivisionCloudCredentialDecoder,
+	config Config,
 ) (LogQuerier, error) {
 	return &AWSLogQuerier{
-		divisionToCredentials:    divisionToCredentials,
+		cloudCredential:          config.CloudCredential,
+		division:                 config.Division,
 		resourceToCloudTrailType: queryParamData.NewAWSResourceToCloudTrailLookup(),
 	}, nil
 }
@@ -91,120 +95,96 @@ func (alc *AWSLogQuerier) loadUpstreamDataToAWSLogQuerier() error {
 		return fmt.Errorf("[loadDriftResourcesDifferences]%v", err)
 	}
 
-	divToNewResources, err := loadDivisionToNewResources()
+	divToNewResources, err := loadNewResources()
 	if err != nil {
 		return fmt.Errorf("[loadDivisionToNewResources]%v", err)
 	}
-	divToUniqueDriftedResources, err := createDivisionUniqueDriftedResources(attributeDifferences)
+	divToUniqueDriftedResources, err := createUniqueDriftedResources(attributeDifferences)
 	if err != nil {
 		return fmt.Errorf("[createDivisionUniqueDriftedResources]%v", err)
 	}
 
-	alc.divisionToUniqueManagedDriftedResources = divToUniqueDriftedResources
-	alc.divisionToNewResources = divToNewResources
+	alc.uniqueManagedDriftedResources = divToUniqueDriftedResources
+	alc.newResources = divToNewResources
 	alc.managedDriftAttributeDifferences = attributeDifferences
 	return nil
 }
 
 // QueryForAllResources coordinates calls of QueryForResourcesInDivision for all
 // divisions from which drifted resources have been identified.
-func (alc *AWSLogQuerier) QueryForAllResources(ctx context.Context) (terraformValueObjects.DivisionResourceActions, error) {
-	divisionToResourceActions := terraformValueObjects.DivisionResourceActions{}
+func (alc *AWSLogQuerier) QueryForAllResources(ctx context.Context) (terraformValueObjects.ResourceActionMap, error) {
+	resourceActions := terraformValueObjects.ResourceActionMap{}
 
 	err := alc.loadUpstreamDataToAWSLogQuerier()
 	if err != nil {
-		return divisionToResourceActions, fmt.Errorf("[alc.loadUpstreamDataToAWSLogQuerier]%v", err)
+		return resourceActions, fmt.Errorf("[alc.loadUpstreamDataToAWSLogQuerier]%v", err)
 	}
 
-	for division := range alc.divisionToCredentials {
-		fmt.Printf("Pulling cloud actor actions for the AWS account represented by %v\n", division)
-		divisionAllResourceActions, err := alc.QueryForResourcesInDivision(ctx, division)
-		if err != nil {
-			return divisionToResourceActions, fmt.Errorf("[alc.QueryForResourcesInDivision]%v", err)
-		}
-		divisionToResourceActions[division] = divisionAllResourceActions
-	}
-	return divisionToResourceActions, nil
-}
-
-// QueryForResourcesInDivision coordinates calls of cloudTrailEventHistorySearch for all
-// resources within a division - both managed drift and resources outside of Terraform control.
-func (alc *AWSLogQuerier) QueryForResourcesInDivision(ctx context.Context, division terraformValueObjects.Division) (map[terraformValueObjects.ResourceName]terraformValueObjects.ResourceActions, error) {
-	divisionResourceActions := map[terraformValueObjects.ResourceName]terraformValueObjects.ResourceActions{}
-	credential := alc.divisionToCredentials[division]
-	err := alc.setAWSCredentials(credential)
+	err = alc.setAWSCredentials(alc.cloudCredential)
 	if err != nil {
 		return nil, fmt.Errorf("[alc.setAWSCredentials]%v", err)
 	}
 
-	division = terraformValueObjects.Division("aws-" + string(division))
-
 	// Calculating cloud actors for managed resource drift
-	currentUniqueDriftedResources, ok := alc.divisionToUniqueManagedDriftedResources[division]
-	if ok {
-		for _, driftedResource := range currentUniqueDriftedResources {
-			resourceActions, err := alc.cloudTrailEventHistorySearch(ctx, driftedResource.ResourceType, driftedResource.InstanceID, driftedResource.Region, false)
-			if err != nil {
-				if err != ErrNoCloudTrailEvents {
-					return nil, fmt.Errorf("[alc.cloudTrailEventHistorySearch]%v", err)
-				}
-				log.Errorf("[no cloud trail events found for resource %v]", driftedResource)
-				continue
+	for _, driftedResource := range alc.uniqueManagedDriftedResources {
+		currentActions, err := alc.cloudTrailEventHistorySearch(ctx, driftedResource.ResourceType, driftedResource.InstanceID, driftedResource.Region, false)
+		if err != nil {
+			if err != ErrNoCloudTrailEvents {
+				return nil, fmt.Errorf("[alc.cloudTrailEventHistorySearch]%v", err)
 			}
-
-			currentResourceName := uniqueDriftedResourceToName(driftedResource)
-			divisionResourceActions[currentResourceName] = resourceActions
+			log.Errorf("[no cloud trail events found for resource %v]", driftedResource)
+			continue
 		}
 
-		alc.UpdateManagedDriftAttributeDifferences(divisionResourceActions)
+		currentResourceName := uniqueDriftedResourceToName(driftedResource)
+		resourceActions[currentResourceName] = currentActions
+	}
 
-		// Overwrite the drift-resources-differences.json file with the new data.
-		managedAttributeDifferencesBytes, err := json.MarshalIndent(alc.managedDriftAttributeDifferences, "", "  ")
-		if err != nil {
-			return divisionResourceActions, fmt.Errorf("[json.MarshalIndent]%v", err)
-		}
+	alc.UpdateManagedDriftAttributeDifferences(resourceActions)
 
-		err = os.WriteFile("mappings/drift-resources-differences.json", managedAttributeDifferencesBytes, 0400)
-		if err != nil {
-			return divisionResourceActions, fmt.Errorf("[os.WriteFile]%v", err)
-		}
+	// Overwrite the drift-resources-differences.json file with the new data.
+	managedAttributeDifferencesBytes, err := json.MarshalIndent(alc.managedDriftAttributeDifferences, "", "  ")
+	if err != nil {
+		return resourceActions, fmt.Errorf("[json.MarshalIndent]%v", err)
+	}
+
+	err = os.WriteFile("outputs/drift-resources-differences.json", managedAttributeDifferencesBytes, 0400)
+	if err != nil {
+		return resourceActions, fmt.Errorf("[os.WriteFile]%v", err)
 	}
 
 	// Calculating cloud actors for new resource drift
-	currentNewResources, ok := alc.divisionToNewResources[division]
-	if ok {
-		for id, resource := range currentNewResources {
-			resourceActions, err := alc.cloudTrailEventHistorySearch(ctx, resource.ResourceType, string(id), resource.Region, true)
-			if err != nil {
-				if err != ErrNoCloudTrailEvents {
-					return nil, fmt.Errorf("[alc.cloudTrailEventHistorySearch]%v", err)
-				}
-				log.Errorf("[no cloud trail events found for resource %v]", resource)
-				continue
+	for id, resource := range alc.newResources {
+		currentActions, err := alc.cloudTrailEventHistorySearch(ctx, resource.ResourceType, string(id), resource.Region, true)
+		if err != nil {
+			if err != ErrNoCloudTrailEvents {
+				return nil, fmt.Errorf("[alc.cloudTrailEventHistorySearch]%v", err)
 			}
-
-			currentResourceName := terraformValueObjects.ResourceName(
-				resource.ResourceType + "." + hclcreate.ConvertTerraformerResourceName(resource.ResourceTerraformerName),
-			)
-			divisionResourceActions[currentResourceName] = resourceActions
+			log.Errorf("[no cloud trail events found for resource %v]", resource)
+			continue
 		}
+
+		currentResourceName := terraformValueObjects.ResourceName(
+			resource.ResourceType + "." + hclcreate.ConvertTerraformerResourceName(resource.ResourceTerraformerName),
+		)
+		resourceActions[currentResourceName] = currentActions
 	}
 
-	return divisionResourceActions, nil
+	return resourceActions, nil
 }
 
 // UpdateManagedDriftAttributeDifferences updates the RecentActor and RecentActionTimestamp fields
 // for each struct within the alc.managedDriftAttributeDifferences slice.
 func (alc *AWSLogQuerier) UpdateManagedDriftAttributeDifferences(
-	divisionResourceActions map[terraformValueObjects.ResourceName]terraformValueObjects.ResourceActions,
+	resourceActions terraformValueObjects.ResourceActionMap,
 ) {
 	newAttributeDifferences := []driftDetector.AttributeDifference{}
 
 	for _, attributeDifference := range alc.managedDriftAttributeDifferences {
 		currentDifferenceResourceName := attributeDifferenceToResourceName(attributeDifference)
 
-		if _, ok := divisionResourceActions[currentDifferenceResourceName]; ok {
-			resourceAction := divisionResourceActions[currentDifferenceResourceName]
+		if _, ok := resourceActions[currentDifferenceResourceName]; ok {
+			resourceAction := resourceActions[currentDifferenceResourceName]
 
 			attributeDifference.RecentActor = resourceAction.Modifier.Actor
 			attributeDifference.RecentActionTimestamp = resourceAction.Modifier.Timestamp
@@ -215,7 +195,7 @@ func (alc *AWSLogQuerier) UpdateManagedDriftAttributeDifferences(
 	alc.managedDriftAttributeDifferences = newAttributeDifferences
 }
 
-// TODO: At some point results may be further back in time, a subsequent improvement would be to look further back if resource details are not found.
+// TODO: A subsequent improvement would be to look further back if resource details are not found.
 // cloudTrailEventHistorySearch runs AWS CLI commands to pull data on who modified and created the cloud resource in question.
 func (alc *AWSLogQuerier) cloudTrailEventHistorySearch(ctx context.Context, resourceType string, resourceID string, resourceRegion string, isNewToTerraform bool) (terraformValueObjects.ResourceActions, error) {
 	lookupAttributeString := fmt.Sprintf("AttributeKey=ResourceName,AttributeValue=%v", resourceID)

@@ -15,7 +15,7 @@ import (
 // GCSBackend is an implementation of the interfaces.TerraformWorkspace interface that uses GCS as a backend.
 type GCSBackend struct {
 	// config is the configuration for the Azure Blob Storage backend.
-	config ContainerBackendConfig
+	config TfStackConfig
 
 	// dragonDrop is the DragonDrop interface that is used to communicate with the DragonDrop API.
 	dragonDrop interfaces.DragonDrop
@@ -36,7 +36,7 @@ func (b *GCSBackend) FindTerraformWorkspaces(ctx context.Context) (map[string]st
 }
 
 // NewGCSBackend creates a new GCSBackend instance.
-func NewGCSBackend(ctx context.Context, config ContainerBackendConfig, dragonDrop interfaces.DragonDrop) interfaces.TerraformWorkspace {
+func NewGCSBackend(ctx context.Context, config TfStackConfig, dragonDrop interfaces.DragonDrop) interfaces.TerraformWorkspace {
 	dragonDrop.PostLog(ctx, "Created TFWorkspace client.")
 
 	return &GCSBackend{config: config, dragonDrop: dragonDrop}
@@ -59,36 +59,43 @@ func (b *GCSBackend) DownloadWorkspaceState(ctx context.Context, workspaceToDire
 
 // getWorkspaceStateByTestingAllGoogleCredentials attempts to download the state file for the given workspace using all
 func (b *GCSBackend) getWorkspaceStateByTestingAllGoogleCredentials(ctx context.Context, workspaceName string) error {
-	for _, credential := range b.config.DivisionCloudCredentials {
-		stateFileName := fmt.Sprintf("%v.json", workspaceName)
 
-		fileOutPath := fmt.Sprintf("state_files/%v", stateFileName)
+	stateFileName := fmt.Sprintf("%v.json", workspaceName)
 
-		outFile, err := os.Create(fileOutPath)
+	fileOutPath := fmt.Sprintf("state_files/%v", stateFileName)
+
+	outFile, err := os.Create(fileOutPath)
+	if err != nil {
+		return fmt.Errorf("[os.Create] %v", err)
+	}
+
+	client, err := storage.NewClient(ctx, option.WithCredentialsJSON([]byte(b.config.CloudCredential)))
+	if err != nil {
+		return fmt.Errorf("[storage.NewClient] %v", err)
+	}
+
+	gcsBackendDetails := b.workspaceToBackendDetails[workspaceName].(GCSBackendBlock)
+	bucket := client.Bucket(gcsBackendDetails.Bucket)
+	rc, err := bucket.Object(stateFileName).NewReader(ctx)
+	if err != nil {
+		err = outFileCloser(outFile)
 		if err != nil {
-			continue
+			return fmt.Errorf("[bucket.Object().NewReader][outFileCloser]%v", err)
 		}
+		return fmt.Errorf("[bucket.Object().NewReader] %v", err)
+	}
+	defer rc.Close()
 
-		client, err := storage.NewClient(ctx, option.WithCredentialsJSON([]byte(credential)))
+	if _, err = io.Copy(outFile, rc); err != nil {
+		err = outFileCloser(outFile)
 		if err != nil {
-			continue
+			return fmt.Errorf("[io.Copy][outFileCloser]%v", err)
 		}
+	}
 
-		gcsBackendDetails := b.workspaceToBackendDetails[workspaceName].(GCSBackendBlock)
-		bucket := client.Bucket(gcsBackendDetails.Bucket)
-		rc, err := bucket.Object(stateFileName).NewReader(ctx)
-		if err != nil {
-			outFile.Close()
-			continue
-		}
-		defer rc.Close()
-
-		if _, err = io.Copy(outFile, rc); err != nil {
-			outFile.Close()
-			continue
-		}
-
-		outFile.Close()
+	err = outFileCloser(outFile)
+	if err != nil {
+		return fmt.Errorf("[outFileCloser] %v", err)
 	}
 
 	return nil

@@ -10,18 +10,12 @@ import (
 	terraformValueObjects "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_value_objects"
 )
 
-// DivisionToHCL is a map between division names and the corresponding hclwrite File object.
-type DivisionToHCL map[string]*hclwrite.File
-
 // WorkspaceToHCL is a map between workspace names and the corresponding hclwrite File object.
 type WorkspaceToHCL map[string]*hclwrite.File
 
 // ResourceIdentifier is a struct comprised of the fields necessary to uniquely identify a
 // terraformer-generated resource.
 type ResourceIdentifier struct {
-
-	// division is the division within which a cloud resource was identified.
-	division string
 
 	// resourceType is the Terraform resource-type.
 	resourceType string
@@ -58,11 +52,8 @@ type Config struct {
 // NewResourceToWorkspace is a map of resource unique id to workspace name
 type NewResourceToWorkspace map[string]string
 
-// ResourceImportsByDivision is a map of division name to a DivisionToImportDataPairs map
-type ResourceImportsByDivision map[string]DivisionToImportDataPairs
-
-// DivisionToImportDataPairs is a map of resource unique id within a division to ImportDataPair
-type DivisionToImportDataPairs map[string]ImportDataPair
+// ResourceToImportDataPair is a map of resource unique id to ImportDataPair
+type ResourceToImportDataPair map[string]ImportDataPair
 
 // ImportDataPair is a struct that holds the data needed to write an individual import block
 type ImportDataPair struct {
@@ -91,7 +82,7 @@ type HCLCreate interface {
 	// CreateTFMigrateMigration saves HCL which defines a TFMigrate migration.
 	CreateTFMigrateMigration(
 		uniqueID string,
-		resourceImportsByDivision ResourceImportsByDivision,
+		resourceToImportDataPair ResourceToImportDataPair,
 		newResourceToWorkspace NewResourceToWorkspace,
 		workspaceToDirectory map[string]string,
 	) error
@@ -111,14 +102,14 @@ type hclCreate struct {
 
 	// divisionToProvider is a mapping between a division and the provider that is responsible
 	// for that division.
-	divisionToProvider map[terraformValueObjects.Division]terraformValueObjects.Provider `required:"true"`
+	provider terraformValueObjects.Provider `required:"true"`
 }
 
 // NewHCLCreate creates and returns a struct which implements the HCLCreate interface.
-func NewHCLCreate(config Config, divisionToProvider map[terraformValueObjects.Division]terraformValueObjects.Provider) (HCLCreate, error) {
+func NewHCLCreate(config Config, provider terraformValueObjects.Provider) (HCLCreate, error) {
 	return &hclCreate{
-		config:             config,
-		divisionToProvider: divisionToProvider,
+		config:   config,
+		provider: provider,
 	}, nil
 }
 

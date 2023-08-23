@@ -21,8 +21,12 @@ type JobConfig struct {
 	// IsManagedDriftOnly represents the option for the user to only scan drifted resources and not new resources
 	IsManagedDriftOnly bool `default:"false"`
 
-	// DivisionCloudCredentials is a map between a division and request cloud credentials to infer the division to provider.
-	DivisionCloudCredentials terraformValueObjects.DivisionCloudCredentialDecoder `required:"true"`
+	// CloudCredential is a cloud credential that is used to authenticate with a cloud provider. Credential should
+	// only require read-only access.
+	CloudCredential terraformValueObjects.Credential `required:"false"`
+
+	// Division is the name of a cloud division. In AWS this is an account, in GCP this is a project name, and in Azure this is a subscription.
+	Division terraformValueObjects.Division `required:"true"`
 
 	// InfracostAPIToken is the token for accessing Infracost's API.
 	InfracostAPIToken string `required:"true"`
@@ -58,12 +62,8 @@ type JobConfig struct {
 	// WorkspaceDirectories is a slice of directories that contains terraform workspaces within the user repo.
 	WorkspaceDirectories terraformWorkspace.WorkspaceDirectoriesDecoder `required:"true"`
 
-	// Providers is a map between a cloud provider and the version for that provider.
-	Providers map[terraformValueObjects.Provider]string `required:"true"`
-
-	// VCSBaseBranch is the name of the base branch within the version control into which
-	// new PRs should be opened.
-	VCSBaseBranch string `required:"true"`
+	// Provider is a map between a cloud provider and the version for that provider.
+	Provider map[terraformValueObjects.Provider]string `required:"true"`
 
 	// VCSToken is the auth token needed to read code and open pull requests within a customer's VCS
 	// environment.
@@ -73,11 +73,8 @@ type JobConfig struct {
 	VCSUser string `required:"true"`
 
 	// VCSRepo is the full path of the repo containing a customer's infrastructure specification.
+	// At the moment, must be a valid GitHub repository URL.
 	VCSRepo string `required:"true"`
-
-	// VCSSystem is the name of the version control system chosen.
-	// At the moment only GitHub is supported.
-	VCSSystem string `required:"true"`
 
 	// PullReviewers is the name of the pull request reviewer who will be tagged on the opened pull request.
 	PullReviewers []string `default:"NoReviewer"`
@@ -89,7 +86,7 @@ type JobConfig struct {
 	ResourcesBlackList terraformValueObjects.ResourceNameList
 
 	// CloudRegions represents the list of cloud regions that will be considered for inclusion in the import statement.
-	CloudRegions terraformValueObjects.CloudRegionsDecoder
+	CloudRegions terraformValueObjects.CloudRegionsDecoder `default:"['us-east-1]"`
 }
 
 // validateJobConfig validates the JobConfig struct with the values as expected.
@@ -108,25 +105,26 @@ func validateJobConfig(config JobConfig) error {
 // getDragonDropConfig returns the configuration for the DragonDrop client.
 func (c JobConfig) getDragonDropConfig() dragonDrop.HTTPDragonDropClientConfig {
 	return dragonDrop.HTTPDragonDropClientConfig{
-		APIPath:  c.APIPath,
-		JobID:    c.JobID,
-		OrgToken: c.OrgToken,
+		APIPath:              c.APIPath,
+		JobID:                c.JobID,
+		OrgToken:             c.OrgToken,
+		WorkspaceDirectories: c.WorkspaceDirectories,
 	}
 }
 
 func (c JobConfig) getVCSConfig() vcs.Config {
 	return vcs.Config{
-		VCSBaseBranch: c.VCSBaseBranch,
 		VCSRepo:       c.VCSRepo,
 		VCSToken:      c.VCSToken,
 		VCSUser:       c.VCSUser,
-		VCSSystem:     c.VCSSystem,
 		PullReviewers: c.PullReviewers,
 	}
 }
 
-func (c JobConfig) getTerraformWorkspaceConfig() terraformWorkspace.TerraformCloudConfig {
-	return terraformWorkspace.TerraformCloudConfig{
+func (c JobConfig) getTerraformWorkspaceConfig() terraformWorkspace.TfStackConfig {
+	return terraformWorkspace.TfStackConfig{
+		Region:                     string(c.CloudRegions[0]),
+		CloudCredential:            c.CloudCredential,
 		StateBackend:               c.StateBackend,
 		TerraformCloudOrganization: c.TerraformCloudOrganization,
 		TerraformCloudToken:        c.TerraformCloudToken,
@@ -143,10 +141,11 @@ func (c JobConfig) getHCLCreateConfig() hclcreate.Config {
 
 func (c JobConfig) getTerraformerConfig() terraformerCli.TerraformerExecutorConfig {
 	return terraformerCli.TerraformerExecutorConfig{
-		DivisionCloudCredentials: c.DivisionCloudCredentials,
-		Providers:                c.Providers,
-		TerraformVersion:         terraformValueObjects.Version(c.TerraformVersion),
-		CloudRegions:             c.CloudRegions,
+		CloudCredential:  c.CloudCredential,
+		Division:         c.Division,
+		Provider:         c.Provider,
+		TerraformVersion: terraformValueObjects.Version(c.TerraformVersion),
+		CloudRegions:     c.CloudRegions,
 	}
 }
 
@@ -159,19 +158,21 @@ func (c JobConfig) getTerraformerCLIConfig() terraformerCli.Config {
 
 func (c JobConfig) getTerraformImportMigrationGeneratorConfig() terraformImportMigrationGenerator.Config {
 	return terraformImportMigrationGenerator.Config{
-		DivisionCloudCredentials: c.DivisionCloudCredentials,
+		CloudCredential: c.CloudCredential,
+		Division:        c.Division,
 	}
 }
 
 func (c JobConfig) getCostEstimationConfig() costEstimation.CostEstimatorConfig {
 	return costEstimation.CostEstimatorConfig{
-		InfracostAPIToken:        c.InfracostAPIToken,
-		DivisionCloudCredentials: c.DivisionCloudCredentials,
+		InfracostAPIToken: c.InfracostAPIToken,
+		CloudCredential:   c.CloudCredential,
 	}
 }
 
 func (c JobConfig) getIdentifyCloudActorsConfig() identifyCloudActors.Config {
 	return identifyCloudActors.Config{
-		DivisionCloudCredentials: c.DivisionCloudCredentials,
+		CloudCredential: c.CloudCredential,
+		Division:        c.Division,
 	}
 }

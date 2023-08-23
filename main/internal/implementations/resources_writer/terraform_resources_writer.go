@@ -83,6 +83,7 @@ func (w *TerraformResourceWriter) commitChangesOpenPullRequest(ctx context.Conte
 		return "", fmt.Errorf("[commit_changes_open_pull_request][error in vcs.Push]%w", err)
 	}
 
+	// TODO: Get the base branch from a remote API call instead of requiring the env var
 	prURL, err := w.vcs.OpenPullRequest(w.jobName)
 	if err != nil {
 		return "", fmt.Errorf("[commit_changes_open_pull_request][error in vcs.OpenPullRequest]%w", err)
@@ -175,7 +176,7 @@ func (w *TerraformResourceWriter) writeDummyFile(ctx context.Context, workspaceT
 			return fmt.Errorf("error writing the placeholder file %v", err)
 		}
 
-		err = os.WriteFile("mappings/new-resources-to-documents.json", []byte("{}"), 0400)
+		err = os.WriteFile("outputs/new-resources-to-documents.json", []byte("{}"), 0400)
 		if err != nil {
 			return fmt.Errorf("error writing new resources empty JSON file: %v", err)
 		}

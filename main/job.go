@@ -2,15 +2,12 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/kelseyhightower/envconfig"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/dragondrop-cloud/cloud-concierge/main/internal/documentize"
 	costEstimation "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/cost_estimation"
 	dragonDrop "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/dragon_drop"
 	identifyCloudActors "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/identify_cloud_actors"
@@ -19,23 +16,11 @@ import (
 	terraformImportMigrationGenerator "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_import_migration_generator"
 	terraformManagedResourcesDriftDetector "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_managed_resources_drift_detector"
 	terraformSecurity "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_security"
-	terraformValueObjects "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_value_objects"
 	terraformWorkspace "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_workspace"
 	terraformerExecutor "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraformer_executor"
 	"github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/vcs"
 	"github.com/dragondrop-cloud/cloud-concierge/main/internal/interfaces"
 )
-
-type InferredData struct {
-	// DivisionToProvider is a map between the string representing a division and the corresponding
-	// cloud provider (aws, azurerm, google, etc.).
-	// For AWS, an account is the division, for GCP a project name is the division,
-	// and for azurerm a resource group is a division.
-	DivisionToProvider map[terraformValueObjects.Division]terraformValueObjects.Provider `required:"true"`
-
-	// WorkspaceToDirectory is a map between a workspace and the directory that contains the terraform state file
-	WorkspaceToDirectory map[documentize.Workspace]documentize.Directory `required:"true"`
-}
 
 // Job is an instance of a runnable dragondrop job.
 type Job struct {
@@ -216,6 +201,11 @@ func (j *Job) Run(ctx context.Context) error {
 		return fmt.Errorf("[run_job][error putting job pull request URL][%v]", err)
 	}
 
+	err = j.dragonDrop.SendCloudPerchData(ctx)
+	if err != nil {
+		log.WithError(err).Errorf("[failed to send cloudperch data][%v]", err)
+	}
+
 	err = j.dragonDrop.InformComplete(ctx)
 	if err != nil {
 		return fmt.Errorf("[run_job][error informing complete status][%w]", err)
@@ -244,11 +234,13 @@ func InitializeJobDependencies(ctx context.Context, env string) (*Job, error) {
 		return nil, fmt.Errorf("[cannot create job config]%w", err)
 	}
 
+	jobConfig.CloudCredential = inferredData.CloudCredential
+
 	dragonDropInstance, err := (&dragonDrop.Factory{}).Instantiate(env, jobConfig.getDragonDropConfig())
 	if err != nil {
 		return nil, err
 	}
-	vcsInstance, err := (&vcs.Factory{}).Instantiate(ctx, env, dragonDropInstance, jobConfig.getVCSConfig())
+	vcsInstance, err := (&vcs.Factory{}).Instantiate(ctx, env, dragonDropInstance, jobConfig.getVCSConfig(), inferredData.VCSSystem)
 	if err != nil {
 		return nil, err
 	}
@@ -256,37 +248,37 @@ func InitializeJobDependencies(ctx context.Context, env string) (*Job, error) {
 	if err != nil {
 		return nil, err
 	}
-	executor, err := (&terraformerExecutor.Factory{}).Instantiate(ctx, env, dragonDropInstance, inferredData.DivisionToProvider,
+	executor, err := (&terraformerExecutor.Factory{}).Instantiate(ctx, env, dragonDropInstance, inferredData.Provider,
 		jobConfig.getHCLCreateConfig(), jobConfig.getTerraformerConfig(), jobConfig.getTerraformerCLIConfig())
 	if err != nil {
 		return nil, err
 	}
-	instantiate, err := (&terraformImportMigrationGenerator.Factory{}).Instantiate(ctx, env, dragonDropInstance, inferredData.DivisionToProvider,
+	instantiate, err := (&terraformImportMigrationGenerator.Factory{}).Instantiate(ctx, env, dragonDropInstance, inferredData.Provider,
 		jobConfig.getTerraformImportMigrationGeneratorConfig())
 	if err != nil {
 		return nil, err
 	}
-	calculator, err := (&resourcesCalculator.Factory{}).Instantiate(ctx, env, dragonDropInstance, inferredData.DivisionToProvider)
+	calculator, err := (&resourcesCalculator.Factory{}).Instantiate(ctx, env, dragonDropInstance, inferredData.Provider)
 	if err != nil {
 		return nil, err
 	}
-	costEstimator, err := (&costEstimation.Factory{}).Instantiate(env, inferredData.DivisionToProvider, jobConfig.getCostEstimationConfig())
+	costEstimator, err := (&costEstimation.Factory{}).Instantiate(env, inferredData.Provider, jobConfig.getCostEstimationConfig())
 	if err != nil {
 		return nil, err
 	}
-	identifier, err := (&identifyCloudActors.Factory{}).Instantiate(ctx, env, dragonDropInstance, inferredData.DivisionToProvider, jobConfig.getIdentifyCloudActorsConfig())
+	identifier, err := (&identifyCloudActors.Factory{}).Instantiate(ctx, env, dragonDropInstance, inferredData.Provider, jobConfig.getIdentifyCloudActorsConfig())
 	if err != nil {
 		return nil, err
 	}
-	writer, err := (&resourcesWriter.Factory{}).Instantiate(ctx, env, vcsInstance, dragonDropInstance, inferredData.DivisionToProvider, jobConfig.getHCLCreateConfig())
+	writer, err := (&resourcesWriter.Factory{}).Instantiate(ctx, env, vcsInstance, dragonDropInstance, inferredData.Provider, jobConfig.getHCLCreateConfig())
 	if err != nil {
 		return nil, err
 	}
-	driftDetector, err := (&terraformManagedResourcesDriftDetector.Factory{}).Instantiate(ctx, env, inferredData.DivisionToProvider)
+	driftDetector, err := (&terraformManagedResourcesDriftDetector.Factory{}).Instantiate(ctx, env, inferredData.Provider)
 	if err != nil {
 		return nil, err
 	}
-	tfSec, err := (&terraformSecurity.Factory{}).Instantiate(ctx, env, inferredData.DivisionToProvider)
+	tfSec, err := (&terraformSecurity.Factory{}).Instantiate(ctx, env, inferredData.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -305,48 +297,4 @@ func InitializeJobDependencies(ctx context.Context, env string) (*Job, error) {
 		config:                            jobConfig,
 		terraformSecurity:                 tfSec,
 	}, nil
-}
-
-func getInferredData(config JobConfig) (InferredData, error) {
-	divisionToProvider := make(map[terraformValueObjects.Division]terraformValueObjects.Provider)
-
-	for division, credential := range config.DivisionCloudCredentials {
-		provider, err := getProviderByCredential(credential)
-		if err != nil {
-			return InferredData{}, fmt.Errorf("[error getting the inferred data][%w]", err)
-		}
-
-		divisionToProvider[division] = provider
-	}
-
-	return InferredData{
-		DivisionToProvider: divisionToProvider,
-	}, nil
-}
-
-func getProviderByCredential(credential terraformValueObjects.Credential) (terraformValueObjects.Provider, error) {
-	var credentialMapped map[string]string
-	err := json.Unmarshal([]byte(credential), &credentialMapped)
-	if err != nil {
-		return "", fmt.Errorf("[poorly formatted credential is an invalid json object][%w]", err)
-	}
-
-	if strings.Trim(credentialMapped["client_id"], "") != "" && strings.Trim(credentialMapped["client_secret"], "") != "" &&
-		strings.Trim(credentialMapped["tenant_id"], "") != "" && strings.Trim(credentialMapped["subscription_id"], "") != "" {
-		return "azurerm", nil
-	}
-
-	if strings.Trim(credentialMapped["awsAccessKeyID"], "") != "" && strings.Trim(credentialMapped["awsSecretAccessKey"], "") != "" {
-		return "aws", nil
-	}
-
-	if strings.Trim(credentialMapped["type"], "") != "" && strings.Trim(credentialMapped["project_id"], "") != "" &&
-		strings.Trim(credentialMapped["private_key_id"], "") != "" && strings.Trim(credentialMapped["private_key"], "") != "" &&
-		strings.Trim(credentialMapped["client_email"], "") != "" && strings.Trim(credentialMapped["client_id"], "") != "" &&
-		strings.Trim(credentialMapped["auth_uri"], "") != "" && strings.Trim(credentialMapped["token_uri"], "") != "" &&
-		strings.Trim(credentialMapped["auth_provider_x509_cert_url"], "") != "" && strings.Trim(credentialMapped["client_x509_cert_url"], "") != "" {
-		return "google", nil
-	}
-
-	return "", fmt.Errorf("provider not supported")
 }

@@ -12,7 +12,7 @@ import (
 func TestCreateIsolatedTerraformWorkspace(t *testing.T) {
 	// Given
 	ctx := context.Background()
-	config := TerraformCloudConfig{}
+	config := TfStackConfig{}
 	terraformWorkspaceProvider := "isolated"
 	terraformWorkspaceFactory := new(Factory)
 	dragonDrop := new(interfaces.DragonDropMock)

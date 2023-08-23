@@ -18,29 +18,32 @@ import (
 
 func validJobConfig() *JobConfig {
 	return &JobConfig{
-		IsManagedDriftOnly:         false,
-		DivisionCloudCredentials:   terraformValueObjects.DivisionCloudCredentialDecoder{ /* Valor necesario */ },
-		InfracostAPIToken:          "InfracostAPIToken",
-		APIPath:                    "https://api.dragondrop.cloud",
-		JobID:                      "JobID",
-		OrgToken:                   "OrgToken",
-		MigrationHistoryStorage:    hclcreate.MigrationHistory{ /* Valor necesario */ },
+		IsManagedDriftOnly: false,
+		InfracostAPIToken:  "InfracostAPIToken",
+		APIPath:            "https://api.dragondrop.cloud",
+		CloudRegions:       terraformValueObjects.CloudRegionsDecoder{"us-east1"},
+		CloudCredential:    "{}",
+		JobID:              "JobID",
+		OrgToken:           "OrgToken",
+		MigrationHistoryStorage: hclcreate.MigrationHistory{
+			StorageType: "S3",
+			Bucket:      "Bucket",
+			Region:      "Region",
+		},
 		TerraformVersion:           "TerraformVersion",
 		StateBackend:               "StateBackend",
 		TerraformCloudOrganization: "TerraformCloudOrganization",
 		TerraformCloudToken:        "TerraformCloudToken",
-		WorkspaceDirectories:       terraformWorkspace.WorkspaceDirectoriesDecoder{ /* Valor necesario */ },
-		Providers: map[terraformValueObjects.Provider]string{
+		WorkspaceDirectories:       terraformWorkspace.WorkspaceDirectoriesDecoder{"workspace1", "workspace2"},
+		Provider: map[terraformValueObjects.Provider]string{
 			"aws": "~>4.57.0",
 		},
-		VCSBaseBranch:      "VCSBaseBranch",
 		VCSToken:           "VCSToken",
 		VCSUser:            "VCSUser",
 		VCSRepo:            "VCSRepo",
-		VCSSystem:          "VCSSystem",
 		PullReviewers:      []string{"PullReviewer1", "PullReviewer2"},
-		ResourcesWhiteList: terraformValueObjects.ResourceNameList{ /* Valor necesario */ },
-		ResourcesBlackList: terraformValueObjects.ResourceNameList{ /* Valor necesario */ },
+		ResourcesWhiteList: terraformValueObjects.ResourceNameList{"Resource1", "Resource2"},
+		ResourcesBlackList: terraformValueObjects.ResourceNameList{"Resource3", "Resource4"},
 	}
 }
 
@@ -55,11 +58,13 @@ func TestGetDragonDropConfig(t *testing.T) {
 	assert.Equal(t, jobConfig.APIPath, dragonDropConfig.APIPath, "APIPath should be equal")
 	assert.Equal(t, jobConfig.JobID, dragonDropConfig.JobID, "JobID should be equal")
 	assert.Equal(t, jobConfig.OrgToken, dragonDropConfig.OrgToken, "OrgToken should be equal")
+	assert.Equal(t, jobConfig.WorkspaceDirectories, dragonDropConfig.WorkspaceDirectories, "OrgToken should be equal")
 
 	want := dragonDrop.HTTPDragonDropClientConfig{
-		APIPath:  jobConfig.APIPath,
-		JobID:    jobConfig.JobID,
-		OrgToken: jobConfig.OrgToken,
+		APIPath:              jobConfig.APIPath,
+		JobID:                jobConfig.JobID,
+		OrgToken:             jobConfig.OrgToken,
+		WorkspaceDirectories: jobConfig.WorkspaceDirectories,
 	}
 
 	assert.Equal(t, want, dragonDropConfig, "HTTPDragonDropClientConfig should be equal")
@@ -74,11 +79,9 @@ func TestGetVCSConfig(t *testing.T) {
 
 	// Then
 	want := vcs.Config{
-		VCSBaseBranch: jobConfig.VCSBaseBranch,
 		VCSRepo:       jobConfig.VCSRepo,
 		VCSToken:      jobConfig.VCSToken,
 		VCSUser:       jobConfig.VCSUser,
-		VCSSystem:     jobConfig.VCSSystem,
 		PullReviewers: jobConfig.PullReviewers,
 	}
 
@@ -93,7 +96,9 @@ func TestGetTerraformWorkspaceConfig(t *testing.T) {
 	got := jobConfig.getTerraformWorkspaceConfig()
 
 	// Then
-	want := terraformWorkspace.TerraformCloudConfig{
+	want := terraformWorkspace.TfStackConfig{
+		Region:                     "us-east1",
+		CloudCredential:            "{}",
 		StateBackend:               jobConfig.StateBackend,
 		TerraformCloudOrganization: jobConfig.TerraformCloudOrganization,
 		TerraformCloudToken:        jobConfig.TerraformCloudToken,
@@ -128,10 +133,10 @@ func TestGetTerraformerConfig(t *testing.T) {
 
 	// Then
 	want := terraformerCli.TerraformerExecutorConfig{
-		DivisionCloudCredentials: jobConfig.DivisionCloudCredentials,
-		Providers:                jobConfig.Providers,
-		TerraformVersion:         terraformValueObjects.Version(jobConfig.TerraformVersion),
-		CloudRegions:             jobConfig.CloudRegions,
+		CloudCredential:  "{}",
+		Provider:         jobConfig.Provider,
+		TerraformVersion: terraformValueObjects.Version(jobConfig.TerraformVersion),
+		CloudRegions:     jobConfig.CloudRegions,
 	}
 
 	assert.Equal(t, want, got, "TerraformerExecutorConfig should be equal")
@@ -162,7 +167,7 @@ func TestGetTerraformImportMigrationGeneratorConfig(t *testing.T) {
 
 	// Then
 	want := terraformImportMigrationGenerator.Config{
-		DivisionCloudCredentials: jobConfig.DivisionCloudCredentials,
+		CloudCredential: "{}",
 	}
 
 	assert.Equal(t, want, got, "TerraformImportMigrationGeneratorConfig should be equal")
@@ -177,8 +182,8 @@ func TestGetCostEstimationConfig(t *testing.T) {
 
 	// Then
 	want := costEstimation.CostEstimatorConfig{
-		InfracostAPIToken:        jobConfig.InfracostAPIToken,
-		DivisionCloudCredentials: jobConfig.DivisionCloudCredentials,
+		CloudCredential:   "{}",
+		InfracostAPIToken: jobConfig.InfracostAPIToken,
 	}
 
 	assert.Equal(t, want, got, "CostEstimationConfig should be equal")
@@ -193,7 +198,7 @@ func TestGetIdentifyCloudActorsConfig(t *testing.T) {
 
 	// Then
 	want := identifyCloudActors.Config{
-		DivisionCloudCredentials: jobConfig.DivisionCloudCredentials,
+		CloudCredential: "{}",
 	}
 
 	assert.Equal(t, want, got, "IdentifyCloudActorsConfig should be equal")

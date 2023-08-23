@@ -10,7 +10,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/Jeffail/gabs/v2"
 	"github.com/dragondrop-cloud/cloud-concierge/main/internal/hclcreate"
 	resourcesCalculator "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/resources_calculator"
 	driftDetector "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_managed_resources_drift_detector/drift_detector"
@@ -23,14 +22,17 @@ type GoogleLogQuerier struct {
 	// authToken is an auth token for the Google Cloud REST API for a particular GCP project
 	authToken string
 
-	// divisionToCredentials is a map between a division and request cloud credentials.
-	divisionToCredentials terraformValueObjects.DivisionCloudCredentialDecoder `required:"true"`
+	// cloudCredential is a cloud credential.
+	cloudCredential terraformValueObjects.Credential `required:"true"`
 
-	// divisionToNewResources is a map between a division and a list of new resource objects.
-	divisionToNewResources resourcesCalculator.DivisionToNewResources
+	// division is the division (project) for which to query logs
+	division terraformValueObjects.Division
 
-	// divisionToUniqueManagedDriftedResources is a map between a division and a list of unique drifted resource objects.
-	divisionToUniqueManagedDriftedResources DivisionToUniqueDriftedResources
+	// newResources is a map between a division and a list of new resource objects.
+	newResources resourcesCalculator.NewResourceMap
+
+	// uniqueManagedDriftedResources is a list of unique drifted resource objects.
+	uniqueManagedDriftedResources UniqueDriftedResources
 
 	// httpClient is a http client shared across all http requests within this package.
 	httpClient http.Client
@@ -40,9 +42,10 @@ type GoogleLogQuerier struct {
 }
 
 // NewGoogleLogQuerier instantiates a new instance of GoogleLogQuerier
-func NewGoogleLogQuerier(divisionToCredentials terraformValueObjects.DivisionCloudCredentialDecoder) (LogQuerier, error) {
+func NewGoogleLogQuerier(config Config) (LogQuerier, error) {
 	return &GoogleLogQuerier{
-		divisionToCredentials: divisionToCredentials,
+		cloudCredential: config.CloudCredential,
+		division:        config.Division,
 	}, nil
 }
 
@@ -54,96 +57,75 @@ func (glc *GoogleLogQuerier) loadUpstreamDataToGoogleLogQuerier() error {
 		return fmt.Errorf("[loadDriftResourcesDifferences]%v", err)
 	}
 
-	divToNewResources, err := loadDivisionToNewResources()
+	newResources, err := loadNewResources()
 	if err != nil {
 		return fmt.Errorf("[loadDivisionToNewResources]%v", err)
 	}
 
-	divToUniqueDriftedResources, err := createDivisionUniqueDriftedResources(attributeDifferences)
+	uniqueDriftedResources, err := createUniqueDriftedResources(attributeDifferences)
 	if err != nil {
 		return fmt.Errorf("[createDivisionUniqueDriftedResources]%v", err)
 	}
 
-	glc.divisionToUniqueManagedDriftedResources = divToUniqueDriftedResources
-	glc.divisionToNewResources = divToNewResources
+	glc.uniqueManagedDriftedResources = uniqueDriftedResources
+	glc.newResources = newResources
 	glc.managedDriftAttributeDifferences = attributeDifferences
 	return nil
 }
 
 // QueryForAllResources coordinates calls of QueryForResourcesInDivision for all
 // divisions from which drifted resources have been identified.
-func (glc *GoogleLogQuerier) QueryForAllResources(ctx context.Context) (terraformValueObjects.DivisionResourceActions, error) {
-	divisionToResourceActions := terraformValueObjects.DivisionResourceActions{}
+func (glc *GoogleLogQuerier) QueryForAllResources(ctx context.Context) (terraformValueObjects.ResourceActionMap, error) {
+	resourceActions := terraformValueObjects.ResourceActionMap{}
 
 	err := glc.loadUpstreamDataToGoogleLogQuerier()
 	if err != nil {
-		return divisionToResourceActions, fmt.Errorf("[glc.loadUpstreamDataToGoogleLogQuerier]%v", err)
+		return resourceActions, fmt.Errorf("[glc.loadUpstreamDataToGoogleLogQuerier]%v", err)
 	}
 
-	for division := range glc.divisionToCredentials {
-		divisionResourceActions, err := glc.QueryForResourcesInDivision(ctx, division)
-		if err != nil {
-			return divisionToResourceActions, fmt.Errorf("[glc.QueryForResourcesInDivision]%v", err)
-		}
-		divisionToResourceActions[division] = divisionResourceActions
-	}
-	return divisionToResourceActions, nil
-}
-
-// QueryForResourcesInDivision coordinates calls of QuerySingleResource for all resources within a division.
-func (glc *GoogleLogQuerier) QueryForResourcesInDivision(ctx context.Context, division terraformValueObjects.Division) (map[terraformValueObjects.ResourceName]terraformValueObjects.ResourceActions, error) {
-	divisionResourceActions := map[terraformValueObjects.ResourceName]terraformValueObjects.ResourceActions{}
-
-	err := glc.gcloudAuthTokenFromServiceAccount(division)
+	err = glc.gcloudAuthToken()
 	if err != nil {
-		return divisionResourceActions, fmt.Errorf("[glc.gcloudAuthTokenFromServiceAccount]%v", err)
+		return resourceActions, fmt.Errorf("[glc.gcloudAuthToken]%v", err)
 	}
-	dragondropDivision := terraformValueObjects.Division("google-" + string(division))
 
 	// Calculating cloud actors for managed resource drift
-	currentUniqueDriftedResources, ok := glc.divisionToUniqueManagedDriftedResources[dragondropDivision]
-	if ok {
-		for _, driftedResource := range currentUniqueDriftedResources {
-			resourceActions, err := glc.adminLogSearch(ctx, division, driftedResource.InstanceID, false)
-			if err != nil {
-				return divisionResourceActions, fmt.Errorf("[glc.QuerySingleResource]%v", err)
-			}
-
-			currentResourceName := uniqueDriftedResourceToName(driftedResource)
-			divisionResourceActions[currentResourceName] = resourceActions
-		}
-
-		glc.UpdateManagedDriftAttributeDifferences(divisionResourceActions)
-
-		// Overwrite the drift-resources-differences.json file with the new data.
-		managedAttributeDifferencesBytes, err := json.MarshalIndent(glc.managedDriftAttributeDifferences, "", "  ")
+	for _, driftedResource := range glc.uniqueManagedDriftedResources {
+		currentResourceAction, err := glc.adminLogSearch(ctx, driftedResource.InstanceID, false)
 		if err != nil {
-			return divisionResourceActions, fmt.Errorf("[json.MarshalIndent]%v", err)
+			return resourceActions, fmt.Errorf("[glc.QuerySingleResource]%v", err)
 		}
 
-		err = os.WriteFile("mappings/drift-resources-differences.json", managedAttributeDifferencesBytes, 0400)
-		if err != nil {
-			return divisionResourceActions, fmt.Errorf("[os.WriteFile]%v", err)
-		}
+		currentResourceName := uniqueDriftedResourceToName(driftedResource)
+		resourceActions[currentResourceName] = currentResourceAction
+	}
+
+	glc.UpdateManagedDriftAttributeDifferences(resourceActions)
+
+	// Overwrite the drift-resources-differences.json file with the new data.
+	managedAttributeDifferencesBytes, err := json.MarshalIndent(glc.managedDriftAttributeDifferences, "", "  ")
+	if err != nil {
+		return resourceActions, fmt.Errorf("[json.MarshalIndent]%v", err)
+	}
+
+	err = os.WriteFile("outputs/drift-resources-differences.json", managedAttributeDifferencesBytes, 0400)
+	if err != nil {
+		return resourceActions, fmt.Errorf("[os.WriteFile]%v", err)
 	}
 
 	// Calculating cloud actors for new resource drift
-	currentNewResources, ok := glc.divisionToNewResources[dragondropDivision]
-	if ok {
-		for id, resource := range currentNewResources {
-			resourceActions, err := glc.adminLogSearch(ctx, division, string(id), true)
-			if err != nil {
-				return divisionResourceActions, fmt.Errorf("[alc.cloudTrailEventHistory]%v", err)
-			}
-
-			currentResourceName := terraformValueObjects.ResourceName(
-				resource.ResourceType + "." + hclcreate.ConvertTerraformerResourceName(resource.ResourceTerraformerName),
-			)
-			divisionResourceActions[currentResourceName] = resourceActions
+	for id, resource := range glc.newResources {
+		currentResourceActions, err := glc.adminLogSearch(ctx, string(id), true)
+		if err != nil {
+			return resourceActions, fmt.Errorf("[alc.cloudTrailEventHistory]%v", err)
 		}
+
+		currentResourceName := terraformValueObjects.ResourceName(
+			resource.ResourceType + "." + hclcreate.ConvertTerraformerResourceName(resource.ResourceTerraformerName),
+		)
+		resourceActions[currentResourceName] = currentResourceActions
 	}
 
-	return divisionResourceActions, nil
+	return resourceActions, nil
 }
 
 // UpdateManagedDriftAttributeDifferences updates the RecentActor and RecentActionTimestamp fields
@@ -170,9 +152,9 @@ func (glc *GoogleLogQuerier) UpdateManagedDriftAttributeDifferences(
 
 // adminLogSearch pulls logs for a single resource from the cloud provider.
 func (glc *GoogleLogQuerier) adminLogSearch(
-	ctx context.Context, division terraformValueObjects.Division, resourceID string, isNewToTerraform bool,
+	ctx context.Context, resourceID string, isNewToTerraform bool,
 ) (terraformValueObjects.ResourceActions, error) {
-	result, err := glc.queryGCPAPI(ctx, division, resourceID)
+	result, err := glc.queryGCPAPI(ctx, resourceID)
 	if err != nil {
 		return terraformValueObjects.ResourceActions{}, fmt.Errorf("[glc.queryGCPAPI]%w", err)
 	}
@@ -204,10 +186,10 @@ type GCPAdminLogPostBody struct {
 
 // queryGCPAPI sends a REST API POST request to the Google Cloud endpoint corresponding to admin
 // log querying.
-func (glc *GoogleLogQuerier) queryGCPAPI(ctx context.Context, division terraformValueObjects.Division, resourceID string) ([]byte, error) {
-	logFilterString := glc.generateLogFilter(division, resourceID)
+func (glc *GoogleLogQuerier) queryGCPAPI(ctx context.Context, resourceID string) ([]byte, error) {
+	logFilterString := glc.generateLogFilter(resourceID)
 	jsonBody, err := json.Marshal(&GCPAdminLogPostBody{
-		ResourceNames: []string{fmt.Sprintf("projects/%v", division)},
+		ResourceNames: []string{fmt.Sprintf("projects/%v", glc.division)},
 		Filter:        logFilterString,
 		OrderBy:       "timestamp desc",
 		PageSize:      1000,
@@ -251,8 +233,8 @@ func (glc *GoogleLogQuerier) queryGCPAPI(ctx context.Context, division terraform
 }
 
 // generateLogFilter generates a string formatted for filtering admin query logs within the GCP API.
-func (glc *GoogleLogQuerier) generateLogFilter(division terraformValueObjects.Division, resourceID string) string {
-	logNameFilter := fmt.Sprintf("logName=projects/%v", division) + "/logs/cloudaudit.googleapis.com%2Factivity"
+func (glc *GoogleLogQuerier) generateLogFilter(resourceID string) string {
+	logNameFilter := fmt.Sprintf("logName=projects/%v", glc.division) + "/logs/cloudaudit.googleapis.com%2Factivity"
 
 	resourceTypeFilter := fmt.Sprintf("protoPayload.resourceName=%v", resourceID)
 
@@ -340,24 +322,14 @@ func (glc *GoogleLogQuerier) ExtractDataFromResourceResult(resourceResult []byte
 	return resourceActions, nil
 }
 
-// gcloudAuthTokenFromServiceAccount gets an authentication token for REST API requests from the
-// passed service account keys.
-func (glc *GoogleLogQuerier) gcloudAuthTokenFromServiceAccount(division terraformValueObjects.Division) error {
-	account, err := glc.parseGCPServiceAccountEmailAddress(division)
+// gcloudAuthToken gets an authentication token for REST API requests.
+func (glc *GoogleLogQuerier) gcloudAuthToken() error {
+	err := os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", "current_cloud/credentials/google.json")
 	if err != nil {
-		return fmt.Errorf("[gcloud_authentication][error parsing service account email address]%w", err)
+		return fmt.Errorf("[os.Setenv][error in setting GOOGLE_APPLICATION_CREDENTIALS]%w", err)
 	}
 
-	// Authenticate gcloud for current division
-	keyFilePath := fmt.Sprintf("--key-file=current_cloud/credentials/google-%s.json", division)
-	authArgs := []string{"auth", "activate-service-account", string(account), keyFilePath}
-
-	_, err = executeCommand("gcloud", authArgs...)
-	if err != nil {
-		return fmt.Errorf("[gcloud_authentication][gcloud auth activate-service-account, failed to authenticate]%w", err)
-	}
-
-	printAccessTokenArgs := []string{"auth", "print-access-token", string(account)}
+	printAccessTokenArgs := []string{"auth", "application-default", "print-access-token"}
 	token, err := executeCommand("gcloud", printAccessTokenArgs...)
 	if err != nil {
 		return fmt.Errorf("[executeCommand][gcloud auth print-access-token]%w", err)
@@ -366,21 +338,4 @@ func (glc *GoogleLogQuerier) gcloudAuthTokenFromServiceAccount(division terrafor
 	glc.authToken = strings.Replace(token, "\n", "", -1)
 
 	return nil
-}
-
-// parseGCPServiceAccountEmailAddress pulls out the service account email address from the service account
-// key file.
-func (glc *GoogleLogQuerier) parseGCPServiceAccountEmailAddress(division terraformValueObjects.Division) (terraformValueObjects.Account, error) {
-	credentialString := glc.divisionToCredentials[division]
-	serviceAccountParsed, err := gabs.ParseJSON([]byte(credentialString))
-	if err != nil {
-		return "", fmt.Errorf("[parse_gcp_service_account_email_address][error parsing JSON with gabs.ParseJSON]%w", err)
-	}
-
-	account, ok := serviceAccountParsed.Path("client_email").Data().(string)
-	if !ok {
-		return "", fmt.Errorf("[parse_gcp_service_account_email_address][client_email not found within service account key]")
-	}
-
-	return terraformValueObjects.Account(account), nil
 }

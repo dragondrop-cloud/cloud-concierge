@@ -22,3 +22,9 @@ local.env
 .env
 .tfstate
 .idea/
+**/__pycache__/
+
+# Some unit tests require a bash environment set-up, and so when executed on Windows may create additional directories which should be ignored
+main/internal/implementations/dragon_drop/current_cloud/
+main/internal/implementations/dragon_drop/outputs/
+main/internal/implementations/dragon_drop/repo/

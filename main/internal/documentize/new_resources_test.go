@@ -33,40 +33,34 @@ func TestSelectNewResources(t *testing.T) {
 		},
 	}
 
-	inputDivisionToID := map[terraformValueObjects.Division]map[ResourceData]bool{
-		"division_1": {
-			ResourceData{
-				id:     "8675309",
-				tfType: "example_terraform_resource",
-			}: true,
-		},
-		"division_2": {
-			ResourceData{
-				id:     "8675309",
-				tfType: "example_terraform_resource_2",
-			}: true,
-			ResourceData{
-				id:     "86asd09asd",
-				tfType: "le_terraform_resource",
-			}: true,
-			ResourceData{
-				id:     "asd1118asd",
-				tfType: "example_terraform_resource_3",
-			}: true,
-		},
+	inputDivisionToID := map[ResourceData]bool{
+		ResourceData{
+			id:     "8675309",
+			tfType: "example_terraform_resource",
+		}: true,
+		ResourceData{
+			id:     "8675309",
+			tfType: "example_terraform_resource_2",
+		}: true,
+		ResourceData{
+			id:     "86asd09asd",
+			tfType: "le_terraform_resource",
+		}: true,
+		ResourceData{
+			id:     "asd1118asd",
+			tfType: "example_terraform_resource_3",
+		}: true,
 	}
 
-	expectedOutput := map[terraformValueObjects.Division]map[ResourceData]bool{
-		"division_2": {
-			ResourceData{
-				id:     "86asd09asd",
-				tfType: "le_terraform_resource",
-			}: true,
-			ResourceData{
-				id:     "asd1118asd",
-				tfType: "example_terraform_resource_3",
-			}: true,
-		},
+	expectedOutput := map[ResourceData]bool{
+		ResourceData{
+			id:     "86asd09asd",
+			tfType: "le_terraform_resource",
+		}: true,
+		ResourceData{
+			id:     "asd1118asd",
+			tfType: "example_terraform_resource_3",
+		}: true,
 	}
 
 	actualOutput := selectNewResources(inputWorkspaceToID, inputDivisionToID)
@@ -471,21 +465,19 @@ func TestPullResourceDocumentFromDiv(t *testing.T) {
 		},
 	}
 
-	inputDiv := terraformValueObjects.Division("exampleDiv")
-
 	inputResourceData := ResourceData{
 		tfType: "google_cloud_run_service",
 		id:     "example_id",
 		name:   "api_compute",
 	}
 
-	resourceName, doc, err := d.pullResourceDocumentFromDiv(tfStateParsed, inputDiv, inputResourceData)
+	resourceName, doc, err := d.pullResourceDocumentFromDiv(tfStateParsed, inputResourceData)
 
 	if err != nil {
 		t.Errorf("[d.pullResourceDocumentFromDiv] Unexpected error %v", err)
 	}
 
-	expectedResourceName := "exampleDiv.google_cloud_run_service.api_compute"
+	expectedResourceName := "google_cloud_run_service.api_compute"
 
 	if resourceName != ResourceName(expectedResourceName) {
 		t.Errorf("resourceName got %v, expected %v", resourceName, expectedResourceName)

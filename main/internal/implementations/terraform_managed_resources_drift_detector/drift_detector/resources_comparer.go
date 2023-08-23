@@ -25,7 +25,6 @@ type AttributeDifference struct {
 // AttributeDetail contains information about the resource that the attribute belongs to.
 type AttributeDetail struct {
 	StateFileName StateFileName
-	CloudDivision string
 	ModuleName    string
 	ResourceType  string
 	ResourceName  string
@@ -50,7 +49,6 @@ func (m *ManagedResourcesDriftDetector) identifyResourceDifferences(
 
 			attributeComplement := &AttributeDetail{
 				StateFileName: StateFileName(data.StateFile),
-				CloudDivision: terraformerResource.CloudDivision,
 				ModuleName:    data.Module,
 				ResourceType:  data.Type,
 				ResourceName:  data.Name,

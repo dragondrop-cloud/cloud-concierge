@@ -12,24 +12,19 @@ func Test_GenerateImportBlockFile(t *testing.T) {
 	// Given
 	h := hclCreate{}
 
-	inputResourceToImportLoc := ResourceImportsByDivision{
-		"dev-division": {
-			"resource_type_1.resource_name_1": {
-				TerraformConfigLocation: "resource_type_1.resource_name_1",
-				RemoteCloudReference:    "remote/cloud/reference",
-			},
+	inputResourceToImportLoc := ResourceToImportDataPair{
+		"resource_type_1.resource_name_1": {
+			TerraformConfigLocation: "resource_type_1.resource_name_1",
+			RemoteCloudReference:    "remote/cloud/reference",
 		},
-		"prod-division": {
-			"resource_type_2.resource_name_2": {
-				TerraformConfigLocation: "resource_type_2.resource_name_2",
-				RemoteCloudReference:    "remote/cloud/reference/2",
-			},
+		"resource_type_2.resource_name_2": {
+			TerraformConfigLocation: "resource_type_2.resource_name_2",
+			RemoteCloudReference:    "remote/cloud/reference/2",
 		},
 	}
 
 	inputResourceToWorkspace := NewResourceToWorkspace{
-		"dev-division.resource_type_1.resource_name_1":  "my-dev-workspace",
-		"prod-division.resource_type_2.resource_name_2": "my-prod-workspace",
+		"resource_type_1.resource_name_1": "my-dev-workspace",
 	}
 
 	inputWorkspace := "my-dev-workspace"

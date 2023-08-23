@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/Jeffail/gabs/v2"
 	terraformValueObjects "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_value_objects"
 	"github.com/dragondrop-cloud/cloud-concierge/main/internal/interfaces"
 )
@@ -16,8 +15,8 @@ import (
 // to envconfig's format expectations.
 type CostEstimatorConfig struct {
 
-	// DivisionCloudCredentials is a map between a division and request cloud credentials.
-	DivisionCloudCredentials terraformValueObjects.DivisionCloudCredentialDecoder `required:"true"`
+	// CloudCredential is a cloud credential with read-only access to a cloud division and, if applicable, access to read Terraform state files.
+	CloudCredential terraformValueObjects.Credential `required:"true"`
 
 	// InfracostAPIToken is the token for accessing Infracost's API.
 	InfracostAPIToken string `required:"true"`
@@ -33,14 +32,14 @@ type CostEstimator struct {
 	// cloud provider (aws, azurerm, google, etc.).
 	// For AWS, an account is the division, for GCP a project name is the division,
 	// and for azurerm a resource group is a division.
-	divisionToProvider map[terraformValueObjects.Division]terraformValueObjects.Provider `required:"true"`
+	provider terraformValueObjects.Provider `required:"true"`
 }
 
 // NewCostEstimator creates a new instance of CostEstimator a struct that implements interfaces.CostEstimation.
-func NewCostEstimator(config CostEstimatorConfig, divisionToProvider map[terraformValueObjects.Division]terraformValueObjects.Provider) interfaces.CostEstimation {
+func NewCostEstimator(config CostEstimatorConfig, provider terraformValueObjects.Provider) interfaces.CostEstimation {
 	return &CostEstimator{
-		config:             config,
-		divisionToProvider: divisionToProvider,
+		config:   config,
+		provider: provider,
 	}
 }
 
@@ -60,76 +59,45 @@ func (ce *CostEstimator) Execute(ctx context.Context) error {
 	}
 	fmt.Println("Done setting Infracost API token.")
 
-	err = ce.GetAllCostEstimates()
+	err = ce.GetCostEstimate()
 	if err != nil {
 		return fmt.Errorf("[ce.GetAllCostEstimates]%v", err)
 	}
 
-	err = ce.FormatAllCostEstimates()
+	err = ce.FormatCostEstimate()
 	if err != nil {
 		return fmt.Errorf("[ce.FormatAllCostEstimates]%v", err)
 	}
 
-	err = ce.AggregateCostEstimates()
+	err = ce.WriteCostEstimates()
 	if err != nil {
-		return fmt.Errorf("[ce.AggregateCostEstimates]%v", err)
+		return fmt.Errorf("[ce.WriteCostEstimates]%v", err)
 	}
 
 	return nil
 }
 
-// AggregateCostEstimates merges all calculated and formatted cost estimations into a single
-// json object and outputs it to data maps for end consumption.
-func (ce *CostEstimator) AggregateCostEstimates() error {
-	outputObj := gabs.New()
+// WriteCostEstimates outputs cost estimates into data maps for end consumption.
+func (ce *CostEstimator) WriteCostEstimates() error {
+	infracostJSONPath := "./current_cloud/infracost-formatted.json"
 
-	for division := range ce.config.DivisionCloudCredentials {
-		divisionFolderName := fmt.Sprintf("%v-%v", ce.divisionToProvider[division], division)
-
-		infracostJSONPath := fmt.Sprintf("./current_cloud/%v/infracost-formatted.json", divisionFolderName)
-
-		divisionCosts, err := os.ReadFile(infracostJSONPath)
-		if err != nil {
-			return fmt.Errorf("[os.ReadFile]%v", err)
-		}
-
-		costContainer, err := gabs.ParseJSON(divisionCosts)
-		if err != nil {
-			return fmt.Errorf("[gabs.ParseJSON]%v", err)
-		}
-
-		_, err = outputObj.Set(costContainer, divisionFolderName)
-		if err != nil {
-			return fmt.Errorf("[outputObj.Set()]%v", err)
-		}
+	costs, err := os.ReadFile(infracostJSONPath)
+	if err != nil {
+		return fmt.Errorf("[os.ReadFile]%v", err)
 	}
 
-	err := os.WriteFile("mappings/division-to-cost-estimates.json", outputObj.Bytes(), 0400)
+	err = os.WriteFile("outputs/cost-estimates.json", costs, 0400)
 	if err != nil {
 		return fmt.Errorf("[os.WriteFile]%v", err)
 	}
 	return nil
 }
 
-// GetAllCostEstimates invokes the infracost CLI to generate cost estimates for identified resources
-// within a all cloud divisions.
-func (ce *CostEstimator) GetAllCostEstimates() error {
-	for division := range ce.config.DivisionCloudCredentials {
-		err := ce.GetDivisionCostEstimate(division)
-		if err != nil {
-			return fmt.Errorf("[ce.GetDivisionCostEstimate for division %v]%v", division, err)
-		}
-	}
-	return nil
-}
-
-// GetDivisionCostEstimate invokes the infracost CLI to generate cost estimates for identified resources
+// GetCostEstimate invokes the infracost CLI to generate cost estimates for identified resources
 // within a single, specified, cloud division.
-func (ce *CostEstimator) GetDivisionCostEstimate(division terraformValueObjects.Division) error {
-	divisionFolderName := fmt.Sprintf("%v-%v", ce.divisionToProvider[division], division)
-
-	infracostEstimationPath := fmt.Sprintf("./current_cloud/%v/", divisionFolderName)
-	infracostJSONPath := fmt.Sprintf("./current_cloud/%v/infracost.json", divisionFolderName)
+func (ce *CostEstimator) GetCostEstimate() error {
+	infracostEstimationPath := "./current_cloud/"
+	infracostJSONPath := "./current_cloud/infracost.json"
 
 	costEstimateArgs := []string{"breakdown", "--path", infracostEstimationPath, "--format", "json", "--out-file", infracostJSONPath}
 	_, err := executeCommand("infracost", costEstimateArgs...)
