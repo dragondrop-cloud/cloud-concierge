@@ -53,7 +53,7 @@ func NewLogQuerier(globalConfig Config, provider terraformValueObjects.Provider)
 		}
 		return awsLogQuerier, nil
 	default:
-		fmt.Printf("provider %s not supported", provider)
+		fmt.Printf("provider %s not supported for log querying", provider)
 		return nil, nil
 	}
 }

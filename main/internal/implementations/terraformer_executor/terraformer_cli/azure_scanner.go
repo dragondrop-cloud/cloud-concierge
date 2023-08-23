@@ -1,6 +1,7 @@
 package terraformerCLI
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -42,7 +43,9 @@ type AzureEnvironment struct {
 // Scan uses the TerraformerCLI interface to scan a given division's cloud environment
 func (azureScanner *AzureScanner) Scan(subscription terraformValueObjects.Division, credential terraformValueObjects.Credential, options ...string) error {
 	env := new(AzureEnvironment)
-	err := json.Unmarshal([]byte(credential), &env)
+	credentialBytes := bytes.TrimPrefix([]byte(credential), []byte("\xef\xbb\xbf"))
+
+	err := json.Unmarshal(credentialBytes, &env)
 	if err != nil {
 		return fmt.Errorf("[azure_scanner][configure_environment][error unmarshalling credentials] %w", err)
 	}
