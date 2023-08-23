@@ -56,17 +56,20 @@ func NewIdentifyCloudActors(config Config, dragonDrop interfaces.DragonDrop, pro
 // Execute creates structured query_param_data mapping new or drifted resources to the cloud actor (service principal or user)
 // responsible for the latest changes for that resource.
 func (ica *IdentifyCloudActors) Execute(ctx context.Context) error {
-	fmt.Printf("Beginning to pull cloud actors for %v divisions\n", ica.provider)
-	resourceActions, err := ica.logQuerier.QueryForAllResources(ctx)
-	if err != nil {
-		return fmt.Errorf("[%v logQuerier.QueryForAllResources]%v", ica.provider, err)
-	}
+	jsonBytes := []byte("{}")
+	if ica.logQuerier != nil {
+		fmt.Printf("Beginning to pull cloud actors for %v divisions\n", ica.provider)
+		resourceActions, err := ica.logQuerier.QueryForAllResources(ctx)
+		if err != nil {
+			return fmt.Errorf("[%v logQuerier.QueryForAllResources]%v", ica.provider, err)
+		}
 
-	jsonBytes, err := ica.convertResourceActionsToJSON(resourceActions)
-	if err != nil {
-		return fmt.Errorf("[ica.convertProviderResourceActionsToJSON]%v", err)
+		jsonBytes, err = ica.convertResourceActionsToJSON(resourceActions)
+		if err != nil {
+			return fmt.Errorf("[ica.convertProviderResourceActionsToJSON]%v", err)
+		}
 	}
-	err = os.WriteFile("outputs/resources-to-cloud-actions.json", jsonBytes, 0400)
+	err := os.WriteFile("outputs/resources-to-cloud-actions.json", jsonBytes, 0400)
 	if err != nil {
 		return fmt.Errorf("[os.WriteFile outputs/resources-to-cloud-actions.json]%v", err)
 	}

@@ -27,6 +27,12 @@ func (h *hclCreate) CreateMainTF(providers map[string]string) ([]byte, error) {
 		}
 	}
 
+	if providers["azurerm"] != "" {
+		providerBlock := rootBody.AppendNewBlock("provider", []string{"azurerm"})
+		providerBody := providerBlock.Body()
+		providerBody.AppendNewBlock("features", nil)
+	}
+
 	return f.Bytes(), nil
 }
 
