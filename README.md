@@ -33,7 +33,23 @@ Scalr, Spacelift and Firefly. We find, however, that these tool's pricing can be
 when wanting to self-host runners or access the most desired features like drift detection, security scanning, etc.
 
 ## Quick Start
- [Quick start guide](https://docs.cloudconcierge.io/quick-start).
+### All Cloud Provider Pre-requisites
+0) Obtain an API token at https://app.dragondrop.cloud. We only collect data on when a cloud-concierge starts up (this can be verified here).
+1) Configure an environment variable file (use one of our templates to get started) to control the specifics of cloud-concierge's coverage.
+2) Make sure you have Docker available on your local machine.
+
+### AWS Quickstart
+I) Run aws config on your CLI and ensure that credentials with read-only access to your cloud are configured. If referencing state files stored in an s3 bucket, the credentials specified should be able to read those state files as well.
+
+II) Run the cloud-concierge container using the following command:
+   `
+   docker run --env-file ./my-env-file.env -v main:/main -v ~/.aws:/main/credentials/aws:ro -w /main  dragondropcloud/cloud-concierge:latest
+   `
+
+III) Upon job completion, check the repository against which you configured cloud-concierge to run. There will be a new Pull Request that has been created by Cloud Concierge. [Example Output](https://github.com/dragondrop-cloud/cloud-concierge-example/pull/2).
+
+### Azure & GCP Quickstart
+See more [here](https://docs.cloudconcierge.io/quick-start#gcp).
 
 ## How does it work?
 1) cloud-concierge creates a representation of your cloud infrastructure as Terraform. Only read-only access should be given to cloud-concierge.
@@ -48,9 +64,6 @@ Jobs managed by the [dragondrop platform](https://dragondrop.cloud) log statuses
 can be viewed [here](https://github.com/dragondrop-cloud/cloud-concierge/blob/dev/main/internal/implementations/dragon_drop/http_dragondrop_managed_execution.go) and
 [here](https://github.com/dragondrop-cloud/cloud-concierge/blob/dev/main/internal/implementations/dragon_drop/http_dragondrop_managed_visualization.go).
 
-## Our Roadmap
-We are just getting started, and have a lot of exciting features on our roadmap. More details can be found [here](https://github.com/dragondrop-cloud/cloud-concierge/wiki/Roadmap).
-
 ## Contributing
 Contributions in any form are highly encouraged. Check out our [contributing guide](CONTRIBUTING.md) to get started.
 
@@ -62,11 +75,11 @@ If you are looking to use cloud-concierge at scale, however, the [dragondrop.clo
 - Consolidate multiple cloud-concierge executions into anonymized visualizations of drift, uncodified resources, cloud costs, and security risks.
 - Continue to self-host cloud-concierge instances within your cloud using [serverless infrastructure](https://registry.terraform.io/namespaces/dragondrop-cloud).
 
-## Other Resources
-- [Documentation](https://docs.cloudconcierge.io)
+## Resources
 - [Example Output](https://github.com/dragondrop-cloud/cloud-concierge-example/pull/2)
-- [Schedule Tool Walk Through + Use Case (low stakes and OSS focused!)](https://calendly.com/dragondrop-cloud/cloud-concierge-walk-through)
-- [Terraform Learning Resources](https://dragondrop.cloud/learn/terraform/)
-- [Medium Blog](https://medium.com/@hello_9187)
+- [Documentation](https://docs.cloudconcierge.io)
+- [Roadmap](https://github.com/dragondrop-cloud/cloud-concierge/wiki/Roadmap)
+- [Blog](https://medium.com/@hello_9187)
 - [Slack](https://cloud-concierge.slack.com/join/shared_invite/zt-1xx3sqsb6-cekIXs2whccZvbU81Xn5qg#/shared-invite/email)
+- [Tool Walk Through (low stakes and purely educational)](https://calendly.com/dragondrop-cloud/cloud-concierge-walk-through)
 - [Managed Offering](https://docs.dragondrop.cloud/)
