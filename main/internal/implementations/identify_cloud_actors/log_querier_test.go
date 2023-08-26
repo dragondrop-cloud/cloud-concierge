@@ -78,6 +78,11 @@ func TestDetermineActionClass(t *testing.T) {
 		t.Errorf("got:\n%vexpected:\n%v", output, "modification")
 	}
 
+	output = determineActionClass("CreateTags")
+	if output != "modification" {
+		t.Errorf("got:\n%vexpected:\n%v", output, "modification")
+	}
+
 	output = determineActionClass("cloud.run.service.delete")
 	if output != "deletion" {
 		t.Errorf("got:\n%vexpected:\n%v", output, "deletion")
