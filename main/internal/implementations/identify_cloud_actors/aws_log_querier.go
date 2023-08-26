@@ -195,7 +195,6 @@ func (alc *AWSLogQuerier) UpdateManagedDriftAttributeDifferences(
 	alc.managedDriftAttributeDifferences = newAttributeDifferences
 }
 
-// TODO: A subsequent improvement would be to look further back if resource details are not found.
 // cloudTrailEventHistorySearch runs AWS CLI commands to pull data on who modified and created the cloud resource in question.
 func (alc *AWSLogQuerier) cloudTrailEventHistorySearch(ctx context.Context, resourceType string, resourceID string, resourceRegion string, isNewToTerraform bool) (terraformValueObjects.ResourceActions, error) {
 	lookupAttributeString := fmt.Sprintf("AttributeKey=ResourceName,AttributeValue=%v", resourceID)
@@ -224,6 +223,7 @@ func (alc *AWSLogQuerier) ExtractDataFromResourceResult(resourceResult []byte, r
 
 	resourceType = string(alc.resourceToCloudTrailType[resourceType])
 
+	eventsLength := len(cloudTrailEvents.Events)
 	isComplete := false
 	isModificationIdentified := false
 	i := 0
@@ -237,12 +237,15 @@ func (alc *AWSLogQuerier) ExtractDataFromResourceResult(resourceResult []byte, r
 		// if not, move on to the next event
 		isValidResourceType := false
 		for _, resource := range event.Resources {
-			if resource.ResourceType == resourceType {
+			if resource.ResourceType == resourceType || resource.ResourceType == "" {
 				isValidResourceType = true
 				break
 			}
 		}
 		if !isValidResourceType {
+			if i+1 >= eventsLength {
+				isComplete = true
+			}
 			i++
 			continue
 		}
@@ -267,6 +270,10 @@ func (alc *AWSLogQuerier) ExtractDataFromResourceResult(resourceResult []byte, r
 					return resourceActions, nil
 				}
 			}
+		}
+
+		if i+1 >= eventsLength {
+			isComplete = true
 		}
 		i++
 	}

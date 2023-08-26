@@ -70,12 +70,6 @@ def create_markdown_file(job_name: str, markdown_text_output_path):
             resources_to_cloud_actions=resources_to_cloud_actions,
         )
 
-    if cost_estimates:
-        cost_summary_dfs = process_pricing_data(
-            cost_estimates=cost_estimates,
-            new_resources=new_resources,
-        )
-
     markdown_file = MdUtils(
         file_name=f"{markdown_text_output_path}/report.md",
         title=f"{job_name} - State of Scanned Cloud Resources",
@@ -92,25 +86,35 @@ def create_markdown_file(job_name: str, markdown_text_output_path):
 
     markdown_file.new_header(level=1, title="Identified Security Risks", style="atx")
     if security_scan:
-        security_df = security_scan_to_df(list_of_dicts=security_scan["results"])
+        if len(security_scan["results"]) == 0:
+            markdown_file.new_line("No security risks identified within scanned resources.")
+        else:
+            security_df = security_scan_to_df(list_of_dicts=security_scan["results"])
 
-        markdown_file = create_markdown_table_security_scans(
-            markdown_file=markdown_file,
-            security_df=security_df,
-        )
+            markdown_file = create_markdown_table_security_scans(
+                markdown_file=markdown_file,
+                security_df=security_df,
+            )
     else:
-        markdown_file.new_line("Security scan not run.")
+        markdown_file.new_line("No security risks identified within scanned resources.")
 
     markdown_file.new_header(
         level=1, title="Calculable Cloud Costs (Monthly)", style="atx"
     )
     if cost_estimates:
-        markdown_file = create_markdown_table_cost_summary(
-            markdown_file=markdown_file,
-            cost_summary_df=cost_summary_dfs["cost_summary"],
-        )
+        if len(cost_estimates) == 0:
+            markdown_file.new_line("No cost estimates calculated for scanned resources.")
+        else:
+            cost_summary_dfs = process_pricing_data(
+                cost_estimates=cost_estimates,
+                new_resources=new_resources,
+            )
+            markdown_file = create_markdown_table_cost_summary(
+                markdown_file=markdown_file,
+                cost_summary_df=cost_summary_dfs["cost_summary"],
+            )
     else:
-        markdown_file.new_line("Cost estimation not run.")
+        markdown_file.new_line("No cost estimates calculated for scanned resources.")
 
     markdown_file.new_header(
         level=1, title="Resources Outside of Terraform Control", style="atx"
@@ -123,7 +127,7 @@ def create_markdown_file(job_name: str, markdown_text_output_path):
             cost_by_provider_by_type_df=cost_summary_dfs[
                 "uncontrolled_cost_by_div_by_type_df"
             ]
-            if cost_summary_dfs
+            if len(cost_estimates) > 0
             else pd.DataFrame(),
         )
     else:

@@ -252,8 +252,8 @@ def _dataframe_from_cost_estimates_json(
 
     df["is_new_resource"] = df["resource_name"].isin(resource_name_set)
     df.loc[
-        (df["monthly_cost"] == "") | (df["monthly_cost"] == "0"), "monthly_cost"
-    ] = df.loc[(df["monthly_cost"] == "") | (df["monthly_cost"] == "0"), "price"]
+        ((df["monthly_cost"] == "") | (df["monthly_cost"] == "0")) & ~df["is_usage_based"], "monthly_cost"
+    ] = df.loc[((df["monthly_cost"] == "") | (df["monthly_cost"] == "0")) & ~df["is_usage_based"], "price"]
 
     df[["monthly_cost", "monthly_quantity"]] = (
         df[["monthly_cost", "monthly_quantity"]].replace("", 0).astype(float)
@@ -277,11 +277,13 @@ def _calculate_aggregate_costs_across_scan(df: pd.DataFrame) -> pd.DataFrame:
         grouped_tf_status_df.query("is_new_resource == False")
         .rename(columns={"Cost": "Terraform Controlled Resources Monthly Cost"})
         .drop(columns=["is_new_resource"])
+        .reset_index(drop=True)
     )
     grouped_controlled_df = (
         grouped_tf_status_df.query("is_new_resource == True")
         .rename(columns={"Cost": "Uncontrolled Resources Monthly Cost"})
         .drop(columns=["is_new_resource"])
+        .reset_index(drop=True)
     )
 
     combined_cost_summary_df = pd.concat(
