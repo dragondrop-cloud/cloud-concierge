@@ -48,7 +48,7 @@ when wanting to self-host runners or access the most desired features like drift
 ## Quick Start
 ### All Cloud Provider Pre-requisites
 0) Obtain an API token at https://app.dragondrop.cloud. We only collect data on when a cloud-concierge starts up (this can be verified here).
-1) Configure an environment variable file (use one of our templates to get started) to control the specifics of cloud-concierge's coverage.
+1) Configure an environment variable file (use one of our [templates](https://github.com/dragondrop-cloud/cloud-concierge/tree/dev/examples/environments/) to get started) to control the specifics of cloud-concierge's coverage.
 2) Make sure you have Docker available on your local machine.
 
 ### AWS Quickstart
