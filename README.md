@@ -12,6 +12,10 @@
    <img src="https://img.shields.io/badge/docker-v0.1.1-blue" />
 </a>
 
+<a href="https://hub.docker.com/r/dragondropcloud/cloud-concierge" alt="Total Downloads">
+   <img src="https://img.shields.io/badge/downloads-4.2k-maroon" />
+</a>
+
 <a href="https://cloud-concierge.slack.com/join/shared_invite/zt-1xx3sqsb6-cekIXs2whccZvbU81Xn5qg#/shared-invite/email" alt="Slack">
 <img src="https://img.shields.io/badge/slack-Join_Us-blueviolet" />
 </a>
