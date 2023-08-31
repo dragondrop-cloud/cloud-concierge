@@ -3,11 +3,11 @@ package identifyCloudActors
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
 
-	"github.com/Jeffail/gabs/v2"
 	terraformValueObjects "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_value_objects"
 	"github.com/dragondrop-cloud/cloud-concierge/main/internal/interfaces"
 )
@@ -79,31 +79,19 @@ func (ica *IdentifyCloudActors) Execute(ctx context.Context) error {
 // convertResourceActionsToJSON takes as input an object of type terraformValueObjects.ProviderResourceActions
 // and outputs a formatted JSON equivalent of the struct.
 func (ica *IdentifyCloudActors) convertResourceActionsToJSON(actions terraformValueObjects.ResourceActionMap) ([]byte, error) {
-	jsonObj := gabs.New()
-
 	for resourceName, resourceActions := range actions {
-		if resourceActions.Creator.Actor != "" {
-			_, err := jsonObj.Set(resourceActions.Creator.Actor, string(resourceName), "creation", "actor")
-			if err != nil {
-				return nil, fmt.Errorf("[jsonObj.Set(resourceActions.Creator.Actor] %v", err)
-			}
-			_, err = jsonObj.Set(resourceActions.Creator.Timestamp, string(resourceName), "creation", "timestamp")
-			if err != nil {
-				return nil, fmt.Errorf("[jsonObj.Set(resourceActions.Creator.Timestamp] %v", err)
-			}
-		}
-		if resourceActions.Modifier.Actor != "" {
-			_, err := jsonObj.Set(resourceActions.Modifier.Actor, string(resourceName), "modified", "actor")
-			if err != nil {
-				return nil, fmt.Errorf("[jsonObj.Set(resourceActions.Modifier.Actor] %v", err)
-			}
-			_, err = jsonObj.Set(resourceActions.Modifier.Timestamp, string(resourceName), "modified", "timestamp")
-			if err != nil {
-				return nil, fmt.Errorf("[jsonObj.Set(resourceActions.Modifier.Timestamp] %v", err)
-			}
+		isCreatorEmpty := resourceActions.Creator == nil
+		isModifierEmpty := resourceActions.Modifier == nil
+		if isCreatorEmpty && isModifierEmpty {
+			delete(actions, resourceName)
 		}
 	}
-	return jsonObj.Bytes(), nil
+
+	outBytes, err := json.Marshal(actions)
+	if err != nil {
+		return nil, fmt.Errorf("[json.Marshal(actions)]%v", err)
+	}
+	return outBytes, nil
 }
 
 // executeCommand wraps os.exec.Command with capturing of std output and errors.

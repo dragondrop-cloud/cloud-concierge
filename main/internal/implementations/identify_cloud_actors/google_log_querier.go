@@ -96,7 +96,7 @@ func (glc *GoogleLogQuerier) QueryForAllResources(ctx context.Context) (terrafor
 		}
 
 		currentResourceName := uniqueDriftedResourceToName(driftedResource)
-		resourceActions[currentResourceName] = currentResourceAction
+		resourceActions[currentResourceName] = &currentResourceAction
 	}
 
 	glc.UpdateManagedDriftAttributeDifferences(resourceActions)
@@ -122,7 +122,7 @@ func (glc *GoogleLogQuerier) QueryForAllResources(ctx context.Context) (terrafor
 		currentResourceName := terraformValueObjects.ResourceName(
 			resource.ResourceType + "." + hclcreate.ConvertTerraformerResourceName(resource.ResourceTerraformerName),
 		)
-		resourceActions[currentResourceName] = currentResourceActions
+		resourceActions[currentResourceName] = &currentResourceActions
 	}
 
 	return resourceActions, nil
@@ -131,7 +131,7 @@ func (glc *GoogleLogQuerier) QueryForAllResources(ctx context.Context) (terrafor
 // UpdateManagedDriftAttributeDifferences updates the RecentActor and RecentActionTimestamp fields
 // for each struct within the alc.managedDriftAttributeDifferences slice.
 func (glc *GoogleLogQuerier) UpdateManagedDriftAttributeDifferences(
-	divisionResourceActions map[terraformValueObjects.ResourceName]terraformValueObjects.ResourceActions,
+	divisionResourceActions terraformValueObjects.ResourceActionMap,
 ) {
 	newAttributeDifferences := []driftDetector.AttributeDifference{}
 
@@ -301,7 +301,7 @@ func (glc *GoogleLogQuerier) ExtractDataFromResourceResult(resourceResult []byte
 
 		switch classification {
 		case "creation":
-			resourceActions.Creator = terraformValueObjects.CloudActorTimeStamp{
+			resourceActions.Creator = &terraformValueObjects.CloudActorTimeStamp{
 				Actor:     terraformValueObjects.CloudActor(entry.ProtoPayload.AuthenticationInfo.PrincipalEmail),
 				Timestamp: terraformValueObjects.Timestamp(entry.ReceiveTimestamp[:10]),
 			}
@@ -309,7 +309,7 @@ func (glc *GoogleLogQuerier) ExtractDataFromResourceResult(resourceResult []byte
 		case "modification":
 			if !isModifyIdentified {
 				isModifyIdentified = true
-				resourceActions.Modifier = terraformValueObjects.CloudActorTimeStamp{
+				resourceActions.Modifier = &terraformValueObjects.CloudActorTimeStamp{
 					Actor:     terraformValueObjects.CloudActor(entry.ProtoPayload.AuthenticationInfo.PrincipalEmail),
 					Timestamp: terraformValueObjects.Timestamp(entry.ReceiveTimestamp[:10]),
 				}

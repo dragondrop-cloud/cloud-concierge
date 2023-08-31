@@ -20,16 +20,31 @@ type ModulesVersions map[string]map[string]int
 // CloudPerchData is a struct that contains all the data that is sent to DragonDrop.
 type CloudPerchData struct {
 	JobRunID string `json:"job_run_id"`
-	ResourceInventoryData
+	CloudActorData
 	CloudCostsData
-	TerraformFootprintData
 	CloudSecurityData
+	ResourceInventoryData
+	TerraformFootprintData
 }
 
 // ResourceInventoryData is a struct that contains the number of resources that are and are not managed by Terraform.
 type ResourceInventoryData struct {
 	DriftedResources                 int `json:"drifted_resources"`
 	ResourcesOutsideTerraformControl int `json:"resources_outside_terraform_control"`
+}
+
+// CloudActorData is a struct that contains the number of resources modified and created outside of Terraform control
+// aggregated by cloud actor.
+type CloudActorData struct {
+	ActorsData []ActorData `json:"actors_data"`
+}
+
+// ActorData is a struct that contains the number of resources modified and created outside of Terraform control
+// for a given cloud actor.
+type ActorData struct {
+	Actor    string `json:"actor_name"`
+	Modified int    `json:"modified"`
+	Created  int    `json:"created"`
 }
 
 // CloudCostsData is a struct that contains the costs of resources that are and are not managed by Terraform.
@@ -92,6 +107,14 @@ func getUniqueDriftedResourceCount(jsonInput []interface{}) int {
 		uniqueDriftedResources[driftedResourceMap["InstanceID"].(string)] = true
 	}
 	return len(uniqueDriftedResources)
+}
+
+// TODO
+// {"aws-backend-drift-mitigation-dev.aws_internet_gateway.internet_gateway.igw-0180823e672775584":{"modified":{"actor":"root","timestamp":"2023-08-26"}}}
+// getCloudActorData returns the number of resources modified and created outside of Terraform control aggregated by cloud actor.
+func (c *HTTPDragonDropClient) getCloudActorData(ctx context.Context) (CloudActorData, error) {
+	cloudActorData := CloudActorData{}
+	return cloudActorData, nil
 }
 
 // getCloudCostsData returns the costs of the resources outside of Terraform control and the costs of the resources
