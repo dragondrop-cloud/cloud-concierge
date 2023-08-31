@@ -82,17 +82,7 @@ func formatResources(resources map[string]interface{}) map[string]interface{} {
 }
 
 // getResourceInventoryData returns the number of resources outside of terraform control and the number of drifted resources
-func (c *HTTPDragonDropClient) getResourceInventoryData(ctx context.Context) (ResourceInventoryData, map[string]interface{}, error) {
-	newResources, err := readOutputFileAsMap("new-resources.json")
-	if err != nil {
-		return ResourceInventoryData{}, map[string]interface{}{}, fmt.Errorf("[error getting new resources]%w", err)
-	}
-
-	driftedResources, err := readOutputFileAsSlice("drift-resources-differences.json")
-	if err != nil {
-		return ResourceInventoryData{}, map[string]interface{}{}, fmt.Errorf("[error getting drifted resources]%w", err)
-	}
-
+func (c *HTTPDragonDropClient) getResourceInventoryData(newResources map[string]interface{}, driftedResources []interface{}) (ResourceInventoryData, map[string]interface{}, error) {
 	return ResourceInventoryData{
 		DriftedResources:                 getUniqueDriftedResourceCount(driftedResources),
 		ResourcesOutsideTerraformControl: len(newResources),
@@ -109,8 +99,8 @@ func getUniqueDriftedResourceCount(jsonInput []interface{}) int {
 	return len(uniqueDriftedResources)
 }
 
-// TODO
-// {"aws-backend-drift-mitigation-dev.aws_internet_gateway.internet_gateway.igw-0180823e672775584":{"modified":{"actor":"root","timestamp":"2023-08-26"}}}
+// TODO: Example data point to build out against
+// {"aws-example.aws_internet_gateway.internet_gateway.igw-":{"modified":{"actor":"root","timestamp":"2023-08-26"}}}
 // getCloudActorData returns the number of resources modified and created outside of Terraform control aggregated by cloud actor.
 func (c *HTTPDragonDropClient) getCloudActorData(ctx context.Context) (CloudActorData, error) {
 	cloudActorData := CloudActorData{}
@@ -119,12 +109,7 @@ func (c *HTTPDragonDropClient) getCloudActorData(ctx context.Context) (CloudActo
 
 // getCloudCostsData returns the costs of the resources outside of Terraform control and the costs of the resources
 // already controlled by Terraform.
-func (c *HTTPDragonDropClient) getCloudCostsData(ctx context.Context, newResources map[string]interface{}) (CloudCostsData, error) {
-	costEstimation, err := readOutputFileAsSlice("cost-estimates.json")
-	if err != nil {
-		return CloudCostsData{}, err
-	}
-
+func (c *HTTPDragonDropClient) getCloudCostsData(ctx context.Context, newResources map[string]interface{}, costEstimation []interface{}) (CloudCostsData, error) {
 	if len(costEstimation) == 0 {
 		return CloudCostsData{}, nil
 	}
@@ -172,12 +157,7 @@ func roundFloat(val float64) float64 {
 }
 
 // getCloudSecurityData returns the number of security risks found in the security scan
-func (c *HTTPDragonDropClient) getCloudSecurityData(ctx context.Context) (CloudSecurityData, error) {
-	securityScan, err := readOutputFileAsMap("security-scan.json")
-	if err != nil {
-		return CloudSecurityData{}, err
-	}
-
+func (c *HTTPDragonDropClient) getCloudSecurityData(ctx context.Context, securityScan map[string]interface{}) (CloudSecurityData, error) {
 	cloudSecurityData := CloudSecurityData{}
 	results := securityScan["results"].([]interface{})
 	for _, result := range results {
@@ -201,17 +181,32 @@ func (c *HTTPDragonDropClient) getCloudSecurityData(ctx context.Context) (CloudS
 func (c *HTTPDragonDropClient) getTerraformFootprintData(ctx context.Context) (TerraformFootprintData, error) {
 	files := []string{"current_cloud/versions.tf", "current_cloud/main.tf"}
 	files = append(files, getAllTFFiles(ctx, c.config.WorkspaceDirectories)...)
-	terraformFootprintData := TerraformFootprintData{}
-	versionsTFModules := ModulesVersions{}
 
+	var loadedFiles [][]byte
 	for _, filename := range files {
 		mainFileContent, err := readFile(filename)
 		if err != nil {
 			continue
 		}
+		loadedFiles = append(loadedFiles, mainFileContent)
+	}
 
+	terraformFootprintData, err := c.parseFootprintDataFromBytes(loadedFiles)
+	if err != nil {
+		return TerraformFootprintData{}, fmt.Errorf("error parsing footprint data from bytes: %w", err)
+	}
+
+	return terraformFootprintData, nil
+}
+
+// parseFootprintDataFromBytes parses Terraform footprint data from loaded of Terraform files
+func (c *HTTPDragonDropClient) parseFootprintDataFromBytes(loadedFiles [][]byte) (TerraformFootprintData, error) {
+	terraformFootprintData := TerraformFootprintData{}
+	versionsTFModules := ModulesVersions{}
+
+	for _, content := range loadedFiles {
 		inputHCLFile, hclDiag := hclwrite.ParseConfig(
-			mainFileContent,
+			content,
 			"placeholder.tf",
 			hcl.Pos{Line: 0, Column: 0, Byte: 0},
 		)
@@ -245,7 +240,8 @@ func (c *HTTPDragonDropClient) getTerraformFootprintData(ctx context.Context) (T
 	}
 
 	terraformFootprintData.VersionsTFModules = string(versionsTFModulesJSON)
-	return terraformFootprintData, nil
+
+	return terraformFootprintData, err
 }
 
 // concatenateVersions concatenates the versions of all modules used in the terraform files

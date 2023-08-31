@@ -12,17 +12,35 @@ func (c *HTTPDragonDropClient) SendCloudPerchData(ctx context.Context) error {
 	if c.config.JobID == "empty" || c.config.JobID == "" {
 		return nil
 	}
-	resourceInventoryData, newResources, err := c.getResourceInventoryData(ctx)
+
+	newResources, err := readOutputFileAsMap("new-resources.json")
+	if err != nil {
+		return fmt.Errorf("[error reading new-resources.json]%w", err)
+	}
+	driftedResources, err := readOutputFileAsSlice("drift-resources-differences.json")
+	if err != nil {
+		return fmt.Errorf("[error reading drift-resources-differences.json]%w", err)
+	}
+	costData, err := readOutputFileAsSlice("cost-estimates.json")
+	if err != nil {
+		return fmt.Errorf("[error reading cost-estimates.json]%w", err)
+	}
+	securityData, err := readOutputFileAsMap("security-scan.json")
+	if err != nil {
+		return fmt.Errorf("[error reading security-scan.json]%w", err)
+	}
+
+	resourceInventoryData, newResources, err := c.getResourceInventoryData(newResources, driftedResources)
 	if err != nil {
 		return fmt.Errorf("[error getting ResourceInventoryData]%w", err)
 	}
 
-	cloudCostsData, err := c.getCloudCostsData(ctx, formatResources(newResources))
+	cloudCostsData, err := c.getCloudCostsData(ctx, newResources, costData)
 	if err != nil {
 		return fmt.Errorf("[error getting CloudCostsData]%w", err)
 	}
 
-	cloudSecurityData, err := c.getCloudSecurityData(ctx)
+	cloudSecurityData, err := c.getCloudSecurityData(ctx, securityData)
 	if err != nil {
 		return fmt.Errorf("[error getting CloudSecurityData]%w", err)
 	}
