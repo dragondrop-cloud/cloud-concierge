@@ -1,4 +1,4 @@
-package terraformImportMigrationGenerator
+package terraformimportmigrationgenerator
 
 var ResourceTypeLocations = map[ResourceType]ImportLocationFormat{
 	"aws_s3_bucket": {

@@ -1,4 +1,4 @@
-package terraformSecurity
+package terraformsecurity
 
 import (
 	"bytes"

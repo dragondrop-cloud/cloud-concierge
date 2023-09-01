@@ -1,4 +1,4 @@
-package terraformManagedResourcesDriftDetector
+package tfmanagedresourcesdriftdetector
 
 import (
 	"context"

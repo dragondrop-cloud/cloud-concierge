@@ -1,4 +1,4 @@
-package driftDetector
+package driftdetector
 
 import (
 	"context"

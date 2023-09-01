@@ -1,4 +1,4 @@
-package resourcesCalculator
+package resourcescalculator
 
 import (
 	"context"

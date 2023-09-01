@@ -18,6 +18,6 @@ func NewIsolatedTerraformerExecutor() interfaces.TerraformerExecutor {
 
 // Execute runs the workflow needed to capture the current state of an
 // external cloud environment via the terraformer package.
-func (v *IsolatedTerraformerExecutor) Execute(ctx context.Context) error {
+func (v *IsolatedTerraformerExecutor) Execute(_ context.Context) error {
 	return nil
 }

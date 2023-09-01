@@ -1,4 +1,4 @@
-package driftDetector
+package driftdetector
 
 // DeletedResource represents a drifted deleted resource
 type DeletedResource struct {

@@ -1,19 +1,4 @@
-package terraformValueObjects
-
-// Design struct to handle data output. Should be defined globally, not just for gcp. Likely:
-// "provider": {
-//     "divisionName": {
-//          "resourceType.resourceName": {
-//             "creator":  {
-//                 actor: "AUTH ACCOUNT",
-//				   timestamp: "XYZ"
-//             },
-//             "modifier": {}
-//         },
-//          "resourceName2": {},
-//          "resourceName3": {}
-//      }
-// }
+package terraformvalueobjects
 
 // Timestamp is a string that represents the time of a cloud actor's action.
 type Timestamp string

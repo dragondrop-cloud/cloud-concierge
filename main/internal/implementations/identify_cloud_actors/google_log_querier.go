@@ -1,4 +1,4 @@
-package identifyCloudActors
+package identifycloudactors
 
 import (
 	"bytes"
