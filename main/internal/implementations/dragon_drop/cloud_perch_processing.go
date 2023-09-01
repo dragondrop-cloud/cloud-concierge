@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 
+	terraformValueObjects "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_value_objects"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 )
@@ -99,11 +100,59 @@ func getUniqueDriftedResourceCount(jsonInput []interface{}) int {
 	return len(uniqueDriftedResources)
 }
 
-// TODO: Example data point to build out against
+// TODO: Unit test implementation needed
 // {"aws-example.aws_internet_gateway.internet_gateway.igw-":{"modified":{"actor":"root","timestamp":"2023-08-26"}}}
 // getCloudActorData returns the number of resources modified and created outside of Terraform control aggregated by cloud actor.
-func (c *HTTPDragonDropClient) getCloudActorData(ctx context.Context) (CloudActorData, error) {
-	cloudActorData := CloudActorData{}
+func (c *HTTPDragonDropClient) getCloudActorData(ctx context.Context, cloudActorBytes []byte) (CloudActorData, error) {
+	resourceToActions := &terraformValueObjects.ResourceActionMap{}
+	err := json.Unmarshal(cloudActorBytes, resourceToActions)
+	if err != nil {
+		return CloudActorData{}, fmt.Errorf("failed to unmarshal cloud actor bytes: %w", err)
+	}
+
+	if (&terraformValueObjects.ResourceActionMap{}) == resourceToActions {
+		return CloudActorData{}, nil
+	}
+
+	// Capturing and building data structure within a "helper" map before converting to a slice of ActorData
+	// to enable ~O(1) lookup for each new resource action.
+	actorToActorData := map[string]*ActorData{}
+	for _, actions := range *resourceToActions {
+		if actions.Creator != nil {
+			actor := string(actions.Creator.Actor)
+			if _, ok := actorToActorData[actor]; !ok {
+				actorToActorData[actor] = &ActorData{
+					Actor:    actor,
+					Modified: 0,
+					Created:  1,
+				}
+			} else {
+				actorToActorData[actor].Created += 1
+			}
+		}
+		if actions.Modifier != nil {
+			actor := string(actions.Modifier.Actor)
+			if _, ok := actorToActorData[actor]; !ok {
+				actorToActorData[actor] = &ActorData{
+					Actor:    actor,
+					Modified: 1,
+					Created:  0,
+				}
+			} else {
+				actorToActorData[actor].Modified += 1
+			}
+		}
+	}
+
+	var actorsData []ActorData
+	for _, actorData := range actorToActorData {
+		actorsData = append(actorsData, *actorData)
+	}
+
+	cloudActorData := CloudActorData{
+		ActorsData: actorsData,
+	}
+
 	return cloudActorData, nil
 }
 

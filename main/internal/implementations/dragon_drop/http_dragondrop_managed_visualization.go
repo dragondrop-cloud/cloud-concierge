@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 )
 
 // SendCloudPerchData sends CloudPerchData to DragonDrop.
@@ -29,6 +30,10 @@ func (c *HTTPDragonDropClient) SendCloudPerchData(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("[error reading security-scan.json]%w", err)
 	}
+	cloudActorBytes, err := os.ReadFile("outputs/resources-to-cloud-actions.json")
+	if err != nil {
+		return fmt.Errorf("[error reading resources-to-cloud-actions.json]%w", err)
+	}
 
 	resourceInventoryData, newResources, err := c.getResourceInventoryData(newResources, driftedResources)
 	if err != nil {
@@ -50,10 +55,16 @@ func (c *HTTPDragonDropClient) SendCloudPerchData(ctx context.Context) error {
 		return fmt.Errorf("[error getting TerraformFootprintData]%w", err)
 	}
 
+	cloudActorData, err := c.getCloudActorData(ctx, cloudActorBytes)
+	if err != nil {
+		return fmt.Errorf("[error getting CloudActorData]%w", err)
+	}
+
 	// Only sending highly anonymized data to the DragonDrop API for managed cloud-concierge instances
 	cloudPerchData := &CloudPerchData{
 		JobRunID:               c.config.JobID,
 		ResourceInventoryData:  resourceInventoryData,
+		CloudActorData:         cloudActorData,
 		CloudCostsData:         cloudCostsData,
 		CloudSecurityData:      cloudSecurityData,
 		TerraformFootprintData: terraformFootprintData,
