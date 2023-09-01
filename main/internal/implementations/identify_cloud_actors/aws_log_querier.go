@@ -1,4 +1,4 @@
-package identifyCloudActors
+package identifycloudactors
 
 import (
 	"bytes"
@@ -196,7 +196,7 @@ func (alc *AWSLogQuerier) UpdateManagedDriftAttributeDifferences(
 }
 
 // cloudTrailEventHistorySearch runs AWS CLI commands to pull data on who modified and created the cloud resource in question.
-func (alc *AWSLogQuerier) cloudTrailEventHistorySearch(ctx context.Context, resourceType string, resourceID string, resourceRegion string, isNewToTerraform bool) (terraformValueObjects.ResourceActions, error) {
+func (alc *AWSLogQuerier) cloudTrailEventHistorySearch(_ context.Context, resourceType string, resourceID string, resourceRegion string, isNewToTerraform bool) (terraformValueObjects.ResourceActions, error) {
 	lookupAttributeString := fmt.Sprintf("AttributeKey=ResourceName,AttributeValue=%v", resourceID)
 	cloudTrailCommand := []string{"cloudtrail", "lookup-events", "--max-results", "50", "--output", "json", "--region", resourceRegion, "--lookup-attributes", lookupAttributeString}
 

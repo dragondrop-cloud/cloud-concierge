@@ -1,4 +1,4 @@
-package costEstimation
+package costestimation
 
 import (
 	terraformValueObjects "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_value_objects"

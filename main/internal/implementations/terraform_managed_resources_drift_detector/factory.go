@@ -1,4 +1,4 @@
-package terraformManagedResourcesDriftDetector
+package tfmanagedresourcesdriftdetector
 
 import (
 	"context"
@@ -25,6 +25,6 @@ func (f *Factory) Instantiate(ctx context.Context, environment string, provider 
 
 // bootstrappedDriftDetector creates a complete implementation of the interfaces.TerraformManagedResourcesDriftDetector interface with
 // configuration specified via environment variables.
-func (f *Factory) bootstrappedDriftDetector(ctx context.Context, provider terraformValueObjects.Provider) (interfaces.TerraformManagedResourcesDriftDetector, error) {
+func (f *Factory) bootstrappedDriftDetector(_ context.Context, provider terraformValueObjects.Provider) (interfaces.TerraformManagedResourcesDriftDetector, error) {
 	return driftDetector.NewManagedResourcesDriftDetector(provider), nil
 }

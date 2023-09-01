@@ -1,4 +1,4 @@
-package terraformImportMigrationGenerator
+package terraformimportmigrationgenerator
 
 var GoogleResourceTypeLocations = map[ResourceType]ImportLocationFormat{
 	"google_storage_bucket": {

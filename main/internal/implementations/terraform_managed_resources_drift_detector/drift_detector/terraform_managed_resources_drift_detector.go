@@ -1,4 +1,4 @@
-package driftDetector
+package driftdetector
 
 import (
 	"context"
@@ -26,7 +26,7 @@ func NewManagedResourcesDriftDetector(provider terraformValueObjects.Provider) *
 // Execute initiates the process of detecting drift in managed resources
 // by comparing the current state of resources with their expected state.
 // It takes a context as input to support cancellation and timeouts.
-func (m *ManagedResourcesDriftDetector) Execute(ctx context.Context, workspaceToDirectory map[string]string) (bool, error) {
+func (m *ManagedResourcesDriftDetector) Execute(_ context.Context, workspaceToDirectory map[string]string) (bool, error) {
 	remoteStateResources, err := m.loadAllRemoteStateFiles(workspaceToDirectory)
 	if err != nil {
 		return false, fmt.Errorf("[m.loadAllRemoteStateFiles]%w", err)

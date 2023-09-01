@@ -1,9 +1,8 @@
-package dragonDrop
+package dragondrop
 
 import (
 	"context"
 	"encoding/json"
-	"reflect"
 	"testing"
 
 	"github.com/hashicorp/hcl/v2"
@@ -222,13 +221,7 @@ func TestHTTPDragonDropClient_getCloudActorDataSimple(t *testing.T) {
 	cloudActorBytes := []byte(`{"aws-example.aws_internet_gateway.internet_gateway.igw-":{"modified":{"actor":"root","timestamp":"2023-08-26"}}}`)
 
 	expectedOutput := CloudActorData{
-		[]ActorData{
-			{
-				Actor:    "root",
-				Modified: 1,
-				Created:  0,
-			},
-		},
+		ActorsData: `[{"actor_name":"root","modified":1,"created":0}]`,
 	}
 
 	// When
@@ -236,9 +229,7 @@ func TestHTTPDragonDropClient_getCloudActorDataSimple(t *testing.T) {
 
 	// Then
 	require.NoError(t, err)
-	if !reflect.DeepEqual(expectedOutput, cloudActors) {
-		t.Errorf("Expected %v, got %v", expectedOutput, cloudActors)
-	}
+	require.Equal(t, expectedOutput, cloudActors)
 }
 
 func TestHTTPDragonDropClient_getCloudActorDataComplex(t *testing.T) {
@@ -249,18 +240,7 @@ func TestHTTPDragonDropClient_getCloudActorDataComplex(t *testing.T) {
 	cloudActorBytes := []byte(`{"resource1-":{"modified":{"actor":"root"},"creation":{"actor":"root"}},"resource2-":{"modified":{"actor":"jimmy"},"creation":{"actor":"root"}}}`)
 
 	expectedOutput := CloudActorData{
-		[]ActorData{
-			{
-				Actor:    "root",
-				Modified: 1,
-				Created:  2,
-			},
-			{
-				Actor:    "jimmy",
-				Modified: 1,
-				Created:  0,
-			},
-		},
+		ActorsData: `[{"actor_name":"root","modified":1,"created":2},{"actor_name":"jimmy","modified":1,"created":0}]`,
 	}
 
 	// When
@@ -268,9 +248,7 @@ func TestHTTPDragonDropClient_getCloudActorDataComplex(t *testing.T) {
 
 	// Then
 	require.NoError(t, err)
-	if !reflect.DeepEqual(expectedOutput, cloudActors) {
-		t.Errorf("Expected %v, got %v", expectedOutput, cloudActors)
-	}
+	require.Equal(t, expectedOutput, cloudActors)
 }
 
 func Test_formatResources(t *testing.T) {

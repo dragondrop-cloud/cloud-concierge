@@ -1,4 +1,4 @@
-package dragonDrop
+package dragondrop
 
 import (
 	"context"
@@ -35,9 +35,9 @@ type ResourceInventoryData struct {
 }
 
 // CloudActorData is a struct that contains the number of resources modified and created outside of Terraform control
-// aggregated by cloud actor.
+// aggregated by cloud actor but in a string format, using marshalled ActorData list.
 type CloudActorData struct {
-	ActorsData []ActorData `json:"actors_data"`
+	ActorsData string `json:"actors_data"`
 }
 
 // ActorData is a struct that contains the number of resources modified and created outside of Terraform control
@@ -100,10 +100,8 @@ func getUniqueDriftedResourceCount(jsonInput []interface{}) int {
 	return len(uniqueDriftedResources)
 }
 
-// TODO: Unit test implementation needed
-// {"aws-example.aws_internet_gateway.internet_gateway.igw-":{"modified":{"actor":"root","timestamp":"2023-08-26"}}}
 // getCloudActorData returns the number of resources modified and created outside of Terraform control aggregated by cloud actor.
-func (c *HTTPDragonDropClient) getCloudActorData(ctx context.Context, cloudActorBytes []byte) (CloudActorData, error) {
+func (c *HTTPDragonDropClient) getCloudActorData(_ context.Context, cloudActorBytes []byte) (CloudActorData, error) {
 	resourceToActions := &terraformValueObjects.ResourceActionMap{}
 	err := json.Unmarshal(cloudActorBytes, resourceToActions)
 	if err != nil {
@@ -127,7 +125,7 @@ func (c *HTTPDragonDropClient) getCloudActorData(ctx context.Context, cloudActor
 					Created:  1,
 				}
 			} else {
-				actorToActorData[actor].Created += 1
+				actorToActorData[actor].Created++
 			}
 		}
 		if actions.Modifier != nil {
@@ -139,7 +137,7 @@ func (c *HTTPDragonDropClient) getCloudActorData(ctx context.Context, cloudActor
 					Created:  0,
 				}
 			} else {
-				actorToActorData[actor].Modified += 1
+				actorToActorData[actor].Modified++
 			}
 		}
 	}
@@ -149,8 +147,12 @@ func (c *HTTPDragonDropClient) getCloudActorData(ctx context.Context, cloudActor
 		actorsData = append(actorsData, *actorData)
 	}
 
+	marshalledActorsData, err := json.Marshal(actorsData)
+	if err != nil {
+		return CloudActorData{}, err
+	}
 	cloudActorData := CloudActorData{
-		ActorsData: actorsData,
+		ActorsData: string(marshalledActorsData),
 	}
 
 	return cloudActorData, nil
@@ -158,7 +160,7 @@ func (c *HTTPDragonDropClient) getCloudActorData(ctx context.Context, cloudActor
 
 // getCloudCostsData returns the costs of the resources outside of Terraform control and the costs of the resources
 // already controlled by Terraform.
-func (c *HTTPDragonDropClient) getCloudCostsData(ctx context.Context, newResources map[string]interface{}, costEstimation []interface{}) (CloudCostsData, error) {
+func (c *HTTPDragonDropClient) getCloudCostsData(_ context.Context, newResources map[string]interface{}, costEstimation []interface{}) (CloudCostsData, error) {
 	if len(costEstimation) == 0 {
 		return CloudCostsData{}, nil
 	}
@@ -206,7 +208,7 @@ func roundFloat(val float64) float64 {
 }
 
 // getCloudSecurityData returns the number of security risks found in the security scan
-func (c *HTTPDragonDropClient) getCloudSecurityData(ctx context.Context, securityScan map[string]interface{}) (CloudSecurityData, error) {
+func (c *HTTPDragonDropClient) getCloudSecurityData(_ context.Context, securityScan map[string]interface{}) (CloudSecurityData, error) {
 	cloudSecurityData := CloudSecurityData{}
 	results := securityScan["results"].([]interface{})
 	for _, result := range results {

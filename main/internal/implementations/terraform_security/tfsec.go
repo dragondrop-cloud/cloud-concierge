@@ -1,4 +1,4 @@
-package terraformSecurity
+package terraformsecurity
 
 import (
 	"bytes"
@@ -63,7 +63,7 @@ func NewTFSec(provider terraformValueObjects.Provider) *TFSec {
 
 // ExecuteScan is called from the main job flow to execute the tfsec command and save the output
 // to show to the user in the PR
-func (s *TFSec) ExecuteScan(ctx context.Context) error {
+func (s *TFSec) ExecuteScan(_ context.Context) error {
 	contentResults, err := s.runTFSec()
 	if err != nil {
 		return fmt.Errorf("[tfsec][execute_scan][error running tfsec command][%v]", err)

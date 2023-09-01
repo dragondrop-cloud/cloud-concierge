@@ -1,4 +1,4 @@
-package costEstimation
+package costestimation
 
 import (
 	"bytes"
@@ -45,7 +45,7 @@ func NewCostEstimator(config CostEstimatorConfig, provider terraformValueObjects
 
 // Execute creates structured cost estimation data for the current identified/scanned
 // cloud resources.
-func (ce *CostEstimator) Execute(ctx context.Context) error {
+func (ce *CostEstimator) Execute(_ context.Context) error {
 	if ce.config.InfracostAPIToken == "None" {
 		fmt.Println("No Infracost token specified, skipping cost estimation.")
 		return nil

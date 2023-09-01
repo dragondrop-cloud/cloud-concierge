@@ -28,7 +28,7 @@ func (m *TerraformWorkspaceMock) FindTerraformWorkspaces(ctx context.Context) (m
 
 // DownloadWorkspaceState downloads from the remote Terraform backend the latest state file
 // for each "workspace".
-func (m *TerraformWorkspaceMock) DownloadWorkspaceState(ctx context.Context, WorkspaceToDirectory map[string]string) error {
+func (m *TerraformWorkspaceMock) DownloadWorkspaceState(_ context.Context, _ map[string]string) error {
 	args := m.Called()
 	return args.Error(0)
 }

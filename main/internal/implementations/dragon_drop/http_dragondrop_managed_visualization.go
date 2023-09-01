@@ -1,4 +1,4 @@
-package dragonDrop
+package dragondrop
 
 import (
 	"bytes"

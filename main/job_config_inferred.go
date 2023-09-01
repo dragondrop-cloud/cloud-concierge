@@ -202,9 +202,9 @@ func getProviderFromProviderVersion(provider map[terraformValueObjects.Provider]
 
 	var providerName terraformValueObjects.Provider
 	for providerName = range provider {
+		return providerName, nil
 	}
-
-	return providerName, nil
+	return "", fmt.Errorf("no provider found in map")
 }
 
 // getVCSSystemFromRepoURL determines the VCS system from the input repo URL

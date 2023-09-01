@@ -1,4 +1,4 @@
-package queryParamData
+package queryparamdata
 
 type CloudTrailResourceType string
 
