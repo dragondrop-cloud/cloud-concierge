@@ -18,12 +18,12 @@ func NewIsolatedTerraformWorkspace() *IsolatedTerraformWorkspace {
 
 // DownloadWorkspaceState downloads from the remote TerraformCloudFile backend the latest state file
 // for each "workspace".
-func (v *IsolatedTerraformWorkspace) DownloadWorkspaceState(ctx context.Context, WorkspaceToDirectory map[string]string) error {
+func (v *IsolatedTerraformWorkspace) DownloadWorkspaceState(_ context.Context, _ map[string]string) error {
 	log.Debug("Downloading terraform workspace state")
 	return nil
 }
 
-func (v *IsolatedTerraformWorkspace) FindTerraformWorkspaces(ctx context.Context) (map[string]string, error) {
+func (v *IsolatedTerraformWorkspace) FindTerraformWorkspaces(_ context.Context) (map[string]string, error) {
 	log.Debug("finding terraform workspaces")
 	return make(map[string]string), nil
 }

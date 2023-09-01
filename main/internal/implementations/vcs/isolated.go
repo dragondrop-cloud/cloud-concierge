@@ -29,7 +29,7 @@ func (v *IsolatedVCS) AddChanges() error {
 }
 
 // Checkout creates a new branch within the remote repository.
-func (v *IsolatedVCS) Checkout(jobName string) error {
+func (v *IsolatedVCS) Checkout(_ string) error {
 	return nil
 }
 
@@ -45,7 +45,7 @@ func (v *IsolatedVCS) Push() error {
 
 // OpenPullRequest opens a new pull request of committed changes to the remote repository,
 // and returns the url of this pull request
-func (v *IsolatedVCS) OpenPullRequest(jobName string) (string, error) {
+func (v *IsolatedVCS) OpenPullRequest(_ string) (string, error) {
 	return "", nil
 }
 

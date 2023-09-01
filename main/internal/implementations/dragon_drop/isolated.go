@@ -18,12 +18,12 @@ func NewIsolatedDragonDrop() interfaces.DragonDrop {
 }
 
 // CheckLoggerAndToken Check that logging is successful, and implicitly check that the jobToken env variable is valid.
-func (d *IsolatedDragonDrop) CheckLoggerAndToken(ctx context.Context) error {
+func (d *IsolatedDragonDrop) CheckLoggerAndToken(_ context.Context) error {
 	return nil
 }
 
 // InformStarted Informs to DragonDropAPI when job is Starting
-func (d *IsolatedDragonDrop) InformStarted(ctx context.Context) error {
+func (d *IsolatedDragonDrop) InformStarted(_ context.Context) error {
 	return nil
 }
 

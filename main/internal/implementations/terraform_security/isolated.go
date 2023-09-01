@@ -13,6 +13,6 @@ func NewIsolatedTerraformSecurity() *IsolatedTerraformSecurity {
 
 // ExecuteScan is called from the main job flow to mock the output files from tfsec to show
 // to the user in the PR
-func (i *IsolatedTerraformSecurity) ExecuteScan(ctx context.Context) error {
+func (i *IsolatedTerraformSecurity) ExecuteScan(_ context.Context) error {
 	return nil
 }

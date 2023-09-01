@@ -1,4 +1,4 @@
-package terraformerCLI
+package terraformercli
 
 import (
 	"bytes"
@@ -41,7 +41,7 @@ type AzureEnvironment struct {
 }
 
 // Scan uses the TerraformerCLI interface to scan a given division's cloud environment
-func (azureScanner *AzureScanner) Scan(subscription terraformValueObjects.Division, credential terraformValueObjects.Credential, options ...string) error {
+func (azureScanner *AzureScanner) Scan(_ terraformValueObjects.Division, credential terraformValueObjects.Credential, _ ...string) error {
 	env := new(AzureEnvironment)
 	credentialBytes := bytes.TrimPrefix([]byte(credential), []byte("\xef\xbb\xbf"))
 
@@ -61,7 +61,7 @@ func (azureScanner *AzureScanner) Scan(subscription terraformValueObjects.Divisi
 		Provider:       "azurerm",
 		Resources:      []string{},
 		AdditionalArgs: []string{fmt.Sprintf("--filter=resource_group=%s", filterValue)},
-		Regions:        []string{},
+		Regions:        getValidRegions(azureScanner.CloudRegions, terraformValueObjects.AzureRegions, defaultAzureRegions),
 		IsCompact:      true,
 	})
 

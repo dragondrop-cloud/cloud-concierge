@@ -1,4 +1,4 @@
-package terraformerCLI
+package terraformercli
 
 import terraformValueObjects "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_value_objects"
 

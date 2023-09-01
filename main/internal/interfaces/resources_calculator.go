@@ -20,7 +20,7 @@ type ResourcesCalculatorMock struct {
 }
 
 // Execute calculates the association between resources and a state file.
-func (m *ResourcesCalculatorMock) Execute(ctx context.Context, workspaceToDirectory map[string]string) error {
+func (m *ResourcesCalculatorMock) Execute(_ context.Context, _ map[string]string) error {
 	args := m.Called()
 	return args.Error(0)
 }

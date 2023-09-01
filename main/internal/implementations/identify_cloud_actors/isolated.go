@@ -18,7 +18,7 @@ func NewIsolatedIdentifyCloudActors() interfaces.IdentifyCloudActors {
 }
 
 // Execute calculates the association between resources and a state file.
-func (c *IsolatedIdentifyCloudActors) Execute(ctx context.Context) error {
+func (c *IsolatedIdentifyCloudActors) Execute(_ context.Context) error {
 	log.Debug("Executing identify cloud actors")
 	return nil
 }

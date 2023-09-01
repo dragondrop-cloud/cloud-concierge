@@ -23,7 +23,7 @@ type TerraformerExecutorMock struct {
 
 // Execute runs the workflow needed to capture the current state of an
 // external cloud environment via the terraformer package.
-func (m *TerraformerExecutorMock) Execute(ctx context.Context) error {
+func (m *TerraformerExecutorMock) Execute(_ context.Context) error {
 	args := m.Called()
 	return args.Error(0)
 }

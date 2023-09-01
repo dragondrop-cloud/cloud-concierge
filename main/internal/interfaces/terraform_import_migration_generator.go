@@ -20,7 +20,7 @@ type TerraformImportMigrationGeneratorMock struct {
 }
 
 // Execute generates terraform state migration statements for identified resources.
-func (m *TerraformImportMigrationGeneratorMock) Execute(ctx context.Context) error {
+func (m *TerraformImportMigrationGeneratorMock) Execute(_ context.Context) error {
 	args := m.Called()
 	return args.Error(0)
 }
