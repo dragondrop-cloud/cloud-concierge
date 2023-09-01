@@ -100,10 +100,8 @@ func getUniqueDriftedResourceCount(jsonInput []interface{}) int {
 	return len(uniqueDriftedResources)
 }
 
-// TODO: Unit test implementation needed
-// {"aws-example.aws_internet_gateway.internet_gateway.igw-":{"modified":{"actor":"root","timestamp":"2023-08-26"}}}
 // getCloudActorData returns the number of resources modified and created outside of Terraform control aggregated by cloud actor.
-func (c *HTTPDragonDropClient) getCloudActorData(ctx context.Context, cloudActorBytes []byte) (CloudActorData, error) {
+func (c *HTTPDragonDropClient) getCloudActorData(_ context.Context, cloudActorBytes []byte) (CloudActorData, error) {
 	resourceToActions := &terraformValueObjects.ResourceActionMap{}
 	err := json.Unmarshal(cloudActorBytes, resourceToActions)
 	if err != nil {
@@ -162,7 +160,7 @@ func (c *HTTPDragonDropClient) getCloudActorData(ctx context.Context, cloudActor
 
 // getCloudCostsData returns the costs of the resources outside of Terraform control and the costs of the resources
 // already controlled by Terraform.
-func (c *HTTPDragonDropClient) getCloudCostsData(ctx context.Context, newResources map[string]interface{}, costEstimation []interface{}) (CloudCostsData, error) {
+func (c *HTTPDragonDropClient) getCloudCostsData(_ context.Context, newResources map[string]interface{}, costEstimation []interface{}) (CloudCostsData, error) {
 	if len(costEstimation) == 0 {
 		return CloudCostsData{}, nil
 	}
@@ -210,7 +208,7 @@ func roundFloat(val float64) float64 {
 }
 
 // getCloudSecurityData returns the number of security risks found in the security scan
-func (c *HTTPDragonDropClient) getCloudSecurityData(ctx context.Context, securityScan map[string]interface{}) (CloudSecurityData, error) {
+func (c *HTTPDragonDropClient) getCloudSecurityData(_ context.Context, securityScan map[string]interface{}) (CloudSecurityData, error) {
 	cloudSecurityData := CloudSecurityData{}
 	results := securityScan["results"].([]interface{})
 	for _, result := range results {
