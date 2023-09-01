@@ -81,16 +81,16 @@ func TestAWSLogQuerier_ExtractDataFromResourceResultManagedByTerraform(t *testin
 	}
 
 	expectedOutput := terraformValueObjects.ResourceActions{
-		Creator: terraformValueObjects.CloudActorTimeStamp{},
-		Modifier: terraformValueObjects.CloudActorTimeStamp{
+		Creator: nil,
+		Modifier: &terraformValueObjects.CloudActorTimeStamp{
 			Actor:     terraformValueObjects.CloudActor("root"),
 			Timestamp: terraformValueObjects.Timestamp("2023-05-17"),
 		},
 	}
 
 	// Then
-	if !reflect.DeepEqual(output, expectedOutput) {
-		t.Errorf("expected:\n%v\ngot:\n%v", expectedOutput, output)
+	if !reflect.DeepEqual(&output, &expectedOutput) {
+		t.Errorf("expected:\n%v\ngot:\n%v", &expectedOutput, &output)
 	}
 }
 
@@ -151,11 +151,11 @@ func TestAWSLogQuerier_ExtractDataFromResourceResultNewToTerraform(t *testing.T)
 	}
 
 	expectedOutput := terraformValueObjects.ResourceActions{
-		Creator: terraformValueObjects.CloudActorTimeStamp{
+		Creator: &terraformValueObjects.CloudActorTimeStamp{
 			Actor:     terraformValueObjects.CloudActor("goodman.benjamin@dragondrop.cloud"),
 			Timestamp: terraformValueObjects.Timestamp("2023-05-18"),
 		},
-		Modifier: terraformValueObjects.CloudActorTimeStamp{},
+		Modifier: nil,
 	}
 
 	// Then
@@ -238,11 +238,11 @@ func TestAWSLogQuerier_ExtractDataFromResourceResultNewToTerraformWithModificati
 	}
 
 	expectedOutput := terraformValueObjects.ResourceActions{
-		Creator: terraformValueObjects.CloudActorTimeStamp{
+		Creator: &terraformValueObjects.CloudActorTimeStamp{
 			Actor:     terraformValueObjects.CloudActor("goodman.benjamin@dragondrop.cloud"),
 			Timestamp: terraformValueObjects.Timestamp("2023-05-17"),
 		},
-		Modifier: terraformValueObjects.CloudActorTimeStamp{
+		Modifier: &terraformValueObjects.CloudActorTimeStamp{
 			Actor:     terraformValueObjects.CloudActor("root"),
 			Timestamp: terraformValueObjects.Timestamp("2023-05-17"),
 		},
@@ -277,15 +277,15 @@ func TestAWSLogQuerier_UpdateManagedDriftAttributeDifferences(t *testing.T) {
 		},
 	}
 
-	inputDivisionResourceActions := map[terraformValueObjects.ResourceName]terraformValueObjects.ResourceActions{
+	inputDivisionResourceActions := terraformValueObjects.ResourceActionMap{
 		"state-1.type-1.name-1.dragondrop": {
-			Modifier: terraformValueObjects.CloudActorTimeStamp{
+			Modifier: &terraformValueObjects.CloudActorTimeStamp{
 				Actor:     terraformValueObjects.CloudActor("root"),
 				Timestamp: terraformValueObjects.Timestamp("2023-05-17"),
 			},
 		},
 		"state-2.type-1.name-1.dragondrop": {
-			Modifier: terraformValueObjects.CloudActorTimeStamp{
+			Modifier: &terraformValueObjects.CloudActorTimeStamp{
 				Actor:     terraformValueObjects.CloudActor("jenny-from-the-block"),
 				Timestamp: terraformValueObjects.Timestamp("2023-05-16"),
 			},

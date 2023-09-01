@@ -137,7 +137,7 @@ func (alc *AWSLogQuerier) QueryForAllResources(ctx context.Context) (terraformVa
 		}
 
 		currentResourceName := uniqueDriftedResourceToName(driftedResource)
-		resourceActions[currentResourceName] = currentActions
+		resourceActions[currentResourceName] = &currentActions
 	}
 
 	alc.UpdateManagedDriftAttributeDifferences(resourceActions)
@@ -167,7 +167,7 @@ func (alc *AWSLogQuerier) QueryForAllResources(ctx context.Context) (terraformVa
 		currentResourceName := terraformValueObjects.ResourceName(
 			resource.ResourceType + "." + hclcreate.ConvertTerraformerResourceName(resource.ResourceTerraformerName),
 		)
-		resourceActions[currentResourceName] = currentActions
+		resourceActions[currentResourceName] = &currentActions
 	}
 
 	return resourceActions, nil
@@ -253,7 +253,7 @@ func (alc *AWSLogQuerier) ExtractDataFromResourceResult(resourceResult []byte, r
 		switch classification {
 		case "creation":
 			if isNewToTerraform {
-				resourceActions.Creator = terraformValueObjects.CloudActorTimeStamp{
+				resourceActions.Creator = &terraformValueObjects.CloudActorTimeStamp{
 					Actor:     terraformValueObjects.CloudActor(event.UserName),
 					Timestamp: terraformValueObjects.Timestamp(event.EventTime),
 				}
@@ -262,7 +262,7 @@ func (alc *AWSLogQuerier) ExtractDataFromResourceResult(resourceResult []byte, r
 		case "modification":
 			if !isModificationIdentified {
 				isModificationIdentified = true
-				resourceActions.Modifier = terraformValueObjects.CloudActorTimeStamp{
+				resourceActions.Modifier = &terraformValueObjects.CloudActorTimeStamp{
 					Actor:     terraformValueObjects.CloudActor(event.UserName),
 					Timestamp: terraformValueObjects.Timestamp(event.EventTime),
 				}

@@ -112,19 +112,19 @@ func (h *hclCreate) cloudActionsToResourceActionMap(parsedCloudActions *gabs.Con
 	for resourceName, resourceActions := range parsedCloudActions.ChildrenMap() {
 		currentResourceActions := terraformValueObjects.ResourceActions{}
 		if resourceActions.Exists("creation") {
-			currentResourceActions.Creator = terraformValueObjects.CloudActorTimeStamp{
+			currentResourceActions.Creator = &terraformValueObjects.CloudActorTimeStamp{
 				Actor:     terraformValueObjects.CloudActor(resourceActions.Search("creation", "actor").Data().(string)),
 				Timestamp: terraformValueObjects.Timestamp(resourceActions.Search("creation", "timestamp").Data().(string)),
 			}
 		}
 		if resourceActions.Exists("modified") {
-			currentResourceActions.Modifier = terraformValueObjects.CloudActorTimeStamp{
+			currentResourceActions.Modifier = &terraformValueObjects.CloudActorTimeStamp{
 				Actor:     terraformValueObjects.CloudActor(resourceActions.Search("modified", "actor").Data().(string)),
 				Timestamp: terraformValueObjects.Timestamp(resourceActions.Search("modified", "timestamp").Data().(string)),
 			}
 		}
 
-		resourceActionMap[terraformValueObjects.ResourceName(resourceName)] = currentResourceActions
+		resourceActionMap[terraformValueObjects.ResourceName(resourceName)] = &currentResourceActions
 	}
 
 	return resourceActionMap, nil
@@ -173,7 +173,7 @@ func (h *hclCreate) placeHCLIntoNewFileDef(
 // generateHCLCloudActorsComment generates data on Cloud Actor actions for the specified resource.
 func (h *hclCreate) generateHCLCloudActorsComment(
 	resourceType string, resourceName string,
-	resourceToCloudActions map[terraformValueObjects.ResourceName]terraformValueObjects.ResourceActions,
+	resourceToCloudActions terraformValueObjects.ResourceActionMap,
 ) hclwrite.Tokens {
 	completeResourceName := fmt.Sprintf("%v.%v", resourceType, resourceName)
 	cloudActorActionStatement := ""
@@ -181,10 +181,10 @@ func (h *hclCreate) generateHCLCloudActorsComment(
 	if ok {
 		creatorLine := ""
 		modifierLine := ""
-		if cloudActions.Creator.Actor != "" {
+		if cloudActions.Creator != nil && cloudActions.Creator.Actor != "" {
 			creatorLine = fmt.Sprintf("\n# Created at %v by %v", cloudActions.Creator.Timestamp, cloudActions.Creator.Actor)
 		}
-		if cloudActions.Modifier.Actor != "" {
+		if cloudActions.Modifier != nil && cloudActions.Modifier.Actor != "" {
 			modifierLine = fmt.Sprintf("\n# Last Modified at %v by %v", cloudActions.Modifier.Timestamp, cloudActions.Modifier.Actor)
 		}
 		cloudActorActionStatement = fmt.Sprintf("%v%v", creatorLine, modifierLine)
