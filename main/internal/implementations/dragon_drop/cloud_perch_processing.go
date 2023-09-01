@@ -35,9 +35,9 @@ type ResourceInventoryData struct {
 }
 
 // CloudActorData is a struct that contains the number of resources modified and created outside of Terraform control
-// aggregated by cloud actor.
+// aggregated by cloud actor but in a string format, using marshalled ActorData list.
 type CloudActorData struct {
-	ActorsData []ActorData `json:"actors_data"`
+	ActorsData string `json:"actors_data"`
 }
 
 // ActorData is a struct that contains the number of resources modified and created outside of Terraform control
@@ -127,7 +127,7 @@ func (c *HTTPDragonDropClient) getCloudActorData(ctx context.Context, cloudActor
 					Created:  1,
 				}
 			} else {
-				actorToActorData[actor].Created += 1
+				actorToActorData[actor].Created++
 			}
 		}
 		if actions.Modifier != nil {
@@ -139,7 +139,7 @@ func (c *HTTPDragonDropClient) getCloudActorData(ctx context.Context, cloudActor
 					Created:  0,
 				}
 			} else {
-				actorToActorData[actor].Modified += 1
+				actorToActorData[actor].Modified++
 			}
 		}
 	}
@@ -149,8 +149,12 @@ func (c *HTTPDragonDropClient) getCloudActorData(ctx context.Context, cloudActor
 		actorsData = append(actorsData, *actorData)
 	}
 
+	marshalledActorsData, err := json.Marshal(actorsData)
+	if err != nil {
+		return CloudActorData{}, err
+	}
 	cloudActorData := CloudActorData{
-		ActorsData: actorsData,
+		ActorsData: string(marshalledActorsData),
 	}
 
 	return cloudActorData, nil
