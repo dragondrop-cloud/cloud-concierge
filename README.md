@@ -49,6 +49,8 @@ For more sophisticated tooling, some may turn to tools like Terraform Cloud,
 Scalr, Spacelift and Firefly. We find, however, that these tool's pricing can become particularly onerous
 when wanting to self-host runners or access the most desired features like drift detection, security scanning, etc.
 
+This left us asking: What if we could add drift detection, codification, security and cost scanning, etc. to an already existing Terraform workflow?
+
 ## Quick Start
 ### All Cloud Provider Pre-requisites
 0) Obtain an API token at https://app.dragondrop.cloud. We only collect data on when a cloud-concierge starts up (this can be verified here).
