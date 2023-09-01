@@ -22,7 +22,7 @@ jobs:
         uses: golangci/golangci-lint-action@v3
         with:
           working-directory: main
-          version: v1.46.2
+          version: v1.54.2
           args: --timeout=2m
 
   test-go-binary:
