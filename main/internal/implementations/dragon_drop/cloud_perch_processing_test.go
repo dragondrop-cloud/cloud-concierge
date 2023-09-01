@@ -3,6 +3,7 @@ package dragondrop
 import (
 	"context"
 	"encoding/json"
+	"reflect"
 	"testing"
 
 	"github.com/hashicorp/hcl/v2"
@@ -239,8 +240,12 @@ func TestHTTPDragonDropClient_getCloudActorDataComplex(t *testing.T) {
 
 	cloudActorBytes := []byte(`{"resource1-":{"modified":{"actor":"root"},"creation":{"actor":"root"}},"resource2-":{"modified":{"actor":"jimmy"},"creation":{"actor":"root"}}}`)
 
-	expectedOutput := CloudActorData{
+	expectedOutputOne := CloudActorData{
 		ActorsData: `[{"actor_name":"root","modified":1,"created":2},{"actor_name":"jimmy","modified":1,"created":0}]`,
+	}
+
+	expectedOutputTwo := CloudActorData{
+		ActorsData: `[{"actor_name":"jimmy","modified":1,"created":0},{"actor_name":"root","modified":1,"created":2}]`,
 	}
 
 	// When
@@ -248,7 +253,9 @@ func TestHTTPDragonDropClient_getCloudActorDataComplex(t *testing.T) {
 
 	// Then
 	require.NoError(t, err)
-	require.Equal(t, expectedOutput, cloudActors)
+	if !reflect.DeepEqual(cloudActors, expectedOutputOne) && !reflect.DeepEqual(cloudActors, expectedOutputTwo) {
+		t.Errorf("Expected output to be one of the following:\n%v\n%v\ngot:\n%v", expectedOutputOne, expectedOutputTwo, cloudActors)
+	}
 }
 
 func Test_formatResources(t *testing.T) {
