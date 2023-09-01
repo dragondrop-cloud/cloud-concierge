@@ -181,10 +181,10 @@ func (h *hclCreate) generateHCLCloudActorsComment(
 	if ok {
 		creatorLine := ""
 		modifierLine := ""
-		if cloudActions.Creator.Actor != "" {
+		if cloudActions.Creator != nil && cloudActions.Creator.Actor != "" {
 			creatorLine = fmt.Sprintf("\n# Created at %v by %v", cloudActions.Creator.Timestamp, cloudActions.Creator.Actor)
 		}
-		if cloudActions.Modifier.Actor != "" {
+		if cloudActions.Modifier != nil && cloudActions.Modifier.Actor != "" {
 			modifierLine = fmt.Sprintf("\n# Last Modified at %v by %v", cloudActions.Modifier.Timestamp, cloudActions.Modifier.Actor)
 		}
 		cloudActorActionStatement = fmt.Sprintf("%v%v", creatorLine, modifierLine)
