@@ -95,7 +95,7 @@ type AzureCredentials struct {
 }
 
 // configureAzureBlobURL configures the Azure Blob Storage URL.
-func (b *AzureBlobBackend) configureAzureBlobURL(ctx context.Context, credential terraformValueObjects.Credential, backendAzure AzureBackendBlock) (azblob.ServiceURL, error) {
+func (b *AzureBlobBackend) configureAzureBlobURL(_ context.Context, credential terraformValueObjects.Credential, backendAzure AzureBackendBlock) (azblob.ServiceURL, error) {
 	azureCredentials := new(AzureCredentials)
 	err := json.Unmarshal([]byte(credential), &azureCredentials)
 	if err != nil {
