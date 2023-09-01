@@ -283,7 +283,7 @@ type AuthenticationInfo struct {
 
 // ExtractDataFromResourceResult parses the log response from the provider API
 // and extracts needed data (namely who made the most recent relevant change to the resource).
-func (glc *GoogleLogQuerier) ExtractDataFromResourceResult(resourceResult []byte, resourceType string, isNewToTerraform bool) (terraformValueObjects.ResourceActions, error) {
+func (glc *GoogleLogQuerier) ExtractDataFromResourceResult(resourceResult []byte, _ string, isNewToTerraform bool) (terraformValueObjects.ResourceActions, error) {
 	resourceActions := terraformValueObjects.ResourceActions{}
 	var entries Entries
 	if err := json.Unmarshal(resourceResult, &entries); err != nil {
