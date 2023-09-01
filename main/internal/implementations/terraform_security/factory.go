@@ -13,7 +13,7 @@ type Factory struct {
 
 // Instantiate returns an implementation of interfaces.TerraformSecurity depending on the passed
 // environment specification.
-func (f *Factory) Instantiate(ctx context.Context, environment string, provider terraformValueObjects.Provider) (interfaces.TerraformSecurity, error) {
+func (f *Factory) Instantiate(_ context.Context, environment string, provider terraformValueObjects.Provider) (interfaces.TerraformSecurity, error) {
 	switch environment {
 	case "isolated":
 		return NewIsolatedTerraformSecurity(), nil
