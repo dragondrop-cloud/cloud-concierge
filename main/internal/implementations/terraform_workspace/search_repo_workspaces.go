@@ -59,7 +59,7 @@ func searchDirectoryForWorkspaceName(ctx context.Context, directory string, back
 }
 
 // getAllTFFiles searches a directory for all terraform files.
-func getAllTFFiles(ctx context.Context, directory string) []string {
+func getAllTFFiles(_ context.Context, directory string) []string {
 	files, err := os.ReadDir(fmt.Sprintf("repo/%s", directory))
 	if err != nil {
 		return make([]string, 0)
@@ -110,7 +110,7 @@ func getWorkspaceByFile(ctx context.Context, directory string, fileName string, 
 }
 
 // extractTFCloudWorkspaceNameIfExists extracts the workspace name from a Terraform file if it exists.
-func extractTFCloudWorkspaceNameIfExists(ctx context.Context, fileContent []byte) (string, error) {
+func extractTFCloudWorkspaceNameIfExists(_ context.Context, fileContent []byte) (string, error) {
 	inputHCLFile, hclDiag := hclwrite.ParseConfig(
 		fileContent,
 		"placeholder.tf",
@@ -160,7 +160,7 @@ type GCSBackendBlock struct {
 }
 
 // extractBackendDetails extracts the backend details from a .tf file if it exists.
-func extractBackendDetails(ctx context.Context, fileContent []byte, backendType string) (interface{}, error) {
+func extractBackendDetails(_ context.Context, fileContent []byte, backendType string) (interface{}, error) {
 	switch backendType {
 	case "s3":
 		return extractAttributesFromBackendDetails(fileContent, "s3", []string{"bucket", "key", "region"},

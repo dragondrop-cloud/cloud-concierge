@@ -102,7 +102,7 @@ func (s *S3Backend) configureS3Client(credential terraformValueObjects.Credentia
 
 // getWorkspaceStateByTestingAllS3Credentials downloads from the remote S3 backend a single "workspace"'s latest
 // state file testing all the s3 credentials.
-func (s *S3Backend) getWorkspaceStateByTestingAllS3Credentials(ctx context.Context, workspaceName string) error {
+func (s *S3Backend) getWorkspaceStateByTestingAllS3Credentials(_ context.Context, workspaceName string) error {
 	err := s.configureS3Client(s.config.CloudCredential)
 	if err != nil {
 		return fmt.Errorf("[s.configureS3Client]%w", err)
