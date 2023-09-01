@@ -1,4 +1,4 @@
-package resourcesWriter
+package resourceswriter
 
 import (
 	"context"
@@ -83,7 +83,6 @@ func (w *TerraformResourceWriter) commitChangesOpenPullRequest(ctx context.Conte
 		return "", fmt.Errorf("[commit_changes_open_pull_request][error in vcs.Push]%w", err)
 	}
 
-	// TODO: Get the base branch from a remote API call instead of requiring the env var
 	prURL, err := w.vcs.OpenPullRequest(w.jobName)
 	if err != nil {
 		return "", fmt.Errorf("[commit_changes_open_pull_request][error in vcs.OpenPullRequest]%w", err)
@@ -162,7 +161,7 @@ func (w *TerraformResourceWriter) checkoutNewBranch(ctx context.Context) error {
 	return nil
 }
 
-func (w *TerraformResourceWriter) writeDummyFile(ctx context.Context, workspaceToDirectory map[string]string) error {
+func (w *TerraformResourceWriter) writeDummyFile(_ context.Context, workspaceToDirectory map[string]string) error {
 	for _, directory := range workspaceToDirectory {
 		err := os.MkdirAll(fmt.Sprintf("repo%vcloud-concierge/placeholder", directory), 0400)
 		if err != nil {

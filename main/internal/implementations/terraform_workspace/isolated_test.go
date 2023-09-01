@@ -1,4 +1,4 @@
-package terraformWorkspace
+package terraformworkspace
 
 import (
 	"testing"
