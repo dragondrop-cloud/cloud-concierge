@@ -13,7 +13,7 @@
 </a>
 
 <a href="https://hub.docker.com/r/dragondropcloud/cloud-concierge" alt="Total Downloads">
-   <img src="https://img.shields.io/badge/downloads-4.2k-maroon" />
+   <img src="https://img.shields.io/badge/downloads-4.5k-maroon" />
 </a>
 
 <a href="https://cloud-concierge.slack.com/join/shared_invite/zt-1xx3sqsb6-cekIXs2whccZvbU81Xn5qg#/shared-invite/email" alt="Slack">
@@ -58,7 +58,7 @@ This left us asking: What if we could add drift detection, codification, securit
 2) Make sure you have Docker available on your local machine.
 
 ### AWS Quickstart
-I) Run aws config on your CLI and ensure that credentials with read-only access to your cloud are configured. If referencing state files stored in an s3 bucket, the credentials specified should be able to read those state files as well.
+I) Run `aws configure` on your CLI and ensure that credentials with read-only access to your cloud are configured. If referencing state files stored in an s3 bucket, the credentials specified should be able to read those state files as well.
 
 II) Run the cloud-concierge container using the following command:
    `
