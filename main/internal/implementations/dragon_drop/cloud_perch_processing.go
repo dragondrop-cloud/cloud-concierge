@@ -31,6 +31,7 @@ type CloudPerchData struct {
 // ResourceInventoryData is a struct that contains the number of resources that are and are not managed by Terraform.
 type ResourceInventoryData struct {
 	DriftedResources                 int `json:"drifted_resources"`
+	DeletedResources                 int `json:"deleted_resources"`
 	ResourcesOutsideTerraformControl int `json:"resources_outside_terraform_control"`
 }
 
@@ -83,9 +84,10 @@ func formatResources(resources map[string]interface{}) map[string]interface{} {
 }
 
 // getResourceInventoryData returns the number of resources outside of terraform control and the number of drifted resources
-func (c *HTTPDragonDropClient) getResourceInventoryData(newResources map[string]interface{}, driftedResources []interface{}) (ResourceInventoryData, map[string]interface{}, error) {
+func (c *HTTPDragonDropClient) getResourceInventoryData(newResources map[string]interface{}, driftedResources []interface{}, deletedResources []interface{}) (ResourceInventoryData, map[string]interface{}, error) {
 	return ResourceInventoryData{
 		DriftedResources:                 getUniqueDriftedResourceCount(driftedResources),
+		DeletedResources:                 len(deletedResources),
 		ResourcesOutsideTerraformControl: len(newResources),
 	}, newResources, nil
 }

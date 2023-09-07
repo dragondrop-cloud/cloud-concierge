@@ -31,9 +31,7 @@ func TestHTTPDragonDropClient_getResourceInventoryData(t *testing.T) {
 	`)
 	var newResources map[string]interface{}
 	err := json.Unmarshal(newResourcesBytes, &newResources)
-	if err != nil {
-		t.Errorf("[error unmarshalling bytes]%v", err)
-	}
+	require.NoError(t, err, "failed to unmarshal new resources")
 
 	driftedResourceBytes := []byte(`
 		[
@@ -67,12 +65,39 @@ func TestHTTPDragonDropClient_getResourceInventoryData(t *testing.T) {
 	`)
 	var driftedResources []interface{}
 	err = json.Unmarshal(driftedResourceBytes, &driftedResources)
-	if err != nil {
-		t.Errorf("[error unmarshalling bytes]%v", err)
-	}
+	require.NoError(t, err, "failed to unmarshal drifted resources")
+
+	deletedResourcesBytes := []byte(`
+		[
+		  {
+			"InstanceID": "id_1",
+			"StateFileName": "state_file_name_1",
+			"ModuleName": "module_name_1",
+			"ResourceType": "aws_lb",
+			"ResourceName": "secret1"
+		  },
+		  {
+			"InstanceID": "id_2",
+			"StateFileName": "state_file_name_1",
+			"ModuleName": "module_name_1",
+			"ResourceType": "aws_s3_bucket",
+			"ResourceName": "secret2"
+		  },
+		  {
+			"InstanceID": "id_3",
+			"StateFileName": "state_file_name_1",
+			"ModuleName": "module_name_1",
+			"ResourceType": "aws_s3_bucket",
+			"ResourceName": "secret3"
+		  }
+		]
+	`)
+	var deletedResources []interface{}
+	err = json.Unmarshal(deletedResourcesBytes, &deletedResources)
+	require.NoError(t, err, "failed to unmarshal deleted resources")
 
 	// When
-	resourceInventory, newResources, err := client.getResourceInventoryData(newResources, driftedResources)
+	resourceInventory, newResources, err := client.getResourceInventoryData(newResources, driftedResources, deletedResources)
 
 	// Then
 	require.NoError(t, err)
@@ -80,6 +105,7 @@ func TestHTTPDragonDropClient_getResourceInventoryData(t *testing.T) {
 	require.Equal(t, 2, resourceInventory.ResourcesOutsideTerraformControl)
 	require.NotNil(t, newResources["resource_id_1"])
 	require.NotNil(t, newResources["resource_id_2"])
+	require.Equal(t, 3, resourceInventory.DeletedResources)
 }
 
 func TestHTTPDragonDropClient_getCloudSecurityData(t *testing.T) {
