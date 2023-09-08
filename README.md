@@ -9,11 +9,11 @@
 </a>
 
 <a href="https://hub.docker.com/r/dragondropcloud/cloud-concierge/tags" alt="Latest Docker Version">
-   <img src="https://img.shields.io/badge/docker-v0.1.1-blue" />
+   <img src="https://img.shields.io/badge/docker-v0.1.3-blue" />
 </a>
 
 <a href="https://hub.docker.com/r/dragondropcloud/cloud-concierge" alt="Total Downloads">
-   <img src="https://img.shields.io/badge/downloads-4.2k-maroon" />
+   <img src="https://img.shields.io/badge/downloads-4.6k-maroon" />
 </a>
 
 <a href="https://cloud-concierge.slack.com/join/shared_invite/zt-1xx3sqsb6-cekIXs2whccZvbU81Xn5qg#/shared-invite/email" alt="Slack">
@@ -62,6 +62,8 @@ II) Run the cloud-concierge container using the following command:
    `
    docker run --env-file ./my-env-file.env -v main:/main -v ~/.aws:/main/credentials/aws:ro -w /main  dragondropcloud/cloud-concierge:latest
    `
+
+If running on Windows, the substitute `$HOME/.aws:` for `~/.aws:` in the above command.
 
 III) Upon job completion, check the repository against which you configured cloud-concierge to run. There will be a new Pull Request that has been created by Cloud Concierge. [Example Output](https://github.com/dragondrop-cloud/cloud-concierge-example/pull/2).
 
