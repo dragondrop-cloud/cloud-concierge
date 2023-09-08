@@ -9,6 +9,8 @@ import (
 	"regexp"
 	"strings"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/dragondrop-cloud/cloud-concierge/main/internal/documentize"
 	terraformValueObjects "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_value_objects"
 )
@@ -91,6 +93,8 @@ func getAWSCredential(jobID string) (terraformValueObjects.Credential, error) {
 			return "", fmt.Errorf("[os.ReadFile][%w]", err)
 		}
 
+		log.Infof("credentialBytes: %v", string(credentialBytes))
+
 		credential, err := parseAWSCredentialValues(credentialBytes)
 		if err != nil {
 			return "", fmt.Errorf("[parseAWSCredentialValues][%w]", err)
@@ -111,8 +115,8 @@ func parseAWSCredentialValues(credentialBytes []byte) (terraformValueObjects.Cre
 	// [default]
 	// aws_access_key_id = <access_key_id>
 	// aws_secret_access_key = <secret_access_key>
-	re := regexp.MustCompile(`\naws_access_key_id = (.*)\naws_secret_access_key = (.*)`)
-	credentialValues := re.FindStringSubmatch(string(credentialBytes))
+	credentialValues := searchAwsAccess(credentialBytes)
+
 	AWSCredentialLocal := awsCredentialLocal{
 		AwsAccessKeyID:     strings.Replace(credentialValues[1], "\r", "", -1),
 		AwsSecretAccessKey: strings.Replace(credentialValues[2], "\r", "", -1),
@@ -122,6 +126,11 @@ func parseAWSCredentialValues(credentialBytes []byte) (terraformValueObjects.Cre
 		return "", fmt.Errorf("[json.Marshal][%w]", err)
 	}
 	return terraformValueObjects.Credential(credential), nil
+}
+
+func searchAwsAccess(credentials []byte) []string {
+	re := regexp.MustCompile(`\naws_access_key_id\s?=\s?(.*)\naws_secret_access_key\s?=\s?(.*)`)
+	return re.FindStringSubmatch(string(credentials))
 }
 
 // awsCredentialLocal is the struct that represents an AWS credential configured
@@ -202,9 +211,9 @@ func getProviderFromProviderVersion(provider map[terraformValueObjects.Provider]
 
 	var providerName terraformValueObjects.Provider
 	for providerName = range provider {
+		return providerName, nil
 	}
-
-	return providerName, nil
+	return "", fmt.Errorf("no provider found in map")
 }
 
 // getVCSSystemFromRepoURL determines the VCS system from the input repo URL

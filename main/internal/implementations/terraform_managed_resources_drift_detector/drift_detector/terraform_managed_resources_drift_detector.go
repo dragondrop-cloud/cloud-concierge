@@ -1,4 +1,4 @@
-package driftDetector
+package driftdetector
 
 import (
 	"context"
@@ -9,24 +9,33 @@ import (
 	terraformValueObjects "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_value_objects"
 )
 
+// ManagedResourceDriftDetectorConfig is a type that contains configuration
+type ManagedResourceDriftDetectorConfig struct {
+	// ResourcesWhiteList represents the list of resource names that will be exclusively considered for inclusion in the import statement.
+	ResourcesWhiteList terraformValueObjects.ResourceNameList
+
+	// ResourcesBlackList represents the list of resource names that will be excluded from consideration for inclusion in the import statement.
+	ResourcesBlackList terraformValueObjects.ResourceNameList
+}
+
 // ManagedResourcesDriftDetector is a type that identifies resources
 // managed by Terraform that have drifted from their expected state.
 type ManagedResourcesDriftDetector struct {
-	// Provider is the name of the provider against which drift detection will be performed.
-	provider terraformValueObjects.Provider `required:"true"`
+	// config is the configuration for the ManagedResourcesDriftDetector
+	config ManagedResourceDriftDetectorConfig
 }
 
 // NewManagedResourcesDriftDetector generated a terraformer instance from ManagedResourcesDriftDetector
-func NewManagedResourcesDriftDetector(provider terraformValueObjects.Provider) *ManagedResourcesDriftDetector {
+func NewManagedResourcesDriftDetector(config ManagedResourceDriftDetectorConfig) *ManagedResourcesDriftDetector {
 	return &ManagedResourcesDriftDetector{
-		provider: provider,
+		config: config,
 	}
 }
 
 // Execute initiates the process of detecting drift in managed resources
 // by comparing the current state of resources with their expected state.
 // It takes a context as input to support cancellation and timeouts.
-func (m *ManagedResourcesDriftDetector) Execute(ctx context.Context, workspaceToDirectory map[string]string) (bool, error) {
+func (m *ManagedResourcesDriftDetector) Execute(_ context.Context, workspaceToDirectory map[string]string) (bool, error) {
 	remoteStateResources, err := m.loadAllRemoteStateFiles(workspaceToDirectory)
 	if err != nil {
 		return false, fmt.Errorf("[m.loadAllRemoteStateFiles]%w", err)

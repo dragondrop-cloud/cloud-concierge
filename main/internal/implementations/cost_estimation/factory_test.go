@@ -1,4 +1,4 @@
-package costEstimation
+package costestimation
 
 import (
 	"testing"

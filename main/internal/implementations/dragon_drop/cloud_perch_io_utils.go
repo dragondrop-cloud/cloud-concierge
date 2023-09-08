@@ -1,4 +1,4 @@
-package dragonDrop
+package dragondrop
 
 import (
 	"context"
@@ -53,7 +53,7 @@ func readOutputFileAsSlice(filename string) ([]interface{}, error) {
 }
 
 // getAllTFFiles searches a directory for all terraform files within the user workspace directories.
-func getAllTFFiles(ctx context.Context, directories terraformWorkspace.WorkspaceDirectoriesDecoder) []string {
+func getAllTFFiles(_ context.Context, directories terraformWorkspace.WorkspaceDirectoriesDecoder) []string {
 	tfFiles := make([]string, 0)
 
 	for _, directory := range directories {

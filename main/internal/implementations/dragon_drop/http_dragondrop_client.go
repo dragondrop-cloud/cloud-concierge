@@ -1,10 +1,13 @@
-package dragonDrop
+package dragondrop
 
 import (
 	"context"
 	"fmt"
 	"io"
 	"net/http"
+	"os"
+
+	log "github.com/sirupsen/logrus"
 
 	terraformWorkspace "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_workspace"
 	"github.com/dragondrop-cloud/cloud-concierge/main/internal/interfaces"
@@ -54,4 +57,19 @@ func (c *HTTPDragonDropClient) newRequest(ctx context.Context, requestName strin
 	}
 
 	return request, nil
+}
+
+func (c *HTTPDragonDropClient) getDeletedResourcesList() []interface{} {
+	_, err := os.Stat("outputs/drift-resources-deleted.json")
+	if os.IsNotExist(err) {
+		return []interface{}{}
+	}
+
+	deletedResources, err := readOutputFileAsSlice("outputs/drift-resources-deleted.json")
+	if err != nil {
+		log.Errorf("[error reading drift-resources-deleted.json]%v", err)
+		return []interface{}{}
+	}
+
+	return deletedResources
 }

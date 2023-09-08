@@ -1,4 +1,4 @@
-package terraformerCLI
+package terraformercli
 
 import (
 	"bytes"

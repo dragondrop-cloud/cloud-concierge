@@ -1,11 +1,28 @@
 # cloud-concierge
 <p align="center">
-<img width="500" src=./images/cloud-concierge-logo.png>
+<img width="375" src=./images/cloud-concierge-logo.png>
 </p>
-<h2 align="center">
+
+<p align = "center">
+<a href="https://goreportcard.com/report/github.com/dragondrop-cloud/cloud-concierge/main" alt="Go Report">
+   <img src="https://img.shields.io/badge/Go_Report-A+-green" />
+</a>
+
+<a href="https://hub.docker.com/r/dragondropcloud/cloud-concierge/tags" alt="Latest Docker Version">
+   <img src="https://img.shields.io/badge/docker-v0.1.3-blue" />
+</a>
+
+<a href="https://hub.docker.com/r/dragondropcloud/cloud-concierge" alt="Total Downloads">
+   <img src="https://img.shields.io/badge/downloads-4.6k-maroon" />
+</a>
+
+<a href="https://cloud-concierge.slack.com/join/shared_invite/zt-1xx3sqsb6-cekIXs2whccZvbU81Xn5qg#/shared-invite/email" alt="Slack">
+<img src="https://img.shields.io/badge/slack-Join_Us-blueviolet" />
+</a>
+<h3 align="center">
 <a href="https://github.com/dragondrop-cloud/cloud-concierge-example/pull/2" target="_blank">Example Output</a> |
 <a href="https://docs.cloudconcierge.io" target="_blank">Docs</a>
-</h2>
+</h3>
 
 ## Why cloud-concierge?
 cloud-concierge is a container that integrates with your existing Terraform management stack.
@@ -32,19 +49,23 @@ For more sophisticated tooling, some may turn to tools like Terraform Cloud,
 Scalr, Spacelift and Firefly. We find, however, that these tool's pricing can become particularly onerous
 when wanting to self-host runners or access the most desired features like drift detection, security scanning, etc.
 
+This left us asking: What if we could add drift detection, codification, security and cost scanning, etc. to an already existing Terraform workflow?
+
 ## Quick Start
 ### All Cloud Provider Pre-requisites
 0) Obtain an API token at https://app.dragondrop.cloud. We only collect data on when a cloud-concierge starts up (this can be verified here).
-1) Configure an environment variable file (use one of our templates to get started) to control the specifics of cloud-concierge's coverage.
+1) Configure an environment variable file (use one of our [templates](https://github.com/dragondrop-cloud/cloud-concierge/tree/dev/examples/environments/) to get started) to control the specifics of cloud-concierge's coverage.
 2) Make sure you have Docker available on your local machine.
 
 ### AWS Quickstart
-I) Run aws config on your CLI and ensure that credentials with read-only access to your cloud are configured. If referencing state files stored in an s3 bucket, the credentials specified should be able to read those state files as well.
+I) Run `aws configure` on your CLI and ensure that credentials with read-only access to your cloud are configured. If referencing state files stored in an s3 bucket, the credentials specified should be able to read those state files as well.
 
 II) Run the cloud-concierge container using the following command:
    `
    docker run --env-file ./my-env-file.env -v main:/main -v ~/.aws:/main/credentials/aws:ro -w /main  dragondropcloud/cloud-concierge:latest
    `
+
+If running on Windows, the substitute `$HOME/.aws:` for `~/.aws:` in the above command.
 
 III) Upon job completion, check the repository against which you configured cloud-concierge to run. There will be a new Pull Request that has been created by Cloud Concierge. [Example Output](https://github.com/dragondrop-cloud/cloud-concierge-example/pull/2).
 

@@ -22,7 +22,7 @@ type ResourcesWriterMock struct {
 
 // Execute writes new resources to the relevant version control system,
 // and returns a pull request url corresponding to the new changes.
-func (m *ResourcesWriterMock) Execute(ctx context.Context, jobName string, createDummyFile bool, workspaceToDirectory map[string]string) (string, error) {
+func (m *ResourcesWriterMock) Execute(_ context.Context, _ string, _ bool, _ map[string]string) (string, error) {
 	args := m.Called()
 	return args.String(0), args.Error(1)
 }

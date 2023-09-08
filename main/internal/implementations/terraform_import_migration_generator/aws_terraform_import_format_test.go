@@ -1,4 +1,4 @@
-package terraformImportMigrationGenerator
+package terraformimportmigrationgenerator
 
 import (
 	"testing"

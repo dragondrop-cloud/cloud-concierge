@@ -17,7 +17,9 @@ func TestResourceToIdentifierStruct(t *testing.T) {
 		resourceName: "tfer--resource-id",
 	}
 
-	reflect.DeepEqual(output, expectedOutput)
+	if !reflect.DeepEqual(output, expectedOutput) {
+		t.Errorf("got: %v\n\nexpected: %v", output, expectedOutput)
+	}
 }
 
 func TestGenerateImportStatement(t *testing.T) {

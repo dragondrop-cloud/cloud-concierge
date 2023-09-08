@@ -1,11 +1,9 @@
-package dragonDrop
+package dragondrop
 
 import (
 	"context"
 	"encoding/json"
-	"fmt"
-	"os"
-	"os/exec"
+	"reflect"
 	"testing"
 
 	"github.com/hashicorp/hcl/v2"
@@ -13,63 +11,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func writeFile(fileName string, content []byte, directoryName string) error {
-	err := os.MkdirAll(directoryName, os.ModePerm)
-	if err != nil {
-		return err
-	}
-	f, err := os.Create(fmt.Sprintf("%s/%v", directoryName, fileName))
-	if err != nil {
-		return fmt.Errorf("[error writing output file]%w", err)
-	}
-
-	defer f.Close()
-	_, err = f.Write(content)
-	if err != nil {
-		return fmt.Errorf("[error writing output file]%w", err)
-	}
-
-	return nil
-}
-
-func writeOutputFile(filename string, content []byte) error {
-	return writeFile(filename, content, "outputs")
-}
-
-func writeCurrentCloudFile(filename string, content []byte) error {
-	return writeFile(filename, content, "current_cloud")
-}
-
-func cleanMockedDirectories(t *testing.T) {
-	cmd := exec.Command("rm", "-rf", "outputs")
-	err := cmd.Run()
-	if err != nil {
-		t.Logf("Error cleaning mocked directories outputs: %v", err)
-	}
-
-	cmd = exec.Command("rm", "-rf", "current_cloud")
-	err = cmd.Run()
-	if err != nil {
-		t.Logf("Error cleaning mocked directories current_cloud: %v", err)
-	}
-
-	cmd = exec.Command("rm", "-rf", "repo")
-	err = cmd.Run()
-	if err != nil {
-		t.Logf("Error cleaning mocked directories repo: %v", err)
-	}
-}
-
 func TestHTTPDragonDropClient_getResourceInventoryData(t *testing.T) {
-	defer cleanMockedDirectories(t)
-
 	// Given
-	ctx := context.Background()
 	client := HTTPDragonDropClient{}
 
-	err := writeOutputFile("new-resources.json", []byte(`
+	newResourcesBytes := []byte(`
 		{
- 			"resource_id_1": {
+			"resource_id_1": {
 				"ResourceType": "resource_type_1",
 				"ResourceTerraformerName": "resource_terraformer_name_1",
 				"Region": "region_1"
@@ -80,12 +28,14 @@ func TestHTTPDragonDropClient_getResourceInventoryData(t *testing.T) {
 				"Region": "region_1"
 			}
 		}
-	`))
-	require.NoError(t, err)
+	`)
+	var newResources map[string]interface{}
+	err := json.Unmarshal(newResourcesBytes, &newResources)
+	require.NoError(t, err, "failed to unmarshal new resources")
 
-	err = writeOutputFile("drift-resources-differences.json", []byte(`
+	driftedResourceBytes := []byte(`
 		[
- 			{
+			{
 				"RecentActor": "root",
 				"RecentActionTimestamp": "2023-08-09",
 				"AttributeName": "access_logs.s3.enabled",
@@ -112,11 +62,42 @@ func TestHTTPDragonDropClient_getResourceInventoryData(t *testing.T) {
 				"ResourceName": "example_lb_2"
 			}
 		]
-	`))
-	require.NoError(t, err)
+	`)
+	var driftedResources []interface{}
+	err = json.Unmarshal(driftedResourceBytes, &driftedResources)
+	require.NoError(t, err, "failed to unmarshal drifted resources")
+
+	deletedResourcesBytes := []byte(`
+		[
+		  {
+			"InstanceID": "id_1",
+			"StateFileName": "state_file_name_1",
+			"ModuleName": "module_name_1",
+			"ResourceType": "aws_lb",
+			"ResourceName": "secret1"
+		  },
+		  {
+			"InstanceID": "id_2",
+			"StateFileName": "state_file_name_1",
+			"ModuleName": "module_name_1",
+			"ResourceType": "aws_s3_bucket",
+			"ResourceName": "secret2"
+		  },
+		  {
+			"InstanceID": "id_3",
+			"StateFileName": "state_file_name_1",
+			"ModuleName": "module_name_1",
+			"ResourceType": "aws_s3_bucket",
+			"ResourceName": "secret3"
+		  }
+		]
+	`)
+	var deletedResources []interface{}
+	err = json.Unmarshal(deletedResourcesBytes, &deletedResources)
+	require.NoError(t, err, "failed to unmarshal deleted resources")
 
 	// When
-	resourceInventory, newResources, err := client.getResourceInventoryData(ctx)
+	resourceInventory, newResources, err := client.getResourceInventoryData(newResources, driftedResources, deletedResources)
 
 	// Then
 	require.NoError(t, err)
@@ -124,17 +105,15 @@ func TestHTTPDragonDropClient_getResourceInventoryData(t *testing.T) {
 	require.Equal(t, 2, resourceInventory.ResourcesOutsideTerraformControl)
 	require.NotNil(t, newResources["resource_id_1"])
 	require.NotNil(t, newResources["resource_id_2"])
-
+	require.Equal(t, 3, resourceInventory.DeletedResources)
 }
 
 func TestHTTPDragonDropClient_getCloudSecurityData(t *testing.T) {
 	// Given
-	defer cleanMockedDirectories(t)
-
 	ctx := context.Background()
 	client := HTTPDragonDropClient{}
 
-	err := writeOutputFile("security-scan.json", []byte(`
+	securityBytes := []byte(`
 	{
 	  "results": [
 			{
@@ -162,11 +141,15 @@ func TestHTTPDragonDropClient_getCloudSecurityData(t *testing.T) {
 			  "severity": "LOW"
 			}
 		]
-   }`))
-	require.NoError(t, err)
+  }`)
+	var securityData map[string]interface{}
+	err := json.Unmarshal(securityBytes, &securityData)
+	if err != nil {
+		t.Errorf("[error unmarshalling bytes]%v", err)
+	}
 
 	// When
-	cloudSecurity, err := client.getCloudSecurityData(ctx)
+	cloudSecurity, err := client.getCloudSecurityData(ctx, securityData)
 
 	// Then
 	require.NoError(t, err)
@@ -178,8 +161,6 @@ func TestHTTPDragonDropClient_getCloudSecurityData(t *testing.T) {
 
 func TestHTTPDragonDropClient_getCloudCostsData(t *testing.T) {
 	// Given
-	defer cleanMockedDirectories(t)
-
 	ctx := context.Background()
 	client := HTTPDragonDropClient{}
 
@@ -200,7 +181,7 @@ func TestHTTPDragonDropClient_getCloudCostsData(t *testing.T) {
 		),
 	}
 
-	err := writeOutputFile("cost-estimates.json", []byte(`
+	costEstimateBytes := []byte(`
 	[
 		{
 			"cost_component": "Application load balancer",
@@ -242,11 +223,16 @@ func TestHTTPDragonDropClient_getCloudCostsData(t *testing.T) {
 			"sub_resource_name": "",
 			"unit": "hours"
 		}
-	]`))
-	require.NoError(t, err)
+	]`)
+
+	var costEstimate []interface{}
+	err := json.Unmarshal(costEstimateBytes, &costEstimate)
+	if err != nil {
+		t.Errorf("[error unmarshalling bytes]%v", err)
+	}
 
 	// When
-	cloudCosts, err := client.getCloudCostsData(ctx, newResources)
+	cloudCosts, err := client.getCloudCostsData(ctx, newResources, costEstimate)
 
 	// Then
 	require.NoError(t, err)
@@ -254,9 +240,52 @@ func TestHTTPDragonDropClient_getCloudCostsData(t *testing.T) {
 	require.Equal(t, 123.546, cloudCosts.CostsTerraformControlled)
 }
 
+func TestHTTPDragonDropClient_getCloudActorDataSimple(t *testing.T) {
+	// Given
+	ctx := context.Background()
+	client := HTTPDragonDropClient{}
+
+	cloudActorBytes := []byte(`{"aws-example.aws_internet_gateway.internet_gateway.igw-":{"modified":{"actor":"root","timestamp":"2023-08-26"}}}`)
+
+	expectedOutput := CloudActorData{
+		ActorsData: `[{"actor_name":"root","modified":1,"created":0}]`,
+	}
+
+	// When
+	cloudActors, err := client.getCloudActorData(ctx, cloudActorBytes)
+
+	// Then
+	require.NoError(t, err)
+	require.Equal(t, expectedOutput, cloudActors)
+}
+
+func TestHTTPDragonDropClient_getCloudActorDataComplex(t *testing.T) {
+	// Given
+	ctx := context.Background()
+	client := HTTPDragonDropClient{}
+
+	cloudActorBytes := []byte(`{"resource1-":{"modified":{"actor":"root"},"creation":{"actor":"root"}},"resource2-":{"modified":{"actor":"jimmy"},"creation":{"actor":"root"}}}`)
+
+	expectedOutputOne := CloudActorData{
+		ActorsData: `[{"actor_name":"root","modified":1,"created":2},{"actor_name":"jimmy","modified":1,"created":0}]`,
+	}
+
+	expectedOutputTwo := CloudActorData{
+		ActorsData: `[{"actor_name":"jimmy","modified":1,"created":0},{"actor_name":"root","modified":1,"created":2}]`,
+	}
+
+	// When
+	cloudActors, err := client.getCloudActorData(ctx, cloudActorBytes)
+
+	// Then
+	require.NoError(t, err)
+	if !reflect.DeepEqual(cloudActors, expectedOutputOne) && !reflect.DeepEqual(cloudActors, expectedOutputTwo) {
+		t.Errorf("Expected output to be one of the following:\n%v\n%v\ngot:\n%v", expectedOutputOne, expectedOutputTwo, cloudActors)
+	}
+}
+
 func Test_formatResources(t *testing.T) {
 	// Given
-	defer cleanMockedDirectories(t)
 
 	newResources := map[string]interface{}{
 		"instance_id_1": interface{}(
@@ -298,14 +327,11 @@ func Test_formatResources(t *testing.T) {
 	require.Equal(t, expectedResourcesFormatted, resourcesFormatted)
 }
 
-func TestHTTPDragonDropClient_getTerraformFootprintData_main_tf_no_modules_aws(t *testing.T) {
+func TestHTTPDragonDropClient_parseFootprintDataFromBytes_main_tf_no_modules_aws(t *testing.T) {
 	// Given
-	defer cleanMockedDirectories(t)
-
-	ctx := context.Background()
 	client := HTTPDragonDropClient{}
 
-	err := writeCurrentCloudFile("main.tf", []byte(`
+	fileBytes := []byte(`
 		terraform {
 		  required_version = "1.5.1"
 
@@ -317,11 +343,10 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_main_tf_no_modules_aws(t
 
 		  }
 		}
-	`))
-	require.NoError(t, err)
+	`)
 
 	// When
-	terraformFootprint, err := client.getTerraformFootprintData(ctx)
+	terraformFootprint, err := client.parseFootprintDataFromBytes([][]byte{fileBytes})
 
 	// Then
 	require.NoError(t, err)
@@ -330,14 +355,11 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_main_tf_no_modules_aws(t
 	require.Equal(t, "{}", terraformFootprint.VersionsTFModules)
 }
 
-func TestHTTPDragonDropClient_getTerraformFootprintData_main_tf_no_modules_azure(t *testing.T) {
+func TestHTTPDragonDropClient_parseFootprintDataFromBytes_main_tf_no_modules_azure(t *testing.T) {
 	// Given
-	defer cleanMockedDirectories(t)
-
-	ctx := context.Background()
 	client := HTTPDragonDropClient{}
 
-	err := writeCurrentCloudFile("main.tf", []byte(`
+	fileBytes := []byte(`
 		terraform {
 		  required_version = "1.5.1"
 
@@ -348,11 +370,10 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_main_tf_no_modules_azure
 			}
 		  }
 		}
-	`))
-	require.NoError(t, err)
+	`)
 
 	// When
-	terraformFootprint, err := client.getTerraformFootprintData(ctx)
+	terraformFootprint, err := client.parseFootprintDataFromBytes([][]byte{fileBytes})
 
 	// Then
 	require.NoError(t, err)
@@ -361,14 +382,11 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_main_tf_no_modules_azure
 	require.Equal(t, "{}", terraformFootprint.VersionsTFModules)
 }
 
-func TestHTTPDragonDropClient_getTerraformFootprintData_main_tf_no_modules_google(t *testing.T) {
+func TestHTTPDragonDropClient_parseFootprintDataFromBytes_main_tf_no_modules_google(t *testing.T) {
 	// Given
-	defer cleanMockedDirectories(t)
-
-	ctx := context.Background()
 	client := HTTPDragonDropClient{}
 
-	err := writeCurrentCloudFile("main.tf", []byte(`
+	fileBytes := []byte(`
 		terraform {
 		  required_version = "1.5.1"
 
@@ -379,11 +397,10 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_main_tf_no_modules_googl
 			}
 		  }
 		}
-	`))
-	require.NoError(t, err)
+	`)
 
 	// When
-	terraformFootprint, err := client.getTerraformFootprintData(ctx)
+	terraformFootprint, err := client.parseFootprintDataFromBytes([][]byte{fileBytes})
 
 	// Then
 	require.NoError(t, err)
@@ -392,14 +409,11 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_main_tf_no_modules_googl
 	require.Equal(t, "{}", terraformFootprint.VersionsTFModules)
 }
 
-func TestHTTPDragonDropClient_getTerraformFootprintData_versions_tf_no_modules(t *testing.T) {
+func TestHTTPDragonDropClient_parseFootprintDataFromBytes_versions_tf_no_modules(t *testing.T) {
 	// Given
-	defer cleanMockedDirectories(t)
-
-	ctx := context.Background()
 	client := HTTPDragonDropClient{}
 
-	err := writeCurrentCloudFile("versions.tf", []byte(`
+	fileBytes := []byte(`
 		terraform {
 		  required_version = "1.5.1"
 
@@ -410,11 +424,10 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_versions_tf_no_modules(t
 			}
 		  }
 		}
-	`))
-	require.NoError(t, err)
+	`)
 
 	// When
-	terraformFootprint, err := client.getTerraformFootprintData(ctx)
+	terraformFootprint, err := client.parseFootprintDataFromBytes([][]byte{fileBytes})
 
 	// Then
 	require.NoError(t, err)
@@ -423,18 +436,15 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_versions_tf_no_modules(t
 	require.Equal(t, "{}", terraformFootprint.VersionsTFModules)
 }
 
-func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_no_modules(t *testing.T) {
+func TestHTTPDragonDropClient_parseFootprintDataFromBytes_another_tf_file_no_modules(t *testing.T) {
 	// Given
-	defer cleanMockedDirectories(t)
-
-	ctx := context.Background()
 	client := HTTPDragonDropClient{
 		config: HTTPDragonDropClientConfig{
 			WorkspaceDirectories: []string{"workspace1"},
 		},
 	}
 
-	err := writeFile("another.tf", []byte(`
+	fileBytes := []byte(`
 		terraform {
 		  required_version = "1.5.1"
 
@@ -445,11 +455,10 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_no_modul
 			}
 		  }
 		}
-	`), "repo/workspace1")
-	require.NoError(t, err)
+	`)
 
 	// When
-	terraformFootprint, err := client.getTerraformFootprintData(ctx)
+	terraformFootprint, err := client.parseFootprintDataFromBytes([][]byte{fileBytes})
 
 	// Then
 	require.NoError(t, err)
@@ -458,18 +467,15 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_no_modul
 	require.Equal(t, "{}", terraformFootprint.VersionsTFModules)
 }
 
-func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_one_module(t *testing.T) {
+func TestHTTPDragonDropClient_parseFootprintDataFromBytes_another_tf_file_one_module(t *testing.T) {
 	// Given
-	defer cleanMockedDirectories(t)
-
-	ctx := context.Background()
 	client := HTTPDragonDropClient{
 		config: HTTPDragonDropClientConfig{
 			WorkspaceDirectories: []string{"workspace1"},
 		},
 	}
 
-	err := writeFile("another.tf", []byte(`
+	fileBytes := []byte(`
 		terraform {
 		  required_version = "1.5.1"
 
@@ -480,21 +486,19 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_one_modu
 			}
 		  }
 		}
-	`), "repo/workspace1")
-	require.NoError(t, err)
+	`)
 
-	err = writeFile("module_file.tf", []byte(`
+	fileBytes2 := []byte(`
 		module "servers" {
 			source = "./app-cluster"
 			version = "0.0.5"
 
 			servers = 5
 		}
-	`), "repo/workspace1")
-	require.NoError(t, err)
+	`)
 
 	// When
-	terraformFootprint, err := client.getTerraformFootprintData(ctx)
+	terraformFootprint, err := client.parseFootprintDataFromBytes([][]byte{fileBytes, fileBytes2})
 
 	// Then
 	require.NoError(t, err)
@@ -503,18 +507,15 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_one_modu
 	require.Equal(t, `{"./app-cluster":{"0.0.5":1}}`, terraformFootprint.VersionsTFModules)
 }
 
-func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_two_modules_in_a_file(t *testing.T) {
+func TestHTTPDragonDropClient_parseFootprintDataFromBytes_another_tf_file_two_modules_in_a_file(t *testing.T) {
 	// Given
-	defer cleanMockedDirectories(t)
-
-	ctx := context.Background()
 	client := HTTPDragonDropClient{
 		config: HTTPDragonDropClientConfig{
 			WorkspaceDirectories: []string{"workspace1"},
 		},
 	}
 
-	err := writeFile("another.tf", []byte(`
+	fileBytes := []byte(`
 		terraform {
 		  required_version = "1.5.1"
 
@@ -525,10 +526,9 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_two_modu
 			}
 		  }
 		}
-	`), "repo/workspace1")
-	require.NoError(t, err)
+	`)
 
-	err = writeFile("module_file.tf", []byte(`
+	fileBytes2 := []byte(`
 		module "servers" {
 			source = "./app-cluster"
 			version = "0.0.5"
@@ -542,11 +542,10 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_two_modu
 
 			servers = 5
 		}
-	`), "repo/workspace1")
-	require.NoError(t, err)
+	`)
 
 	// When
-	terraformFootprint, err := client.getTerraformFootprintData(ctx)
+	terraformFootprint, err := client.parseFootprintDataFromBytes([][]byte{fileBytes, fileBytes2})
 
 	// Then
 	require.NoError(t, err)
@@ -555,18 +554,15 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_two_modu
 	require.Equal(t, `{"./app-cluster":{"0.0.5":1,"0.0.6":1}}`, terraformFootprint.VersionsTFModules)
 }
 
-func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_multiple_modules_multiple_files(t *testing.T) {
+func TestHTTPDragonDropClient_parseFootprintDataFromBytes_another_tf_file_multiple_modules_multiple_files(t *testing.T) {
 	// Given
-	defer cleanMockedDirectories(t)
-
-	ctx := context.Background()
 	client := HTTPDragonDropClient{
 		config: HTTPDragonDropClientConfig{
 			WorkspaceDirectories: []string{"workspace1"},
 		},
 	}
 
-	err := writeFile("another.tf", []byte(`
+	fileBytes := []byte(`
 		terraform {
 		  required_version = "1.5.1"
 
@@ -577,10 +573,9 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_multiple
 			}
 		  }
 		}
-	`), "repo/workspace1")
-	require.NoError(t, err)
+	`)
 
-	err = writeFile("module_file1.tf", []byte(`
+	fileBytes2 := []byte(`
 		module "servers" {
 			source = "./app-cluster"
 			version = "0.0.5"
@@ -594,10 +589,9 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_multiple
 
 			servers = 5
 		}
-	`), "repo/workspace1")
-	require.NoError(t, err)
+	`)
 
-	err = writeFile("module_file2.tf", []byte(`
+	fileBytes3 := []byte(`
 		module "server4" {
 			source = "./app-cluster"
 			version = "0.0.7"
@@ -611,11 +605,10 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_multiple
 
 			servers = 5
 		}
-	`), "repo/workspace1")
-	require.NoError(t, err)
+	`)
 
 	// When
-	terraformFootprint, err := client.getTerraformFootprintData(ctx)
+	terraformFootprint, err := client.parseFootprintDataFromBytes([][]byte{fileBytes, fileBytes2, fileBytes3})
 
 	// Then
 	require.NoError(t, err)
@@ -624,18 +617,15 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_multiple
 	require.Equal(t, `{"./app-cluster":{"0.0.5":1,"0.0.6":1,"0.0.7":1,"0.0.8":1}}`, terraformFootprint.VersionsTFModules)
 }
 
-func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_sum_module_versions(t *testing.T) {
+func TestHTTPDragonDropClient_parseFootprintDataFromBytes_another_tf_file_sum_module_versions(t *testing.T) {
 	// Given
-	defer cleanMockedDirectories(t)
-
-	ctx := context.Background()
 	client := HTTPDragonDropClient{
 		config: HTTPDragonDropClientConfig{
 			WorkspaceDirectories: []string{"workspace1"},
 		},
 	}
 
-	err := writeFile("another.tf", []byte(`
+	fileBytes := []byte(`
 		terraform {
 		  required_version = "1.5.1"
 
@@ -646,10 +636,9 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_sum_modu
 			}
 		  }
 		}
-	`), "repo/workspace1")
-	require.NoError(t, err)
+	`)
 
-	err = writeFile("module_file1.tf", []byte(`
+	fileBytes2 := []byte(`
 		module "servers" {
 			source = "./app-cluster"
 			version = "0.0.5"
@@ -663,10 +652,9 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_sum_modu
 
 			servers = 5
 		}
-	`), "repo/workspace1")
-	require.NoError(t, err)
+	`)
 
-	err = writeFile("module_file2.tf", []byte(`
+	fileBytes3 := []byte(`
 		module "server4" {
 			source = "./app-cluster"
 			version = "0.0.5"
@@ -680,11 +668,10 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_sum_modu
 
 			servers = 5
 		}
-	`), "repo/workspace1")
-	require.NoError(t, err)
+	`)
 
 	// When
-	terraformFootprint, err := client.getTerraformFootprintData(ctx)
+	terraformFootprint, err := client.parseFootprintDataFromBytes([][]byte{fileBytes, fileBytes2, fileBytes3})
 
 	// Then
 	require.NoError(t, err)
@@ -693,18 +680,15 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_sum_modu
 	require.Equal(t, `{"./app-cluster":{"0.0.5":2,"0.0.6":2}}`, terraformFootprint.VersionsTFModules)
 }
 
-func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_more_than_one_source(t *testing.T) {
+func TestHTTPDragonDropClient_parseFootprintDataFromBytes_another_tf_file_more_than_one_source(t *testing.T) {
 	// Given
-	defer cleanMockedDirectories(t)
-
-	ctx := context.Background()
 	client := HTTPDragonDropClient{
 		config: HTTPDragonDropClientConfig{
 			WorkspaceDirectories: []string{"workspace1"},
 		},
 	}
 
-	err := writeFile("another.tf", []byte(`
+	fileBytes := []byte(`
 		terraform {
 		  required_version = "1.5.1"
 
@@ -715,10 +699,9 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_more_tha
 			}
 		  }
 		}
-	`), "repo/workspace1")
-	require.NoError(t, err)
+	`)
 
-	err = writeFile("module_file1.tf", []byte(`
+	fileBytes2 := []byte(`
 		module "servers" {
 			source = "./app-cluster"
 			version = "0.0.5"
@@ -732,10 +715,9 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_more_tha
 
 			servers = 5
 		}
-	`), "repo/workspace1")
-	require.NoError(t, err)
+	`)
 
-	err = writeFile("module_file2.tf", []byte(`
+	fileBytes3 := []byte(`
 		module "server4" {
 			source = "./app-cluster"
 			version = "0.0.5"
@@ -749,11 +731,10 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_more_tha
 
 			servers = 5
 		}
-	`), "repo/workspace1")
-	require.NoError(t, err)
+	`)
 
 	// When
-	terraformFootprint, err := client.getTerraformFootprintData(ctx)
+	terraformFootprint, err := client.parseFootprintDataFromBytes([][]byte{fileBytes, fileBytes2, fileBytes3})
 
 	// Then
 	require.NoError(t, err)
@@ -762,18 +743,15 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_more_tha
 	require.Equal(t, `{"./app-cluster":{"0.0.5":2},"./app-cluster2":{"0.0.6":2}}`, terraformFootprint.VersionsTFModules)
 }
 
-func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_more_than_one_source_multiple_versions(t *testing.T) {
+func TestHTTPDragonDropClient_parseFootprintDataFromBytes_another_tf_file_more_than_one_source_multiple_versions(t *testing.T) {
 	// Given
-	defer cleanMockedDirectories(t)
-
-	ctx := context.Background()
 	client := HTTPDragonDropClient{
 		config: HTTPDragonDropClientConfig{
 			WorkspaceDirectories: []string{"workspace1"},
 		},
 	}
 
-	err := writeFile("another.tf", []byte(`
+	fileBytes := []byte(`
 		terraform {
 		  required_version = "1.5.1"
 
@@ -784,10 +762,9 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_more_tha
 			}
 		  }
 		}
-	`), "repo/workspace1")
-	require.NoError(t, err)
+	`)
 
-	err = writeFile("module_file1.tf", []byte(`
+	fileBytes2 := []byte(`
 		module "servers" {
 			source = "./app-cluster"
 			version = "0.0.5"
@@ -815,10 +792,9 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_more_tha
 
 			servers = 5
 		}
-	`), "repo/workspace1")
-	require.NoError(t, err)
+	`)
 
-	err = writeFile("module_file2.tf", []byte(`
+	fileBytes3 := []byte(`
 		module "server4" {
 			source = "./app-cluster"
 			version = "0.0.5"
@@ -846,11 +822,10 @@ func TestHTTPDragonDropClient_getTerraformFootprintData_another_tf_file_more_tha
 
 			servers = 5
 		}
-	`), "repo/workspace1")
-	require.NoError(t, err)
+	`)
 
 	// When
-	terraformFootprint, err := client.getTerraformFootprintData(ctx)
+	terraformFootprint, err := client.parseFootprintDataFromBytes([][]byte{fileBytes, fileBytes2, fileBytes3})
 
 	// Then
 	require.NoError(t, err)
@@ -1003,21 +978,21 @@ func Test_getAttributeValue(t *testing.T) {
 func Test_getUniqueDriftedResourceCount(t *testing.T) {
 	// Given
 	terraformState := []byte(`[
- {
-   "InstanceID": "arn:aws:elasticloadbalancing:us-east-1:6"
- },
- {
-   "InstanceID": "arn:aws:elasticloadbalancing:us-east-1:6"
- },
- {
-   "InstanceID": "arn:aws:elasticloadbalancing:us-east-1:7"
- },
- {
-   "InstanceID": "arn:aws:elasticloadbalancing:us-east-1:7"
- },
- {
-   "InstanceID": "arn:aws:elasticloadbalancing:us-east-1:6"
- }
+{
+  "InstanceID": "arn:aws:elasticloadbalancing:us-east-1:6"
+},
+{
+  "InstanceID": "arn:aws:elasticloadbalancing:us-east-1:6"
+},
+{
+  "InstanceID": "arn:aws:elasticloadbalancing:us-east-1:7"
+},
+{
+  "InstanceID": "arn:aws:elasticloadbalancing:us-east-1:7"
+},
+{
+  "InstanceID": "arn:aws:elasticloadbalancing:us-east-1:6"
+}
 ]`)
 	var data []interface{}
 	err := json.Unmarshal(terraformState, &data)

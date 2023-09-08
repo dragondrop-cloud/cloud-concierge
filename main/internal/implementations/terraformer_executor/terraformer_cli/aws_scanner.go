@@ -1,4 +1,4 @@
-package terraformerCLI
+package terraformercli
 
 import (
 	"encoding/json"
@@ -32,7 +32,7 @@ func NewAWSScanner(credential terraformValueObjects.Credential, cliConfig Config
 }
 
 // Scan uses the TerraformerCLI interface to scan a given division's cloud environment
-func (awsScanner *AWSScanner) Scan(account terraformValueObjects.Division, credential terraformValueObjects.Credential, options ...string) error {
+func (awsScanner *AWSScanner) Scan(_ terraformValueObjects.Division, credential terraformValueObjects.Credential, _ ...string) error {
 	err := awsScanner.configureEnvironment(credential)
 	if err != nil {
 		return fmt.Errorf("[AWS Scanner] Error configuring environment %w", err)

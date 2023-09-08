@@ -1,4 +1,4 @@
-package terraformManagedResourcesDriftDetector
+package tfmanagedresourcesdriftdetector
 
 import (
 	"context"
@@ -19,7 +19,7 @@ func NewIsolatedDriftDetector() interfaces.TerraformManagedResourcesDriftDetecto
 }
 
 // Execute detects drift in Terraform-managed resources.
-func (d *IsolatedTerraformResourcesManagedDriftDetector) Execute(ctx context.Context, workspaceToDirectory map[string]string) (bool, error) {
+func (d *IsolatedTerraformResourcesManagedDriftDetector) Execute(_ context.Context, _ map[string]string) (bool, error) {
 	log.Debug("Executing drift detector")
 	return false, nil
 }

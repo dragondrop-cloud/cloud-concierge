@@ -1,4 +1,4 @@
-package identifyCloudActors
+package identifycloudactors
 
 import (
 	"testing"
@@ -12,17 +12,17 @@ func TestConvertResourceActionsToJSON(t *testing.T) {
 	// Given
 	inputProviderResourceActions := terraformValueObjects.ResourceActionMap{
 		"resource_1": {
-			Creator: terraformValueObjects.CloudActorTimeStamp{
+			Creator: &terraformValueObjects.CloudActorTimeStamp{
 				Actor:     terraformValueObjects.CloudActor("creator@gmail.com"),
 				Timestamp: terraformValueObjects.Timestamp("time_1"),
 			},
-			Modifier: terraformValueObjects.CloudActorTimeStamp{
+			Modifier: &terraformValueObjects.CloudActorTimeStamp{
 				Actor:     terraformValueObjects.CloudActor("modifier@gmail.com"),
 				Timestamp: terraformValueObjects.Timestamp("time_2"),
 			},
 		},
 		"resource_2": {
-			Creator: terraformValueObjects.CloudActorTimeStamp{
+			Creator: &terraformValueObjects.CloudActorTimeStamp{
 				Actor:     terraformValueObjects.CloudActor("el_creator@gmail.com"),
 				Timestamp: terraformValueObjects.Timestamp("time_3"),
 			},

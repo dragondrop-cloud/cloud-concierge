@@ -1,4 +1,4 @@
-package resourcesCalculator
+package resourcescalculator
 
 import (
 	"context"
@@ -18,7 +18,7 @@ func NewIsolatedResourcesCalculator() interfaces.ResourcesCalculator {
 }
 
 // Execute calculates the association between resources and a state file.
-func (c *IsolatedResourcesCalculator) Execute(ctx context.Context, workspaceToDirectory map[string]string) error {
+func (c *IsolatedResourcesCalculator) Execute(_ context.Context, _ map[string]string) error {
 	log.Debug("Executing resource calculator")
 	return nil
 }

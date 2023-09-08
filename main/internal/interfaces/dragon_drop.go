@@ -135,10 +135,10 @@ func (m *DragonDropMock) InformNoResourcesFound(ctx context.Context) error {
 }
 
 // PostLogAlert sends alert log to the dragondrop API.
-func (m *DragonDropMock) PostLogAlert(ctx context.Context, log string) {}
+func (m *DragonDropMock) PostLogAlert(_ context.Context, _ string) {}
 
 // PostLog sends log to the dragondrop API.
-func (m *DragonDropMock) PostLog(ctx context.Context, log string) {}
+func (m *DragonDropMock) PostLog(_ context.Context, _ string) {}
 
 // PutJobPullRequestURL sends the job url to the dragondrop API
 func (m *DragonDropMock) PutJobPullRequestURL(ctx context.Context, prURL string) error {

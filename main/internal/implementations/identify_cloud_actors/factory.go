@@ -1,4 +1,4 @@
-package identifyCloudActors
+package identifycloudactors
 
 import (
 	"context"
@@ -13,7 +13,7 @@ type Factory struct {
 
 // Instantiate returns an implementation of interfaces.IdentifyCloudActors depending on the passed
 // environment specification.
-func (f *Factory) Instantiate(ctx context.Context, environment string, dragonDrop interfaces.DragonDrop, provider terraformValueObjects.Provider, config Config) (interfaces.IdentifyCloudActors, error) {
+func (f *Factory) Instantiate(_ context.Context, environment string, dragonDrop interfaces.DragonDrop, provider terraformValueObjects.Provider, config Config) (interfaces.IdentifyCloudActors, error) {
 	switch environment {
 	case "isolated":
 		return new(IsolatedIdentifyCloudActors), nil

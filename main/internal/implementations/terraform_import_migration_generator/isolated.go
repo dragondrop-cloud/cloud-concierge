@@ -1,4 +1,4 @@
-package terraformImportMigrationGenerator
+package terraformimportmigrationgenerator
 
 import (
 	"context"
@@ -17,6 +17,6 @@ func NewIsolatedTerraformImportMigrationGenerator() interfaces.TerraformImportMi
 }
 
 // Execute generates terraform state migration statements for identified resources.
-func (i *IsolatedTerraformImportMigrationGenerator) Execute(ctx context.Context) error {
+func (i *IsolatedTerraformImportMigrationGenerator) Execute(_ context.Context) error {
 	return nil
 }

@@ -1,4 +1,4 @@
-package resourcesWriter
+package resourceswriter
 
 import (
 	"context"

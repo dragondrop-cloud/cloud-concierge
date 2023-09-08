@@ -1,4 +1,4 @@
-package dragonDrop
+package dragondrop
 
 import (
 	"github.com/dragondrop-cloud/cloud-concierge/main/internal/interfaces"

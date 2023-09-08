@@ -48,7 +48,7 @@ func (m *VCSMock) AddChanges() error {
 }
 
 // Checkout creates a new branch within the remote repository.
-func (m *VCSMock) Checkout(jobName string) error {
+func (m *VCSMock) Checkout(_ string) error {
 	args := m.Called()
 	return args.Error(0)
 }
@@ -67,7 +67,7 @@ func (m *VCSMock) Push() error {
 
 // OpenPullRequest opens a new pull request of committed changes to the remote repository,
 // and returns the url of this pull request
-func (m *VCSMock) OpenPullRequest(jobName string) (string, error) {
+func (m *VCSMock) OpenPullRequest(_ string) (string, error) {
 	args := m.Called()
 	return args.String(0), args.Error(1)
 }

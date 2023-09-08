@@ -1,4 +1,4 @@
-package terraformValueObjects
+package terraformvalueobjects
 
 import (
 	"reflect"

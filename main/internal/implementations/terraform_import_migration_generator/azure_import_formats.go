@@ -1,4 +1,4 @@
-package terraformImportMigrationGenerator
+package terraformimportmigrationgenerator
 
 var AzureResourceTypeLocations = map[ResourceType]ImportLocationFormat{
 	"azurerm_analysis_services_server": {

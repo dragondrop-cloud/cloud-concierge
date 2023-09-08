@@ -1,4 +1,4 @@
-package terraformerExecutor
+package terraformerexecutor
 
 import (
 	"context"

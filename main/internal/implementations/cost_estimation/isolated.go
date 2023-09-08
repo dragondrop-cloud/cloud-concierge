@@ -1,4 +1,4 @@
-package costEstimation
+package costestimation
 
 import (
 	"context"
@@ -18,6 +18,6 @@ func NewIsolatedCostEstimator() interfaces.CostEstimation {
 
 // Execute creates structured cost estimation data for the current identified/scanned
 // cloud resources.
-func (ice *IsolatedCostEstimator) Execute(ctx context.Context) error {
+func (ice *IsolatedCostEstimator) Execute(_ context.Context) error {
 	return nil
 }

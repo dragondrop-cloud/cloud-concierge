@@ -162,11 +162,11 @@ func TestCloudActionsToResourceActionMap(t *testing.T) {
 	// Then
 	expectedOutput := terraformValueObjects.ResourceActionMap{
 		"google_storage_bucket.testing-out-this-bucket": {
-			Creator: terraformValueObjects.CloudActorTimeStamp{
+			Creator: &terraformValueObjects.CloudActorTimeStamp{
 				Actor:     "example@dragondrop.cloud",
 				Timestamp: "2023-02-25",
 			},
-			Modifier: terraformValueObjects.CloudActorTimeStamp{
+			Modifier: &terraformValueObjects.CloudActorTimeStamp{
 				Actor:     "example@dragondrop.cloud",
 				Timestamp: "2023-03-08",
 			},
@@ -205,7 +205,7 @@ func TestSubsetCloudActionsToCurrentDivisionsModifierOnly(t *testing.T) {
 	// Then
 	expectedOutput := terraformValueObjects.ResourceActionMap{
 		"google_storage_bucket.testing-out-this-bucket": {
-			Modifier: terraformValueObjects.CloudActorTimeStamp{
+			Modifier: &terraformValueObjects.CloudActorTimeStamp{
 				Actor:     "example@dragondrop.cloud",
 				Timestamp: "2025-03-08",
 			},
@@ -243,7 +243,7 @@ func TestSubsetCloudActionsToCurrentDivisionsCreationOnly(t *testing.T) {
 	// Then
 	expectedOutput := terraformValueObjects.ResourceActionMap{
 		"google_storage_bucket.testing-out-this-bucket": {
-			Creator: terraformValueObjects.CloudActorTimeStamp{
+			Creator: &terraformValueObjects.CloudActorTimeStamp{
 				Actor:     "example@dragondrop.cloud",
 				Timestamp: "2023-02-25",
 			},
@@ -287,11 +287,11 @@ func TestGenerateHCLActorsCommentCompleteData(t *testing.T) {
 
 	inputResourceToCloudActions := terraformValueObjects.ResourceActionMap{
 		"google_storage_bucket.testing-out-this-bucket": {
-			Creator: terraformValueObjects.CloudActorTimeStamp{
+			Creator: &terraformValueObjects.CloudActorTimeStamp{
 				Actor:     "example@dragondrop.cloud",
 				Timestamp: "2023-02-25",
 			},
-			Modifier: terraformValueObjects.CloudActorTimeStamp{
+			Modifier: &terraformValueObjects.CloudActorTimeStamp{
 				Actor:     "example@dragondrop.cloud",
 				Timestamp: "2023-03-08",
 			},
@@ -320,7 +320,7 @@ func TestGenerateHCLActorsCommentModifierOnly(t *testing.T) {
 
 	inputResourceToCloudActions := terraformValueObjects.ResourceActionMap{
 		"google_storage_bucket.testing-out-this-bucket": {
-			Modifier: terraformValueObjects.CloudActorTimeStamp{
+			Modifier: &terraformValueObjects.CloudActorTimeStamp{
 				Actor:     "example@dragondrop.cloud",
 				Timestamp: "2023-03-08",
 			},
@@ -349,7 +349,7 @@ func TestGenerateHCLActorsCommentCreatorOnly(t *testing.T) {
 
 	inputResourceToCloudActions := terraformValueObjects.ResourceActionMap{
 		"google_storage_bucket.testing-out-this-bucket": {
-			Creator: terraformValueObjects.CloudActorTimeStamp{
+			Creator: &terraformValueObjects.CloudActorTimeStamp{
 				Actor:     "example@dragondrop.cloud",
 				Timestamp: "2023-02-25",
 			},
