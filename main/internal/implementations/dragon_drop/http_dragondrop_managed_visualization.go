@@ -34,8 +34,9 @@ func (c *HTTPDragonDropClient) SendCloudPerchData(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("[error reading resources-to-cloud-actions.json]%w", err)
 	}
+	deletedResources := c.getDeletedResourcesList()
 
-	resourceInventoryData, newResources, err := c.getResourceInventoryData(newResources, driftedResources)
+	resourceInventoryData, newResources, err := c.getResourceInventoryData(newResources, driftedResources, deletedResources)
 	if err != nil {
 		return fmt.Errorf("[error getting ResourceInventoryData]%w", err)
 	}
