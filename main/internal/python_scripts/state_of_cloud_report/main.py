@@ -28,6 +28,8 @@ from helpers.security_scanning import (
     create_markdown_table_security_scans,
     security_scan_to_df,
 )
+from helpers.deleted_resource_drift import create_deleted_resource_tabular_breakdowns_with_cost
+
 
 
 def create_markdown_file(job_name: str, markdown_text_output_path):
@@ -47,6 +49,9 @@ def create_markdown_file(job_name: str, markdown_text_output_path):
 
     with open(f"{file_path_root}drift-resources-differences.json", "r") as json_file:
         managed_drift_list_of_dicts = json.loads(json_file.read())
+
+    with open(f"{file_path_root}drift-resources-deleted.json", "r") as json_file:
+            deleted_resources_list_of_dicts = json.loads(json_file.read())
 
     if managed_drift_list_of_dicts:
         managed_drift_df = pd.DataFrame(managed_drift_list_of_dicts)
@@ -132,6 +137,18 @@ def create_markdown_file(job_name: str, markdown_text_output_path):
         )
     else:
         markdown_file.new_line("No new resources found!")
+
+    markdown_file.new_header(
+        level=1, title="Drifted Resources Deleted", style="atx"
+    )
+
+    if len(deleted_resources_list_of_dicts) > 0:
+        markdown_file = create_deleted_resource_tabular_breakdowns_with_cost(
+            markdown_file=markdown_file,
+            deleted_resources_list_of_dicts=deleted_resources_list_of_dicts,
+        )
+    else:
+        markdown_file.new_line("No deleted resources found!")
 
     markdown_file.new_header(
         level=1, title="Drifted Resources Managed By Terraform", style="atx"

@@ -123,3 +123,42 @@ aws_secret_access_key = Secret123
 	// Then
 	assert.Equal(t, terraformValueObjects.Credential(expectedOutput), credential)
 }
+
+func Test_searchAwsAccess(t *testing.T) {
+	type args struct {
+		credentials []byte
+	}
+	tests := []struct {
+		name string
+		args args
+		want []string
+	}{
+		{
+			name: "aws credentials with spaces",
+			args: args{
+				credentials: []byte(
+					`[default]
+aws_access_key_id = AWS123
+aws_secret_access_key = Secret123
+`),
+			},
+			want: []string{"\naws_access_key_id = AWS123\naws_secret_access_key = Secret123", "AWS123", "Secret123"},
+		},
+		{
+			name: "aws credentials without spaces",
+			args: args{
+				credentials: []byte(
+					`[default]
+aws_access_key_id=AWS123
+aws_secret_access_key=Secret123
+`),
+			},
+			want: []string{"\naws_access_key_id=AWS123\naws_secret_access_key=Secret123", "AWS123", "Secret123"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equalf(t, tt.want, searchAwsAccess(tt.args.credentials), "searchAwsAccess(%v)", tt.args.credentials)
+		})
+	}
+}

@@ -15,7 +15,7 @@ func (m *ManagedResourcesDriftDetector) identifyDeletedResources(terraformerReso
 	deletedResources := make([]DeletedResource, 0)
 
 	for id, data := range terraformResources {
-		if _, ok := terraformerResources[id]; !ok {
+		if _, found := terraformerResources[id]; !found && m.isValidDeletedResource(data.Type) {
 			deletedResource := DeletedResource{
 				InstanceID:    data.Attributes["id"].(string),
 				StateFileName: StateFileName(data.StateFile),
@@ -28,4 +28,26 @@ func (m *ManagedResourcesDriftDetector) identifyDeletedResources(terraformerReso
 	}
 
 	return deletedResources, nil
+}
+
+func (m *ManagedResourcesDriftDetector) isValidDeletedResource(resourceType string) bool {
+	if m.config.ResourcesWhiteList != nil && len(m.config.ResourcesWhiteList) > 0 {
+		for _, resource := range m.config.ResourcesWhiteList {
+			if string(resource) == resourceType {
+				return true
+			}
+		}
+
+		return false
+	} else if m.config.ResourcesBlackList != nil && len(m.config.ResourcesBlackList) > 0 {
+		for _, resource := range m.config.ResourcesBlackList {
+			if string(resource) == resourceType {
+				return false
+			}
+		}
+
+		return true
+	}
+
+	return true
 }

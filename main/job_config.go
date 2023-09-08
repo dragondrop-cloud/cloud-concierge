@@ -5,11 +5,11 @@ import (
 	"strings"
 
 	"github.com/dragondrop-cloud/cloud-concierge/main/internal/hclcreate"
-
 	costEstimation "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/cost_estimation"
 	dragonDrop "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/dragon_drop"
 	identifyCloudActors "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/identify_cloud_actors"
 	terraformImportMigrationGenerator "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_import_migration_generator"
+	driftDetector "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_managed_resources_drift_detector/drift_detector"
 	terraformValueObjects "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_value_objects"
 	terraformWorkspace "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_workspace"
 	terraformerCli "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraformer_executor/terraformer_cli"
@@ -174,5 +174,12 @@ func (c JobConfig) getIdentifyCloudActorsConfig() identifyCloudActors.Config {
 	return identifyCloudActors.Config{
 		CloudCredential: c.CloudCredential,
 		Division:        c.Division,
+	}
+}
+
+func (c JobConfig) getManagedResourceDriftDetectorConfig() driftDetector.ManagedResourceDriftDetectorConfig {
+	return driftDetector.ManagedResourceDriftDetectorConfig{
+		ResourcesWhiteList: c.ResourcesWhiteList,
+		ResourcesBlackList: c.ResourcesBlackList,
 	}
 }
