@@ -274,7 +274,7 @@ func InitializeJobDependencies(ctx context.Context, env string) (*Job, error) {
 	if err != nil {
 		return nil, err
 	}
-	driftDetector, err := (&terraformManagedResourcesDriftDetector.Factory{}).Instantiate(ctx, env, inferredData.Provider)
+	driftDetector, err := (&terraformManagedResourcesDriftDetector.Factory{}).Instantiate(ctx, env, jobConfig.getManagedResourceDriftDetectorConfig())
 	if err != nil {
 		return nil, err
 	}
