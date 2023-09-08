@@ -44,6 +44,7 @@ jobs:
           go mod tidy
           go test ./...
 
+# TODO: Refactor needed here as we remove all internal Python scripts from the core container
   test-python-scripts:
     runs-on: ubuntu-latest
     container: python:3.10.1-slim-buster

@@ -1,0 +1,48 @@
+name: nlpengine continuous deployment (CD)
+on:
+  push:
+    branches:
+      - dev
+      - prod
+    paths:
+      -nlpengine/**
+
+jobs:
+  gcloud-deployment:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    permissions:
+      contents: "read"
+      id-token: "write"
+
+    steps:
+      steps:
+        - name: Checkout branch
+          uses: actions/checkout@v3
+
+        - id: uppercase_env
+          uses: ASzc/change-string-case-action@v5
+          with:
+            string: ${{ github.ref_name }}
+
+        - name: Google Authentication
+          id: auth
+          uses: "google-github-actions/auth@v0"
+          with:
+            token_format: "access_token"
+            workload_identity_provider: "projects/${{ secrets[format('PROJECT_ID_{0}', steps.uppercase_env.outputs.uppercase)] }}/locations/global/workloadIdentityPools/deploy-serverless-${{ github.ref_name }}/providers/github-actions"
+            service_account: "deploy-serverless-${{ github.ref_name }}@dragondrop-${{ github.ref_name }}.iam.gserviceaccount.com"
+
+        - name: 'Set up Cloud SDK'
+          uses: 'google-github-actions/setup-gcloud@v1'
+          with:
+            version: '>= 445.0.0'
+
+        - name: 'Deploy cloud function dev'
+          if: ${{ github.ref_name == 'dev'}}
+          run: 'gcloud functions deploy nlpengine-endpoint-dev --gen2 --runtime=python311 --region=us-east4 --source=nlpengine/ --trigger-http --allow-unauthenticated --entry-point=train_and_predict --memory=2048MB --cpu=2.0 --max-instances=10 --timeout=600s --set-env-vars=DRAGONDROP_API_URL=https://api.dev-dragondrop.cloud'
+
+        - name: 'Deploy cloud function prod'
+          if: ${{ github.ref_name == 'prod'}}
+          run: 'gcloud functions deploy nlpengine-endpoint-prod --gen2 --runtime=python311 --region=us-east4 --source=nlpengine/ --trigger-http --allow-unauthenticated --entry-point=train_and_predict --memory=2048MB --cpu=2.0 --timeout=600s --set-env-vars=DRAGONDROP_API_URL=https://api.dragondrop.cloud'

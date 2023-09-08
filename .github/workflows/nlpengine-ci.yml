@@ -1,0 +1,18 @@
+name: nlpengine continuous deployment (CD)
+on:
+  push:
+    branches:
+      - dev
+      - prod
+    paths:
+      -nlpengine/**
+
+
+unit-tests:
+  gcloud-deployment:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    permissions:
+      contents: "read"
+      id-token: "write"
