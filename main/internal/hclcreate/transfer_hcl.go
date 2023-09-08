@@ -6,6 +6,8 @@ import (
 	"strings"
 
 	"github.com/Jeffail/gabs/v2"
+	"github.com/sirupsen/logrus"
+
 	terraformValueObjects "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_value_objects"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
@@ -15,6 +17,8 @@ import (
 // ExtractResourceDefinitions outputs a bytes slice which defines needed Terraform resources extracted from
 // another configuration file.
 func (h *hclCreate) ExtractResourceDefinitions(noNewResources bool, workspaceToDirectory map[string]string) error {
+	logrus.Debugf("[hclcreate][ExtractResourceDefinitions] noNewResources: %v", noNewResources)
+
 	// Mapping between workspace and the new hclwrite document for that workspace
 	workspaceToHCLFile := WorkspaceToHCL{}
 
@@ -26,29 +30,37 @@ func (h *hclCreate) ExtractResourceDefinitions(noNewResources bool, workspaceToD
 	if err != nil {
 		return fmt.Errorf("[os.ReadFile resources-to-cloud-actions.json]%v", err)
 	}
+	logrus.Debugf("[hclcreate][ExtractResourceDefinitions] rawCloudActions: %v", string(rawCloudActions))
+
 	parsedCloudActions, err := gabs.ParseJSON(rawCloudActions)
 	if err != nil {
 		return fmt.Errorf("[gabs.ParseJSON rawCloudActions]%v", err)
 	}
+	logrus.Debugf("[hclcreate][ExtractResourceDefinitions] parsedCloudActions: %v", parsedCloudActions.String())
 
 	rawCloudCosts, err := os.ReadFile("outputs/cost-estimates.json")
 	if err != nil {
 		return fmt.Errorf("[os.ReadFile cost-estimates.json]%v", err)
 	}
+	logrus.Debugf("[hclcreate][ExtractResourceDefinitions] rawCloudCosts: %v", string(rawCloudCosts))
+
 	parsedCloudCosts, err := gabs.ParseJSON(rawCloudCosts)
 	if err != nil {
 		return fmt.Errorf("[gabs.ParseJSON rawCloudCosts]%v", err)
 	}
+	logrus.Debugf("[hclcreate][ExtractResourceDefinitions] parsedCloudCosts: %v", parsedCloudCosts.String())
+
 	costEstimates, err := gabsContainerToCostsStruct(parsedCloudCosts)
 	if err != nil {
 		return fmt.Errorf("[gabsContainerToAllCostsStruct]%v", err)
 	}
+	logrus.Debugf("[hclcreate][ExtractResourceDefinitions] costEstimates: %v", costEstimates)
 
 	hclBytes, err := os.ReadFile("current_cloud/resources.tf")
-
 	if err != nil {
 		return fmt.Errorf("[os.ReadFile()] Error reading in resources.tf")
 	}
+	logrus.Debugf("[hclcreate][ExtractResourceDefinitions] hclBytes: %v", string(hclBytes))
 
 	terraformerResources, hclDiagnostics := hclwrite.ParseConfig(
 		hclBytes,
@@ -64,6 +76,7 @@ func (h *hclCreate) ExtractResourceDefinitions(noNewResources bool, workspaceToD
 	if err != nil {
 		return fmt.Errorf("[h.subsetCloudActionsToCurrentDivision]%v", err)
 	}
+	logrus.Debugf("[hclcreate][ExtractResourceDefinitions] resourceActions: %v", resourceActions)
 
 	// Read in new-resources-to-workspace.json, parse as gabs file
 	newResourcesToWorkspace := []byte("{}")
@@ -175,6 +188,8 @@ func (h *hclCreate) generateHCLCloudActorsComment(
 	resourceType string, resourceName string,
 	resourceToCloudActions terraformValueObjects.ResourceActionMap,
 ) hclwrite.Tokens {
+	logrus.Debugf("[hclcreate][generateHCLCloudActorsComment] resourceType: %v, resourceName: %v", resourceType, resourceName)
+
 	completeResourceName := fmt.Sprintf("%v.%v", resourceType, resourceName)
 	cloudActorActionStatement := ""
 	cloudActions, ok := resourceToCloudActions[terraformValueObjects.ResourceName(completeResourceName)]
@@ -259,6 +274,7 @@ func (h *hclCreate) writeNewResourceFiles(
 ) error {
 	for workspace, hclFile := range completeWorkspaceToHCLFile {
 		fileContent := hclwrite.Format(hclFile.Bytes())
+		logrus.Debugf("[hclcreate][writeNewResourceFiles] fileContent: %v", string(fileContent))
 
 		subDirectory := workspaceToDirectoryMap[workspace]
 

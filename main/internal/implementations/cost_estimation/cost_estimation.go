@@ -7,6 +7,8 @@ import (
 	"os"
 	"os/exec"
 
+	"github.com/sirupsen/logrus"
+
 	terraformValueObjects "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_value_objects"
 	"github.com/dragondrop-cloud/cloud-concierge/main/internal/interfaces"
 )
@@ -46,8 +48,10 @@ func NewCostEstimator(config CostEstimatorConfig, provider terraformValueObjects
 // Execute creates structured cost estimation data for the current identified/scanned
 // cloud resources.
 func (ce *CostEstimator) Execute(_ context.Context) error {
+	logrus.Debugf("Executing cost estimation for %s", ce.provider)
+
 	if ce.config.InfracostAPIToken == "None" {
-		fmt.Println("No Infracost token specified, skipping cost estimation.")
+		logrus.Warn("No Infracost token specified, skipping cost estimation.")
 		return nil
 	}
 
@@ -57,7 +61,7 @@ func (ce *CostEstimator) Execute(_ context.Context) error {
 	if err != nil {
 		return fmt.Errorf("[gcloud_authentication][gcloud auth activate-service-account, failed to authenticate]%w", err)
 	}
-	fmt.Println("Done setting Infracost API token.")
+	logrus.Info("Done setting Infracost API token.")
 
 	err = ce.GetCostEstimate()
 	if err != nil {
@@ -85,6 +89,7 @@ func (ce *CostEstimator) WriteCostEstimates() error {
 	if err != nil {
 		return fmt.Errorf("[os.ReadFile]%v", err)
 	}
+	logrus.Debugf("Costs: %s", costs)
 
 	err = os.WriteFile("outputs/cost-estimates.json", costs, 0400)
 	if err != nil {
@@ -100,11 +105,12 @@ func (ce *CostEstimator) GetCostEstimate() error {
 	infracostJSONPath := "./current_cloud/infracost.json"
 
 	costEstimateArgs := []string{"breakdown", "--path", infracostEstimationPath, "--format", "json", "--out-file", infracostJSONPath}
-	_, err := executeCommand("infracost", costEstimateArgs...)
+	output, err := executeCommand("infracost", costEstimateArgs...)
 	if err != nil {
 		return fmt.Errorf("[executeCommand]%v", err)
 	}
 
+	logrus.Debugf("Infracost output: %s", output)
 	return nil
 }
 

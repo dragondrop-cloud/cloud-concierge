@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/sirupsen/logrus"
+
 	terraformValueObjects "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_value_objects"
 )
 
@@ -32,6 +34,7 @@ func NewGoogleScanner(credential terraformValueObjects.Credential, cliConfig Con
 
 // Scan uses the TerraformerCLI interface to scan a given division's cloud environment
 func (gcpScan *GoogleScanner) Scan(project terraformValueObjects.Division, credential terraformValueObjects.Credential, _ ...string) error {
+	logrus.Debugf("[Scan] Scanning GCP project %v", project)
 	_ = os.MkdirAll("credentials", 0660)
 
 	err := os.WriteFile("credentials/google.json", []byte(credential), 0400)

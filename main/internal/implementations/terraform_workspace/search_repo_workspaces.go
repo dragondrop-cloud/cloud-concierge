@@ -76,6 +76,7 @@ func getAllTFFiles(_ context.Context, directory string) []string {
 		}
 	}
 
+	log.Debugf("[get_all_tf_files][found %d tf files]", len(tfFiles))
 	return tfFiles
 }
 
@@ -106,6 +107,7 @@ func getWorkspaceByFile(ctx context.Context, directory string, fileName string, 
 		return "", nil, false
 	}
 
+	log.Debugf("[get_workspace_by_file][found workspace %s in file %s]", workspace, fileName)
 	return workspace, details, true
 }
 
@@ -161,6 +163,8 @@ type GCSBackendBlock struct {
 
 // extractBackendDetails extracts the backend details from a .tf file if it exists.
 func extractBackendDetails(_ context.Context, fileContent []byte, backendType string) (interface{}, error) {
+	log.Debugf("extracting backend details for %s: %s", backendType, string(fileContent))
+
 	switch backendType {
 	case "s3":
 		return extractAttributesFromBackendDetails(fileContent, "s3", []string{"bucket", "key", "region"},

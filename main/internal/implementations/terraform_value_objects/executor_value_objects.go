@@ -3,6 +3,8 @@ package terraformvalueobjects
 import (
 	"fmt"
 	"strings"
+
+	"github.com/sirupsen/logrus"
 )
 
 // Credential is a credential which can be used to read resources within a cloud footprint.
@@ -22,6 +24,8 @@ type Version string
 // Decode provides the object decoding logic for Version, in accordance with the envconfig
 // package's requirements.
 func (v *Version) Decode(value string) error {
+	logrus.Debugf("Decoding terraform version %v", value)
+
 	if string(value[1]) != "." {
 		return fmt.Errorf("terraform version should start with 'major version[.]'")
 	}

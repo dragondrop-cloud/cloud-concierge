@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/Jeffail/gabs/v2"
+	"github.com/sirupsen/logrus"
 )
 
 // InfracostResourceData is a struct for handling individual data values for a resource entry in
@@ -72,6 +73,7 @@ func (ce *CostEstimator) FormatCostEstimate() error {
 	if err != nil {
 		return fmt.Errorf("[os.ReadFile]%v", err)
 	}
+	logrus.Debugf("[cost_estimation][FormatCostEstimate] fileBytes: %v", string(fileBytes))
 
 	resourceDataList, err := ce.ParseJSONToStruct(fileBytes)
 	if err != nil {
@@ -82,6 +84,7 @@ func (ce *CostEstimator) FormatCostEstimate() error {
 	if err != nil {
 		return fmt.Errorf("[ce.structToJSONString]%v", err)
 	}
+	logrus.Debugf("[cost_estimation][FormatCostEstimate] output: %v", output)
 
 	formattedFilePath := "current_cloud/infracost-formatted.json"
 
