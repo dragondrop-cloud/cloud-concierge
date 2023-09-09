@@ -4,6 +4,8 @@ on:
     branches:
       - dev
       - prod
+    paths:
+        - nlpengine/**
 
 jobs:
   cloud-function-deployment:

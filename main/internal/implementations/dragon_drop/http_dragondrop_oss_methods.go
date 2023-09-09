@@ -74,18 +74,18 @@ func (c *HTTPDragonDropClient) PostNLPEngine(ctx context.Context) error {
 	)
 
 	if err != nil {
-		return fmt.Errorf("[authorize_job][error in newRequest]%w", err)
+		return fmt.Errorf("[post_nlp_engine][error in newRequest]%w", err)
 	}
 
 	response, err := c.httpClient.Do(request)
 
 	if err != nil {
-		return fmt.Errorf("[authorize_job] error in http POST request]%w", err)
+		return fmt.Errorf("[post_nlp_engine] error in http POST request]%w", err)
 	}
 
 	defer response.Body.Close()
 	if response.StatusCode != 200 {
-		return fmt.Errorf("[authorize_job][was unsuccessful, with the server returning: %v]", response.StatusCode)
+		return fmt.Errorf("[post_nlp_engine][was unsuccessful, with the server returning: %v]", response.StatusCode)
 	}
 
 	// Read response body into a string

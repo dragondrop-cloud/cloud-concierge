@@ -96,8 +96,8 @@ def authenticate_invocation(token: str):
     response = requests.get(
         url=f"{url}/job/authorize/oss/",
         headers={
-            "Authorization": {"Bearer " + token},
-            "Content-Type": {"application/json"},
+            "Authorization": "Bearer " + token,
+            "Content-Type": "application/json",
         },
     )
 

@@ -9,8 +9,6 @@ import (
 	"regexp"
 	"strings"
 
-	log "github.com/sirupsen/logrus"
-
 	"github.com/dragondrop-cloud/cloud-concierge/main/internal/documentize"
 	terraformValueObjects "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_value_objects"
 )
@@ -92,8 +90,6 @@ func getAWSCredential(jobID string) (terraformValueObjects.Credential, error) {
 		if err != nil {
 			return "", fmt.Errorf("[os.ReadFile][%w]", err)
 		}
-
-		log.Infof("credentialBytes: %v", string(credentialBytes))
 
 		credential, err := parseAWSCredentialValues(credentialBytes)
 		if err != nil {
