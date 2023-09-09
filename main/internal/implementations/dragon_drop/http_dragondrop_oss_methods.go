@@ -90,6 +90,9 @@ func (c *HTTPDragonDropClient) PostNLPEngine(ctx context.Context) error {
 
 	// Read response body into a string
 	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		return fmt.Errorf("[error reading response body]%v", err)
+	}
 	// TODO: remove once done integration testing
 	fmt.Printf("response body: %v", string(body))
 	err = os.WriteFile("outputs/new-resources-to-workspace.json", body, 0400)
