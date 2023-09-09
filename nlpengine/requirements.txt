@@ -8,4 +8,4 @@ scikit-learn==1.3.0
 spacy==3.6.1
 
 # Spacy language model installations
-https://github.com/explosion/spacy-models/releases/download/en_core_web_md-3.5.0/en_core_web_md-3.5.0.tar.gz
+https://github.com/explosion/spacy-models/releases/download/en_core_web_md-3.6.0/en_core_web_md-3.6.0.tar.gz
