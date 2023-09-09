@@ -40,8 +40,8 @@ jobs:
 
       - name: 'Deploy cloud function dev'
         if: ${{ github.ref_name == 'dev'}}
-        run: 'gcloud functions deploy nlpengine-endpoint-dev --gen2 --runtime=python311 --region=us-east4 --source=nlpengine/ --entry-point=train_and_predict --trigger-http --allow-unauthenticated --security-level=secure-always --memory=2048MB --cpu=2.0 --max-instances=10 --timeout=600s --set-env-vars=DRAGONDROP_API_URL=https://api.dev-dragondrop.cloud'
+        run: 'gcloud functions deploy nlpengine-endpoint-dev --gen2 --runtime=python311 --region=us-east4 --source=nlpengine/ --entry-point=train_and_predict --trigger-http --allow-unauthenticated --security-level=secure-always --memory=2048MB --timeout=600s --set-env-vars=DRAGONDROP_API_URL=https://api.dev-dragondrop.cloud --max-instances=10'
 
       - name: 'Deploy cloud function prod'
         if: ${{ github.ref_name == 'prod'}}
-        run: 'gcloud functions deploy nlpengine-endpoint-prod --gen2 --runtime=python311 --region=us-east4 --source=nlpengine/ --entry-point=train_and_predict --trigger-http --allow-unauthenticated --security-level=secure-always --memory=2048MB --cpu=2.0 --timeout=600s --set-env-vars=DRAGONDROP_API_URL=https://api.dragondrop.cloud'
+        run: 'gcloud functions deploy nlpengine-endpoint-prod --gen2 --runtime=python311 --region=us-east4 --source=nlpengine/ --entry-point=train_and_predict --trigger-http --allow-unauthenticated --security-level=secure-always --memory=2048MB --timeout=600s --set-env-vars=DRAGONDROP_API_URL=https://api.dragondrop.cloud'
