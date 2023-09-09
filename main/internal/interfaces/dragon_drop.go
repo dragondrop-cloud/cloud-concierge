@@ -53,6 +53,11 @@ type DragonDrop interface {
 	// PutJobPullRequestURL sends the job url to the dragondrop API
 	PutJobPullRequestURL(ctx context.Context, prURL string) error
 
+	// PostNLPEngine posts to the NLPEngine for calculating a mapping between uncontrolled cloud resources and
+	// the appropriate state file.
+	PostNLPEngine(ctx context.Context) error
+
+	// SendCloudPerchData posts anonymized cloud footprint visualization data for managed cloud-concierge jobs.
 	SendCloudPerchData(ctx context.Context) error
 }
 

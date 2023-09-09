@@ -12,7 +12,6 @@ import (
 	"github.com/dragondrop-cloud/cloud-concierge/main/internal/documentize"
 	driftDetector "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_managed_resources_drift_detector/drift_detector"
 	"github.com/dragondrop-cloud/cloud-concierge/main/internal/interfaces"
-	"github.com/dragondrop-cloud/cloud-concierge/main/internal/pyscriptexec"
 )
 
 var ErrNoNewResources = errors.New("[no new resources identified]")
@@ -22,9 +21,6 @@ var ErrNoNewResources = errors.New("[no new resources identified]")
 type TerraformResourcesCalculator struct {
 	// documentize implements the Document
 	documentize *documentize.Documentize
-
-	// pyScriptExec is an implementation of the PyScriptExec python scripts
-	pyScriptExec pyscriptexec.PyScriptExec
 
 	// dragonDrop interface implementation for sending requests to the dragondrop API.
 	dragonDrop interfaces.DragonDrop
@@ -44,8 +40,8 @@ type NewResourceData struct {
 }
 
 // NewTerraformResourcesCalculator creates and returns an instance of the TerraformResourcesCalculator.
-func NewTerraformResourcesCalculator(documentize *documentize.Documentize, pyScriptExec pyscriptexec.PyScriptExec, dragonDrop interfaces.DragonDrop) interfaces.ResourcesCalculator {
-	return &TerraformResourcesCalculator{documentize: documentize, pyScriptExec: pyScriptExec, dragonDrop: dragonDrop}
+func NewTerraformResourcesCalculator(documentize *documentize.Documentize, dragonDrop interfaces.DragonDrop) interfaces.ResourcesCalculator {
+	return &TerraformResourcesCalculator{documentize: documentize, dragonDrop: dragonDrop}
 }
 
 // Execute calculates the association between resources and a state file.
@@ -95,13 +91,13 @@ func (c *TerraformResourcesCalculator) calculateResourceToWorkspaceMapping(ctx c
 	return "", nil
 }
 
-// getResourceToWorkspaceMapping runs the NLPEngine python script to produce a mapping of new resources to suggested workspace.
+// getResourceToWorkspaceMapping hits the NLPEngine endpoint to receive a mapping of new resources to suggested workspace.
 func (c *TerraformResourcesCalculator) getResourceToWorkspaceMapping(ctx context.Context) error {
 	c.dragonDrop.PostLog(ctx, "Beginning to calculate recommended placement of resources to workspace.")
-	err := c.pyScriptExec.RunNLPEngine()
 
+	err := c.dragonDrop.PostNLPEngine(ctx)
 	if err != nil {
-		return fmt.Errorf("[get_resource_to_workspace][pse.RunNLPEngine]%w", err)
+		return fmt.Errorf("[c.dragondropDrop.PostNLPEngine]%w", err)
 	}
 
 	c.dragonDrop.PostLog(ctx, "Done making a map of workspaces to documents.")

@@ -47,6 +47,10 @@ type JobConfig struct {
 	// history storage appropriately.
 	MigrationHistoryStorage hclcreate.MigrationHistory
 
+	// NLPEndpoint is the endpoint for the NLP service used by cloud-concierge to match uncontrolled resources
+	// to the right state files.
+	NLPEndpoint string `default:"https://us-east4-dragondrop-prod.cloudfunctions.net/nlpengine-endpoint-prod"`
+
 	// TerraformVersion is the version of Terraform used.
 	TerraformVersion string `required:"true"`
 
@@ -107,6 +111,7 @@ func (c JobConfig) getDragonDropConfig() dragonDrop.HTTPDragonDropClientConfig {
 	return dragonDrop.HTTPDragonDropClientConfig{
 		APIPath:              c.APIPath,
 		JobID:                c.JobID,
+		NLPEndpoint:          c.NLPEndpoint,
 		OrgToken:             c.OrgToken,
 		WorkspaceDirectories: c.WorkspaceDirectories,
 	}

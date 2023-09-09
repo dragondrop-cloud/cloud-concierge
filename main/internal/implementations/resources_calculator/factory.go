@@ -6,7 +6,6 @@ import (
 	"github.com/dragondrop-cloud/cloud-concierge/main/internal/documentize"
 	terraformValueObjects "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_value_objects"
 	"github.com/dragondrop-cloud/cloud-concierge/main/internal/interfaces"
-	"github.com/dragondrop-cloud/cloud-concierge/main/internal/pyscriptexec"
 )
 
 // Factory is a struct that generates implementations of interfaces.ResourcesCalculator.
@@ -37,7 +36,5 @@ func (f *Factory) bootstrappedResourceCalculator(
 
 	dragonDrop.PostLog(ctx, "Created Documentize client.")
 
-	pyScriptExec := pyscriptexec.NewPyScriptExec()
-
-	return NewTerraformResourcesCalculator(&doc, pyScriptExec, dragonDrop), nil
+	return NewTerraformResourcesCalculator(&doc, dragonDrop), nil
 }

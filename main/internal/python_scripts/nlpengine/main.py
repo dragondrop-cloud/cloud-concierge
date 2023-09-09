@@ -302,7 +302,6 @@ if __name__ == "__main__":
     with open(f"outputs/workspace-to-documents.json", "rb") as file:
         workspace_docs = json.load(file)
 
-    spacy.util.fix_random_seed(42)
     resource_to_workspace_dict = train_and_predict(
         new_resource_docs=new_resource_docs, category_docs=workspace_docs
     )

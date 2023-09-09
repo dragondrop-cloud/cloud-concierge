@@ -22,6 +22,9 @@ type HTTPDragonDropClientConfig struct {
 	// JobID is the unique identification string for the current job run.
 	JobID string
 
+	// NLPEndpoint is the endpoint for the NLP service.
+	NLPEndpoint string
+
 	// OrgToken is the token that authorizes access to the dragondrop API.
 	OrgToken string
 

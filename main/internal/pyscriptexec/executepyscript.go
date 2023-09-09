@@ -33,16 +33,6 @@ func (pse *pyScriptExec) ExecutePythonScript(name string, otherArgs []string) er
 	return nil
 }
 
-// RunNLPEngine is a function that wraps ExecutePythonScript to execute
-// python_scripts/nlpengine/main.py
-func (pse *pyScriptExec) RunNLPEngine() error {
-	err := pse.ExecutePythonScript("nlpengine", []string{})
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 // RunStateOfCloudReport is a function that wraps ExecutePythonScript to execute
 // python_scripts/state_of_cloud_report/main.py
 func (pse *pyScriptExec) RunStateOfCloudReport(uniqueID string, jobName string) error {
