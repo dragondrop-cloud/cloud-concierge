@@ -1,12 +1,11 @@
-name: nlpengine continuous deployment (CD)
+name: nlpengine continuous integration (CI)
 on:
   push:
     paths:
       - nlpengine/**
 
-
-unit-tests:
-  gcloud-deployment:
+jobs:
+  nlpengine-unit-tests:
     runs-on: ubuntu-latest
     container: python:3.10.1-slim-buster
 
