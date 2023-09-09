@@ -1,10 +1,10 @@
 """
 Main function for training and predicting cloud resource state file assignments via Spacy.
 """
-import json
 import os
 import traceback
 
+from ast import literal_eval
 from copy import deepcopy
 from random import randint, shuffle
 from typing import List, Tuple, Union
@@ -27,21 +27,21 @@ def train_and_predict(request):
     Train and predict function. Input request is expected to have a json body with the following
     structure:
     {
-        "category_docs": {...},
+        "workspace_docs": {...},
         "new_resource_docs": {...},
-        "dragondrop_token": "cco-<token>"
+        "token": "cco-<token>"
     }
     """
     try:
         # Loading data from request
         json_body = request.get_json()
-        category_docs = json_body["category_docs"]
-        new_resource_docs = json_body["new_resource_docs"]
-        dragondrop_token = json_body["dragondrop-token"]
+        category_docs = literal_eval(json_body["workspace_docs"])
+        new_resource_docs = literal_eval(json_body["new_resource_docs"])
 
         # Authenticating invocation
-        authenticate_invocation(dragondrop_token=dragondrop_token)
+        authenticate_invocation(token=json_body["token"])
 
+        spacy.util.fix_random_seed(42)
         # Loading spacy model
         nlp = spacy.load("en_core_web_md")
 
@@ -86,9 +86,9 @@ def train_and_predict(request):
         return "Internal Server Error", 500
 
 
-def authenticate_invocation(dragondrop_token: str):
+def authenticate_invocation(token: str):
     """
-    Authenticates the invocation of the function by checking the dragondrop organization
+    Authenticates the invocation of the function by checking the organization
     token. On failure, raises an exception, halting the execution.
     """
     url = os.getenv("DRAGONDROP_API_URL")
@@ -96,7 +96,7 @@ def authenticate_invocation(dragondrop_token: str):
     response = requests.get(
         url=f"{url}/job/authorize/oss/",
         headers={
-            "Authorization": {"Bearer " + dragondrop_token},
+            "Authorization": {"Bearer " + token},
             "Content-Type": {"application/json"},
         },
     )
@@ -341,19 +341,3 @@ def _predict(
         ]
 
     return resource_name_to_workspace
-
-
-if __name__ == "__main__":
-    with open(f"outputs/new-resources-to-documents.json", "rb") as file:
-        new_resource_docs = json.load(file)
-
-    with open(f"outputs/workspace-to-documents.json", "rb") as file:
-        workspace_docs = json.load(file)
-
-    spacy.util.fix_random_seed(42)
-    resource_to_workspace_dict = train_and_predict(
-        new_resource_docs=new_resource_docs, category_docs=workspace_docs
-    )
-
-    with open(f"outputs/new-resources-to-workspace.json", "w") as file_out:
-        json.dump(resource_to_workspace_dict, file_out)

@@ -17,5 +17,6 @@ jobs:
 
       - name: Install dependencies & run tests
         run: |
-          pip3 install -r nlpengine/requirements.txt
-          coverage run -m pytest --cov ./  --cov-branch --cov-report term-missing --cov-config=./nlpengine/tests/.coveragerc
+          cd nlpengine/
+          pip3 install -r requirements.txt
+          coverage run -m pytest --cov ./  --cov-branch --cov-report term-missing --cov-config=./tests/.coveragerc
