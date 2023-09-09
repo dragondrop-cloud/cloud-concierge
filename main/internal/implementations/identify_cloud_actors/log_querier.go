@@ -58,7 +58,6 @@ func NewLogQuerier(globalConfig Config, provider terraformValueObjects.Provider)
 	}
 }
 
-// TODO: Update unit tests to include the createtags action
 // determineActionClass determines the classification of an input method, which is either a resource
 // "modification", "creation", "deletion", or "not_classified".
 func determineActionClass(value string) string {
