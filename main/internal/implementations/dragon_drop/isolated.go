@@ -90,6 +90,13 @@ func (d *IsolatedDragonDrop) PutJobPullRequestURL(_ context.Context, _ string) e
 	return nil
 }
 
+// PostNLPEngine posts to the NLPEngine for calculating a mapping between uncontrolled cloud resources and
+// the appropriate state file.
+func (d *IsolatedDragonDrop) PostNLPEngine(_ context.Context) error {
+	return nil
+}
+
+// SendCloudPerchData posts anonymized cloud footprint visualization data for managed cloud-concierge jobs.
 func (d *IsolatedDragonDrop) SendCloudPerchData(_ context.Context) error {
 	return nil
 }
