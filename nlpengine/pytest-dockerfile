@@ -1,0 +1,11 @@
+FROM python:3.10.1-slim-buster
+RUN pip3 install --upgrade pip
+
+COPY nlpengine/requirements.txt nlpengine/requirements.txt
+RUN pip3 install -r nlpengine/requirements.txt
+
+COPY nlpengine/ nlpengine/
+
+WORKDIR /nlpengine/
+EXPOSE 5000
+CMD ["coverage", "run", "-m", "pytest", "--cov", "./",  "--cov-branch", "--cov-report", "term-missing", "--cov-config=./tests/.coveragerc"]
