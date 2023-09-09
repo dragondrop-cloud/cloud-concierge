@@ -1,18 +1,22 @@
 name: nlpengine continuous deployment (CD)
 on:
   push:
-    branches:
-      - dev
-      - prod
     paths:
-      -nlpengine/**
+      - nlpengine/**
 
 
 unit-tests:
   gcloud-deployment:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    container: python:3.10.1-slim-buster
 
-    permissions:
-      contents: "read"
-      id-token: "write"
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v3
+
+      - name: Install dependencies & run tests
+        run: |
+          pip3 install -r nlpengine/requirements.txt
+          coverage run -m pytest --cov ./  --cov-branch --cov-report term-missing --cov-config=./nlpengine/tests/.coveragerc
