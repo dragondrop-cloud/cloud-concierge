@@ -47,7 +47,13 @@ type NLPEnginePostBody struct {
 // data on the mapping of new resources to state files.
 func (c *HTTPDragonDropClient) PostNLPEngine(ctx context.Context) error {
 	newResourceToDocBytes, err := os.ReadFile("outputs/new-resources-to-documents.json")
+	if err != nil {
+		return fmt.Errorf("[post_nlp_engine][error reading new-resources-to-documents.json]%v", err)
+	}
 	workspaceToDocBytes, err := os.ReadFile("outputs/workspace-to-documents.json")
+	if err != nil {
+		return fmt.Errorf("[post_nlp_engine][error reading workspace-to-documents.json]%v", err)
+	}
 
 	jsonBody, err := json.Marshal(&NLPEnginePostBody{
 		NewResourceToDoc: string(newResourceToDocBytes),
@@ -86,7 +92,7 @@ func (c *HTTPDragonDropClient) PostNLPEngine(ctx context.Context) error {
 	body, err := io.ReadAll(response.Body)
 	// TODO: remove once done integration testing
 	fmt.Printf("response body: %v", string(body))
-	err = os.WriteFile("outputs/new-resources-to-workspace.json", body, 0644)
+	err = os.WriteFile("outputs/new-resources-to-workspace.json", body, 0400)
 	if err != nil {
 		return fmt.Errorf("[error writing new-resources-to-workspace.json]%v", err)
 	}
