@@ -1,0 +1,22 @@
+name: nlpengine continuous integration (CI)
+on:
+  push:
+    paths:
+      - nlpengine/**
+
+jobs:
+  nlpengine-unit-tests:
+    runs-on: ubuntu-latest
+    container: python:3.10.1-slim-buster
+
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v3
+
+      - name: Install dependencies & run tests
+        run: |
+          cd nlpengine/
+          pip3 install -r requirements.txt
+          coverage run -m pytest --cov ./  --cov-branch --cov-report term-missing --cov-config=./tests/.coveragerc

@@ -1,10 +1,10 @@
 """
-Unit tests for functions within the backend/nlpengine/main.py file.
+Unit tests for functions within the nlpengine/main.py file.
 """
 from unittest import TestCase
 from random import seed
 
-from main.internal.python_scripts.nlpengine.main import (
+from nlpengine.main import (
     _create_gold_dict,
     _doc_to_example_text_list,
     _join_text_components,

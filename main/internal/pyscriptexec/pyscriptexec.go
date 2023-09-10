@@ -7,10 +7,6 @@ type PyScriptExec interface {
 	// from within the python_scripts directory.
 	ExecutePythonScript(name string, otherArgs []string) error
 
-	// RunNLPEngine is a function that wraps ExecutePythonScript to execute
-	// python_scripts/nlpengine/main.py
-	RunNLPEngine() error
-
 	// RunStateOfCloudReport is a function that wraps ExecutePythonScript to execute
 	// python_scripts/state_of_cloud_report/main.py
 	RunStateOfCloudReport(uniqueID string, jobName string) error

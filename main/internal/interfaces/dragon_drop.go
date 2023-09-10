@@ -53,6 +53,11 @@ type DragonDrop interface {
 	// PutJobPullRequestURL sends the job url to the dragondrop API
 	PutJobPullRequestURL(ctx context.Context, prURL string) error
 
+	// PostNLPEngine posts to the NLPEngine for calculating a mapping between uncontrolled cloud resources and
+	// the appropriate state file.
+	PostNLPEngine(ctx context.Context) error
+
+	// SendCloudPerchData posts anonymized cloud footprint visualization data for managed cloud-concierge jobs.
 	SendCloudPerchData(ctx context.Context) error
 }
 
@@ -146,6 +151,14 @@ func (m *DragonDropMock) PutJobPullRequestURL(ctx context.Context, prURL string)
 	return args.Error(0)
 }
 
+// PostNLPEngine posts to the NLPEngine for calculating a mapping between uncontrolled cloud resources and
+// the appropriate state file.
+func (m *DragonDropMock) PostNLPEngine(ctx context.Context) error {
+	args := m.Called(ctx)
+	return args.Error(0)
+}
+
+// SendCloudPerchData posts anonymized cloud footprint visualization data for managed cloud-concierge jobs.
 func (m *DragonDropMock) SendCloudPerchData(ctx context.Context) error {
 	args := m.Called(ctx)
 	return args.Error(0)

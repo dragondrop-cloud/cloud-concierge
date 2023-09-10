@@ -1,13 +1,18 @@
 """
-Main function for training and predicting resource workspace classes via Spacy.
+Main function for training and predicting cloud resource state file assignments via Spacy.
 """
-import json
+import os
+import traceback
 
+from ast import literal_eval
 from copy import deepcopy
 from random import randint, shuffle
-from typing import List, Union
+from typing import List, Tuple, Union
 
+import functions_framework
+import requests
 import spacy
+
 import numpy as np
 import pandas as pd
 
@@ -16,47 +21,90 @@ from spacy.pipeline.textcat_multilabel import DEFAULT_MULTI_TEXTCAT_MODEL
 from spacy.training import Example
 
 
-def train_and_predict(new_resource_docs: dict, category_docs: dict) -> dict:
+@functions_framework.http
+def train_and_predict(request):
     """
-    Train and predict function.
+    Train and predict function. Input request is expected to have a json body with the following
+    structure:
+    {
+        "workspace_docs": {...},
+        "new_resource_docs": {...},
+        "token": "cco-<token>"
+    }
     """
-    nlp = spacy.load("en_core_web_md")
+    try:
+        # Loading data from request
+        json_body = request.get_json()
+        category_docs = literal_eval(json_body["workspace_docs"])
+        new_resource_docs = literal_eval(json_body["new_resource_docs"])
 
-    print("Loaded english model, beginning to preprocess training data.")
-    all_training_examples = preprocess_training_data(nlp, category_docs=category_docs)
+        # Authenticating invocation
+        authenticate_invocation(token=json_body["token"])
 
-    print("Through preprocess_training_data().")
+        spacy.util.fix_random_seed(42)
+        # Loading spacy model
+        nlp = spacy.load("en_core_web_md")
 
-    train_eval_dict = _split_into_train_and_evaluation_data(
-        training_data_examples=all_training_examples
+        print("Loaded english model, beginning to preprocess training data.")
+        all_training_examples = preprocess_training_data(nlp, category_docs=category_docs)
+
+        print("Through preprocess_training_data().")
+
+        train_eval_dict = _split_into_train_and_evaluation_data(
+            training_data_examples=all_training_examples
+        )
+
+        training_data = train_eval_dict["train"]
+        evaluation_data = train_eval_dict["evaluate"]
+
+        print("Done preprocessing training data, beginning to initialize model.")
+        textcat_multilabel_model = _initialize_classification_model(
+            nlp=nlp, initial_examples=training_data[:3]
+        )
+
+        print("Done initializing model, beginning to train model.")
+        final_loss_metrics = _train_model(
+            nlp=nlp,
+            textcat_multilabel_model=textcat_multilabel_model,
+            training_data=training_data,
+            evaluation_data=evaluation_data,
+        )
+
+        print("Done training model, beginning to make predictions.")
+        resource_name_to_workspace_predictions = _predict(
+            nlp=nlp,
+            new_resource_docs=new_resource_docs,
+            textcat_multilabel_model=textcat_multilabel_model,
+        )
+
+        print("Done making predictions, returning results.")
+
+        return resource_name_to_workspace_predictions, 201
+    except Exception as e:
+        stack_trace = traceback.format_exc()
+        print(f"{e}:\n{stack_trace}")
+        return "Internal Server Error", 500
+
+
+def authenticate_invocation(token: str):
+    """
+    Authenticates the invocation of the function by checking the organization
+    token. On failure, raises an exception, halting the execution.
+    """
+    url = os.getenv("DRAGONDROP_API_URL")
+
+    response = requests.get(
+        url=f"{url}/job/authorize/oss/",
+        headers={
+            "Authorization": "Bearer " + token,
+            "Content-Type": "application/json",
+        },
     )
 
-    training_data = train_eval_dict["train"]
-    evaluation_data = train_eval_dict["evaluate"]
-
-    print("Done preprocessing training data, beginning to initialize model.")
-    textcat_multilabel_model = _initialize_classification_model(
-        nlp=nlp, initial_examples=training_data[:3]
-    )
-
-    print("Done initializing model, beginning to train model.")
-    final_loss_metrics = _train_model(
-        nlp=nlp,
-        textcat_multilabel_model=textcat_multilabel_model,
-        training_data=training_data,
-        evaluation_data=evaluation_data,
-    )
-
-    print("Done training model, beginning to make predictions.")
-    resource_name_to_workspace_predictions = _predict(
-        nlp=nlp,
-        new_resource_docs=new_resource_docs,
-        textcat_multilabel_model=textcat_multilabel_model,
-    )
-
-    print("Done making predictions, returning results.")
-
-    return resource_name_to_workspace_predictions
+    if response.status_code != 200:
+        raise Exception(
+            f"Failed to authenticate invocation against dragondrop API with status code {response.status_code}."
+        )
 
 
 def preprocess_training_data(nlp: spacy.Language, category_docs: dict) -> List[Example]:
@@ -293,19 +341,3 @@ def _predict(
         ]
 
     return resource_name_to_workspace
-
-
-if __name__ == "__main__":
-    with open(f"outputs/new-resources-to-documents.json", "rb") as file:
-        new_resource_docs = json.load(file)
-
-    with open(f"outputs/workspace-to-documents.json", "rb") as file:
-        workspace_docs = json.load(file)
-
-    spacy.util.fix_random_seed(42)
-    resource_to_workspace_dict = train_and_predict(
-        new_resource_docs=new_resource_docs, category_docs=workspace_docs
-    )
-
-    with open(f"outputs/new-resources-to-workspace.json", "w") as file_out:
-        json.dump(resource_to_workspace_dict, file_out)
