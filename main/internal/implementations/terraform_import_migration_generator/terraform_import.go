@@ -53,7 +53,6 @@ func (i *TerraformImportMigrationGenerator) Execute(ctx context.Context) error {
 		return fmt.Errorf("[terraform_import_migration_generator][error informing resources mapped to import location]%w", err)
 	}
 
-	// TODO: Major refactor needed here
 	resourceImportMapJSON, err := i.convertProviderToResourceImportMapToJSON(resourceImports)
 	if err != nil {
 		return fmt.Errorf("[terraform_import_migration_generator][error converting Provider to resource import]%w", err)

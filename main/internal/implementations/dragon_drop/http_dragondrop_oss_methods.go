@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // AuthorizeJob Checks with DragonDropAPI for valid auth of the current job, for an oss job
@@ -72,29 +74,28 @@ func (c *HTTPDragonDropClient) PostNLPEngine(ctx context.Context) error {
 		fmt.Sprintf("%v", c.config.NLPEndpoint),
 		bytes.NewBuffer(jsonBody),
 	)
-
 	if err != nil {
 		return fmt.Errorf("[post_nlp_engine][error in newRequest]%w", err)
 	}
 
+	log.Info("Sending request to NLP engine...")
 	response, err := c.httpClient.Do(request)
-
 	if err != nil {
 		return fmt.Errorf("[post_nlp_engine] error in http POST request]%w", err)
 	}
 
 	defer response.Body.Close()
-	if response.StatusCode != 200 {
+	if response.StatusCode != 201 {
 		return fmt.Errorf("[post_nlp_engine][was unsuccessful, with the server returning: %v]", response.StatusCode)
 	}
+	log.Info("NLP engine completed successfully.")
 
 	// Read response body into a string
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
 		return fmt.Errorf("[error reading response body]%v", err)
 	}
-	// TODO: remove once done integration testing
-	fmt.Printf("response body: %v", string(body))
+
 	err = os.WriteFile("outputs/new-resources-to-workspace.json", body, 0400)
 	if err != nil {
 		return fmt.Errorf("[error writing new-resources-to-workspace.json]%v", err)
