@@ -87,9 +87,8 @@ func (c *HTTPDragonDropClient) PostNLPEngine(ctx context.Context) error {
 	defer response.Body.Close()
 	if response.StatusCode != 201 {
 		return fmt.Errorf("[post_nlp_engine][was unsuccessful, with the server returning: %v]", response.StatusCode)
-	} else {
-		log.Info("NLP engine completed successfully.")
 	}
+	log.Info("NLP engine completed successfully.")
 
 	// Read response body into a string
 	body, err := io.ReadAll(response.Body)
