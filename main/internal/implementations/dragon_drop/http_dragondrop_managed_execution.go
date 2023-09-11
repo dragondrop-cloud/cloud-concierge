@@ -37,21 +37,25 @@ type PostLogRequestBody struct {
 
 // CheckLoggerAndToken Check that logging is successful, and implicitly check that the OrgToken env variable is valid.
 func (c *HTTPDragonDropClient) CheckLoggerAndToken(ctx context.Context) error {
+	logrus.Debugf("Checking that logger is working and that OrgToken is valid")
 	return c.postLog(ctx, "Successfully started job", true)
 }
 
 // InformStarted Informs to DragonDropAPI when job is Starting
 func (c *HTTPDragonDropClient) InformStarted(ctx context.Context) error {
+	logrus.Debugf("Informing DragonDropAPI that job is starting")
 	return c.postJobStatus(ctx, "Started Job")
 }
 
 // InformComplete Informs to DragonDropAPI when job is Complete
 func (c *HTTPDragonDropClient) InformComplete(ctx context.Context) error {
+	logrus.Debugf("Informing DragonDropAPI that job is complete")
 	return c.postJobStatus(ctx, "Complete")
 }
 
 // InformRepositoryCloned Informs to DragonDropAPI when job cloned the repository
 func (c *HTTPDragonDropClient) InformRepositoryCloned(ctx context.Context) error {
+	logrus.Debugf("Informing DragonDropAPI that repository has been cloned")
 	return c.postJobStatus(ctx, "Pulled Repository from VCS")
 }
 
@@ -62,26 +66,31 @@ func (c *HTTPDragonDropClient) InformCloudEnvironmentScanned(ctx context.Context
 
 // InformCloudActorIdentification Informs to DragonDropAPI when job is identifying the cloud actors
 func (c *HTTPDragonDropClient) InformCloudActorIdentification(ctx context.Context) error {
+	logrus.Debugf("Informing DragonDropAPI that job is identifying cloud actors")
 	return c.postJobStatus(ctx, "Identifying Cloud Actors")
 }
 
 // InformCostEstimation Informs to DragonDropAPI when job is estimating costs
 func (c *HTTPDragonDropClient) InformCostEstimation(ctx context.Context) error {
+	logrus.Debugf("Informing DragonDropAPI that job is estimating costs")
 	return c.postJobStatus(ctx, "Estimating Costs")
 }
 
 // InformSecurityScan Informs to DragonDropAPI when job is assessing cloud security
 func (c *HTTPDragonDropClient) InformSecurityScan(ctx context.Context) error {
+	logrus.Debugf("Informing DragonDropAPI that job is assessing cloud security")
 	return c.postJobStatus(ctx, "Assessing Cloud Security")
 }
 
 // InformCloudResourcesMappedToStateFile Informs to DragonDropAPI when job has mapped the resources to state file
 func (c *HTTPDragonDropClient) InformCloudResourcesMappedToStateFile(ctx context.Context) error {
+	logrus.Debugf("Informing DragonDropAPI that job has mapped the resources to state file")
 	return c.postJobStatus(ctx, "Map of cloud resources to state file")
 }
 
 // InformNoResourcesFound Informs to DragonDropAPI when job is InformNoResourcesFound
 func (c *HTTPDragonDropClient) InformNoResourcesFound(ctx context.Context) error {
+	logrus.Debugf("Informing DragonDropAPI that job is InformNoResourcesFound")
 	return c.postJobStatus(ctx, "No Resources Found")
 }
 
@@ -196,6 +205,7 @@ func (c *HTTPDragonDropClient) postLog(ctx context.Context, log string, isAlert 
 
 // PutJobPullRequestURL sends the job url to the dragondrop API
 func (c *HTTPDragonDropClient) PutJobPullRequestURL(ctx context.Context, prURL string) error {
+	logrus.Debugf("Put job pull request url: %s", prURL)
 	if c.config.JobID == "empty" || c.config.JobID == "" {
 		return nil
 	}
@@ -239,6 +249,8 @@ func (c *HTTPDragonDropClient) PutJobPullRequestURL(ctx context.Context, prURL s
 // AuthorizeManagedJob check with DragonDropAPI for valid auth of the current job, for a job managed
 // by dragondrop.
 func (c *HTTPDragonDropClient) AuthorizeManagedJob(ctx context.Context) (string, error) {
+	logrus.Debugf("Authorize managed job: %s", c.config.JobID)
+
 	// Building authorization request body
 	jsonBody, err := json.Marshal(
 		AuthorizeManagedJobRequestBody{

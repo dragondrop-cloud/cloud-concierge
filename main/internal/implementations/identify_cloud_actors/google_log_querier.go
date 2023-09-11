@@ -10,6 +10,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/dragondrop-cloud/cloud-concierge/main/internal/hclcreate"
 	resourcesCalculator "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/resources_calculator"
 	driftDetector "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_managed_resources_drift_detector/drift_detector"
@@ -106,6 +108,7 @@ func (glc *GoogleLogQuerier) QueryForAllResources(ctx context.Context) (terrafor
 	if err != nil {
 		return resourceActions, fmt.Errorf("[json.MarshalIndent]%v", err)
 	}
+	logrus.Debugf("managedAttributeDifferencesBytes: %s", string(managedAttributeDifferencesBytes))
 
 	err = os.WriteFile("outputs/drift-resources-differences.json", managedAttributeDifferencesBytes, 0400)
 	if err != nil {

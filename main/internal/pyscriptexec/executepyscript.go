@@ -4,11 +4,15 @@ import (
 	"bytes"
 	"fmt"
 	"os/exec"
+
+	"github.com/sirupsen/logrus"
 )
 
 // ExecutePythonScript is a generic function for executing a python script
 // from within the python_scripts directory.
 func (pse *pyScriptExec) ExecutePythonScript(name string, otherArgs []string) error {
+	logrus.Debugf("Executing python script %v", name)
+
 	path := fmt.Sprintf("/python_scripts/%v/main.py", name)
 	args := []string{path}
 	args = append(args, otherArgs...)
@@ -36,6 +40,8 @@ func (pse *pyScriptExec) ExecutePythonScript(name string, otherArgs []string) er
 // RunStateOfCloudReport is a function that wraps ExecutePythonScript to execute
 // python_scripts/state_of_cloud_report/main.py
 func (pse *pyScriptExec) RunStateOfCloudReport(uniqueID string, jobName string) error {
+	logrus.Debugf("Running state of cloud report for job %v", jobName)
+
 	jobArgs := []string{
 		"--job_name", jobName,
 		"--job_unique_id", uniqueID,

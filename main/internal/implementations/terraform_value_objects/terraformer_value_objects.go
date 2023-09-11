@@ -3,6 +3,8 @@ package terraformvalueobjects
 import (
 	"fmt"
 	"strings"
+
+	"github.com/sirupsen/logrus"
 )
 
 var AwsRegions = map[string]bool{
@@ -119,6 +121,8 @@ type CloudRegion string
 type CloudRegionsDecoder []CloudRegion
 
 func (d *CloudRegionsDecoder) Decode(value string) error {
+	logrus.Debugf("Decoding cloud regions: %v", value)
+
 	azureAlreadySet := false
 	awsAlreadySet := false
 	googleAlreadySet := false

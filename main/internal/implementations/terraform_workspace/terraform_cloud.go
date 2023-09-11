@@ -70,6 +70,7 @@ func NewTerraformCloud(ctx context.Context, config TfStackConfig, dragonDrop int
 }
 
 func (c *TerraformCloud) FindTerraformWorkspaces(ctx context.Context) (map[string]string, error) {
+	log.Debugf("[terraform_cloud][FindTerraformWorkspaces] config: %+v", c.config)
 	workspaceToDirectory := make(map[string]string)
 
 	c.dragonDrop.PostLog(ctx, "Searching for terraform workspaces names.")
@@ -104,6 +105,7 @@ func (c *TerraformCloud) searchDirectoryForWorkspaceName(ctx context.Context, di
 // DownloadWorkspaceState downloads from the remote TerraformCloudFile backend the latest state file
 // for each "workspace".
 func (c *TerraformCloud) DownloadWorkspaceState(ctx context.Context, WorkspaceToDirectory map[string]string) error {
+	log.Debugf("[terraform_cloud][DownloadWorkspaceState] config: %+v", c.config)
 	c.dragonDrop.PostLog(ctx, "Beginning download of state files to local memory.")
 
 	for workspaceName := range WorkspaceToDirectory {

@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/hcl/v2/hclwrite"
+	"github.com/sirupsen/logrus"
 
 	terraformValueObjects "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_value_objects"
 )
@@ -115,6 +116,7 @@ func NewHCLCreate(config Config, provider terraformValueObjects.Provider) (HCLCr
 
 // Decode is a custom decoder of the MigrationHistoryDataMap for use with the envconfig library.
 func (mhd *MigrationHistory) Decode(value string) error {
+	logrus.Debugf("MigrationHistory.Decode() called with value: %v", value)
 	var currentMap MigrationHistory
 
 	if value == "" {
@@ -151,6 +153,8 @@ func (mhd *MigrationHistory) Decode(value string) error {
 
 // CreateImports creates either import blocks or tfmigrate configuration to import resources into Terraform state.
 func (h *hclCreate) CreateImports(uniqueID string, workspaceToDirectory map[string]string) error {
+	logrus.Debugf("[hclcreate] CreateImports() called with uniqueID: %v, workspaceToDirectory: %v", uniqueID, workspaceToDirectory)
+
 	if h.config.TerraformVersion >= "1.5.0" {
 		err := h.WriteImportBlocks(uniqueID, workspaceToDirectory)
 		if err != nil {

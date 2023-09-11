@@ -95,6 +95,8 @@ func (j *Job) Authorize(ctx context.Context) error {
 		if err != nil {
 			return fmt.Errorf("[create_job][error authorizing managed job][%w]", err)
 		}
+
+		log.Debugf("Job name: %s", jobName)
 		j.name = jobName
 		j.dragonDrop.PostLog(ctx, "Authorized against billing plan.")
 	} else {
@@ -159,6 +161,7 @@ func (j *Job) Run(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("[run_job][error detecting drifted resources]%w", err)
 	}
+	log.Debugf("Drifted resources identified: %v", driftedResourcesIdentified)
 
 	err = j.dragonDrop.InformCloudActorIdentification(ctx)
 	if err != nil {
