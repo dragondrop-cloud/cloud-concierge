@@ -28,15 +28,15 @@ func (d *IsolatedDragonDrop) InformStarted(_ context.Context) error {
 }
 
 // AuthorizeJob Check with DragonDropAPI for valid auth of the current OSS job
-func (d *IsolatedDragonDrop) AuthorizeJob(_ context.Context) error {
+func (d *IsolatedDragonDrop) AuthorizeJob(_ context.Context) (string, error) {
 	log.Debug("Authorizing job")
-	return nil
+	return "", nil
 }
 
 // AuthorizeManagedJob Check with DragonDropAPI for valid auth of the current managed job
-func (d *IsolatedDragonDrop) AuthorizeManagedJob(_ context.Context) (string, error) {
+func (d *IsolatedDragonDrop) AuthorizeManagedJob(_ context.Context) (string, string, error) {
 	log.Debug("Authorizing job")
-	return "", nil
+	return "", "", nil
 }
 
 // InformComplete Informs to DragonDropAPI when job is Complete

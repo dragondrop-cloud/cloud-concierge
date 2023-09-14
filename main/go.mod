@@ -9,6 +9,7 @@ require (
 	github.com/aws/aws-sdk-go v1.45.1
 	github.com/go-git/go-git/v5 v5.8.1
 	github.com/google/go-github/v45 v45.2.0
+	github.com/google/martian/v3 v3.3.2
 	github.com/hashicorp/hcl/v2 v2.18.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/sirupsen/logrus v1.9.3
