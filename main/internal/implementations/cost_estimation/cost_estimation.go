@@ -20,6 +20,9 @@ type CostEstimatorConfig struct {
 
 	// InfracostAPIToken is the token for accessing Infracost's API.
 	InfracostAPIToken string `required:"true"`
+
+	// InfracostCloudPricingAPI is the API endpoint for an Infracost cloud pricing API.
+	InfracostCloudPricingAPI string
 }
 
 // CostEstimator is a struct that implements interfaces.CostEstimation.
@@ -43,6 +46,11 @@ func NewCostEstimator(config CostEstimatorConfig, provider terraformValueObjects
 	}
 }
 
+// SetInfracostAPIToken sets the Infracost API token.
+func (ce *CostEstimator) SetInfracostAPIToken(token string) {
+	ce.config.InfracostAPIToken = token
+}
+
 // Execute creates structured cost estimation data for the current identified/scanned
 // cloud resources.
 func (ce *CostEstimator) Execute(_ context.Context) error {
@@ -51,11 +59,19 @@ func (ce *CostEstimator) Execute(_ context.Context) error {
 		return nil
 	}
 
+	// Setting Infracost Cloud Pricing API Endpoint
+	endpointArgs := []string{"configure", "set", "pricing_api_endpoint", ce.config.InfracostCloudPricingAPI}
+	_, err := executeCommand("infracost", endpointArgs...)
+	if err != nil {
+		return fmt.Errorf("[failed to set infracost pricing_api_endpoint value]%w", err)
+	}
+	fmt.Println("Done setting Infracost pricing API endpoint.")
+
 	// Setting the Infracost API token
 	authArgs := []string{"configure", "set", "api_key", ce.config.InfracostAPIToken}
-	_, err := executeCommand("infracost", authArgs...)
+	_, err = executeCommand("infracost", authArgs...)
 	if err != nil {
-		return fmt.Errorf("[gcloud_authentication][gcloud auth activate-service-account, failed to authenticate]%w", err)
+		return fmt.Errorf("[failed to set infracost api_key value]%w", err)
 	}
 	fmt.Println("Done setting Infracost API token.")
 

@@ -12,7 +12,7 @@ import (
 )
 
 // AuthorizeJob Checks with DragonDropAPI for valid auth of the current job, for an oss job
-func (c *HTTPDragonDropClient) AuthorizeJob(ctx context.Context) error {
+func (c *HTTPDragonDropClient) AuthorizeJob(ctx context.Context) (string, error) {
 	request, err := c.newRequest(
 		ctx,
 		"GetJobAuthorization",
@@ -22,21 +22,36 @@ func (c *HTTPDragonDropClient) AuthorizeJob(ctx context.Context) error {
 	)
 
 	if err != nil {
-		return fmt.Errorf("[authorize_job][error in newRequest]%w", err)
+		return "", fmt.Errorf("[authorize_job][error in newRequest]%w", err)
 	}
 
 	response, err := c.httpClient.Do(request)
 
 	if err != nil {
-		return fmt.Errorf("[authorize_job] error in http GET request]%w", err)
+		return "", fmt.Errorf("[authorize_job] error in http GET request]%w", err)
 	}
 
 	defer response.Body.Close()
 	if response.StatusCode != 200 {
-		return fmt.Errorf("[authorize_job][was unsuccessful, with the server returning: %v]", response.StatusCode)
+		return "", fmt.Errorf("[authorize_job][was unsuccessful, with the server returning: %v]", response.StatusCode)
 	}
 
-	return nil
+	// Read in response body to bytes array.
+	outputBytes, err := io.ReadAll(response.Body)
+	if err != nil {
+		return "", fmt.Errorf("[authorize_job][error in reading response into bytes array]%w", err)
+	}
+
+	var jobAuthResponse struct {
+		InfracostAPIToken string
+	}
+
+	err = json.Unmarshal(outputBytes, &jobAuthResponse)
+	if err != nil {
+		return "", fmt.Errorf("[authorize_job][unable to unmarshal %v]", string(outputBytes))
+	}
+
+	return jobAuthResponse.InfracostAPIToken, nil
 }
 
 type NLPEnginePostBody struct {

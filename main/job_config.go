@@ -29,7 +29,10 @@ type JobConfig struct {
 	Division terraformValueObjects.Division `required:"true"`
 
 	// InfracostAPIToken is the token for accessing Infracost's API.
-	InfracostAPIToken string `required:"true"`
+	InfracostAPIToken string
+
+	// InfracostCloudPricingAPI is the API endpoint for an Infracost cloud pricing API.
+	InfracostCloudPricingAPI string `default:"https://infracost.dragondrop.cloud"`
 
 	// APIPath is the dragondrop api path to which requests are sent.
 	APIPath string `default:"https://api.dragondrop.cloud"`
@@ -170,8 +173,8 @@ func (c JobConfig) getTerraformImportMigrationGeneratorConfig() terraformImportM
 
 func (c JobConfig) getCostEstimationConfig() costEstimation.CostEstimatorConfig {
 	return costEstimation.CostEstimatorConfig{
-		InfracostAPIToken: c.InfracostAPIToken,
-		CloudCredential:   c.CloudCredential,
+		CloudCredential:          c.CloudCredential,
+		InfracostCloudPricingAPI: c.InfracostCloudPricingAPI,
 	}
 }
 

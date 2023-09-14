@@ -21,3 +21,7 @@ func NewIsolatedCostEstimator() interfaces.CostEstimation {
 func (ice *IsolatedCostEstimator) Execute(_ context.Context) error {
 	return nil
 }
+
+// SetInfracostAPIToken sets the Infracost API token.
+func (ice *IsolatedCostEstimator) SetInfracostAPIToken(_ string) {
+}
