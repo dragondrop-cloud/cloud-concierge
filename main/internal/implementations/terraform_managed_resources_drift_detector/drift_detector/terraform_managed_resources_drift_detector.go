@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/sirupsen/logrus"
+
 	terraformValueObjects "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_value_objects"
 )
 
@@ -36,25 +38,31 @@ func NewManagedResourcesDriftDetector(config ManagedResourceDriftDetectorConfig)
 // by comparing the current state of resources with their expected state.
 // It takes a context as input to support cancellation and timeouts.
 func (m *ManagedResourcesDriftDetector) Execute(_ context.Context, workspaceToDirectory map[string]string) (bool, error) {
+	logrus.Debugf("[drift_detector] workspaceToDirectory: %v", workspaceToDirectory)
+
 	remoteStateResources, err := m.loadAllRemoteStateFiles(workspaceToDirectory)
 	if err != nil {
 		return false, fmt.Errorf("[m.loadAllRemoteStateFiles]%w", err)
 	}
+	logrus.Debugf("[drift_detector] remoteStateResources: %v", remoteStateResources)
 
 	terraformerStateResources, err := m.loadAllTerraformerStateFiles()
 	if err != nil {
 		return false, fmt.Errorf("[m.loadAllTerraformerStateFiles]%w", err)
 	}
+	logrus.Debugf("[drift_detector] terraformerStateResources: %v", terraformerStateResources)
 
 	wereDeleted, err := m.identifyAndWriteDeletedResources(terraformerStateResources, remoteStateResources)
 	if err != nil {
 		return false, fmt.Errorf("[m.identifyAndWriteDeletedResources]%w", err)
 	}
+	logrus.Debugf("[drift_detector] wereDeleted: %v", wereDeleted)
 
 	differencesFound, err := m.identifyAndWriteResourcesDifferences(terraformerStateResources, remoteStateResources)
 	if err != nil {
 		return false, fmt.Errorf("[m.identifyAndWriteResourcesDifferences]%w", err)
 	}
+	logrus.Debugf("[drift_detector] differencesFound: %v", differencesFound)
 
 	return wereDeleted || differencesFound, nil
 }

@@ -4,11 +4,14 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/hcl/v2/hclwrite"
+	"github.com/sirupsen/logrus"
 	"github.com/zclconf/go-cty/cty"
 )
 
 // CreateMainTF outputs a bytes slice which defines a baseline main.tf file.
 func (h *hclCreate) CreateMainTF(providers map[string]string) ([]byte, error) {
+	logrus.Debugf("[hclcreate][write_hcl] CreateMainTF: %v", providers)
+
 	f := hclwrite.NewEmptyFile()
 	rootBody := f.Body()
 

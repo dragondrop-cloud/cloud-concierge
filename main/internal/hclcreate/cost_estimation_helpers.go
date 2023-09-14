@@ -5,6 +5,8 @@ import (
 	"strings"
 
 	"github.com/Jeffail/gabs/v2"
+	"github.com/sirupsen/logrus"
+
 	terraformValueObjects "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_value_objects"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/hashicorp/hcl/v2/hclwrite"
@@ -48,6 +50,7 @@ type costComponent struct {
 // gabsContainerToCostsStruct converts a gabs container to the divisionCosts struct.
 func gabsContainerToCostsStruct(c *gabs.Container) (costs, error) {
 	divCosts := costs{}
+	logrus.Debugf("[hclcreate][cost_estimation_helper] gabsContainerToCostsStruct: %v", c.String())
 
 	for _, cost := range c.Children() {
 		resourceName := cost.Search("resource_name").Data().(string)
@@ -105,6 +108,8 @@ func (h *hclCreate) generateHCLCloudCostComment(
 	resourceType string, resourceName string,
 	costEstimates costs,
 ) hclwrite.Tokens {
+	logrus.Debugf("[hclcreate][cost_estimation_helper] generateHCLCloudCostComment: %v, %v, %v", resourceType, resourceName, costEstimates)
+
 	completeResourceName := fmt.Sprintf("%v.%v", resourceType, resourceName)
 	cloudCostStatement := ""
 	cloudCostCurrentResource, ok := costEstimates[terraformValueObjects.ResourceName(completeResourceName)]

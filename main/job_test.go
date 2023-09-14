@@ -30,6 +30,7 @@ func TestAuthorize_Success(t *testing.T) {
 	dragonDrop.On("InformStarted", ctx).Return(nil)
 	dragonDrop.On("AuthorizeJob", ctx).Return("xyz", nil)
 	dragonDrop.On("AuthorizeManagedJob", ctx).Return("xyz", "xyz", nil)
+	costEstimator.On("SetInfracostAPIToken", "xyz").Return()
 
 	job := Job{
 		costEstimator:                     costEstimator,
@@ -203,6 +204,8 @@ func createValidJob(t *testing.T) (*JobDependenciesMock, *Job) {
 	dragonDrop.On("InformStarted", ctx).Return(nil)
 	dragonDrop.On("AuthorizeJob", ctx).Return("xyz", nil)
 	dragonDrop.On("InformRepositoryCloned", ctx).Return(nil)
+	costEstimator.On("SetInfracostAPIToken", "xyz").Return()
+
 	job := &Job{
 		costEstimator:                     costEstimator,
 		dragonDrop:                        dragonDrop,

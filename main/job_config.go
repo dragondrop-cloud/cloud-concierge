@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/dragondrop-cloud/cloud-concierge/main/internal/hclcreate"
 	costEstimation "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/cost_estimation"
 	dragonDrop "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/dragon_drop"
@@ -27,9 +29,6 @@ type JobConfig struct {
 
 	// Division is the name of a cloud division. In AWS this is an account, in GCP this is a project name, and in Azure this is a subscription.
 	Division terraformValueObjects.Division `required:"true"`
-
-	// InfracostAPIToken is the token for accessing Infracost's API.
-	InfracostAPIToken string
 
 	// InfracostCloudPricingAPI is the API endpoint for an Infracost cloud pricing API.
 	InfracostCloudPricingAPI string `default:"https://infracost.dragondrop.cloud"`
@@ -98,6 +97,8 @@ type JobConfig struct {
 
 // validateJobConfig validates the JobConfig struct with the values as expected.
 func validateJobConfig(config JobConfig) error {
+	logrus.Debugf("Validating job config: %+v", config)
+
 	if strings.ToLower(config.StateBackend) == "terraformcloud" {
 		if config.TerraformCloudOrganization == "" {
 			return fmt.Errorf("[terraform cloud organization is required when using terraform cloud as state backend]")

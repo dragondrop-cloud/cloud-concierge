@@ -152,6 +152,7 @@ func (alc *AWSLogQuerier) QueryForAllResources(ctx context.Context) (terraformVa
 	if err != nil {
 		return resourceActions, fmt.Errorf("[os.WriteFile]%v", err)
 	}
+	log.Debugf("[aws_log_querier][QueryForAllResources] Wrote drift-resources-differences.json file")
 
 	// Calculating cloud actors for new resource drift
 	for id, resource := range alc.newResources {
@@ -204,6 +205,7 @@ func (alc *AWSLogQuerier) cloudTrailEventHistorySearch(_ context.Context, resour
 	if err != nil {
 		return terraformValueObjects.ResourceActions{}, fmt.Errorf("[executeCommandReturnStdOut]%v", err)
 	}
+	log.Debugf("[aws_log_querier][cloudTrailEventHistorySearch] result: %v", result)
 
 	return alc.ExtractDataFromResourceResult([]byte(result), resourceType, isNewToTerraform)
 }
@@ -211,6 +213,7 @@ func (alc *AWSLogQuerier) cloudTrailEventHistorySearch(_ context.Context, resour
 // ExtractDataFromResourceResult parses the log response from the provider API
 // and extracts needed data (namely who made the most recent relevant change to the resource).
 func (alc *AWSLogQuerier) ExtractDataFromResourceResult(resourceResult []byte, resourceType string, isNewToTerraform bool) (terraformValueObjects.ResourceActions, error) {
+	log.Debugf("[aws_log_querier][ExtractDataFromResourceResult] resourceResult: %v", string(resourceResult))
 	resourceActions := terraformValueObjects.ResourceActions{}
 
 	var cloudTrailEvents CloudTrailEvents
@@ -313,6 +316,7 @@ func (alc *AWSLogQuerier) setAWSCredentials(credential terraformValueObjects.Cre
 	if err != nil {
 		return fmt.Errorf("[json.Unmarshal] %w", err)
 	}
+	log.Debugf("setting AWS credentials for account: %+v", envVars)
 
 	err = os.Setenv("AWS_ACCESS_KEY_ID", envVars.AWSAccessKeyID)
 	if err != nil {

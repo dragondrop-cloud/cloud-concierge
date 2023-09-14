@@ -7,6 +7,7 @@ Welcome to the contributing guide for Cloud Concierge!
 - [Coding conventions](#coding-conventions)
 - [Pull request](#pull-requests)
 - [Release Process](#release-process)
+- [Log Level](#log-level)
 - [Code of Conduct](#code-of-conduct)
 - [License](#license)
 
@@ -46,6 +47,11 @@ We will review your Pull Request as soon as possible (step 0. above will help ex
 - After unit test, linter and code review requirements are met, pull requests are merged to the default `dev` branch.
 - We tag and deploy a beta release image off of the updated dev branch, and run additional end-to-end tests on this branch to ensure new features do not break existing functionality.
 - Once validated, we merge the `dev` branch to the `prod` branch, and tag and deploy a release image off of the `prod` branch to [DockerHub](https://hub.docker.com/r/dragondropcloud/cloud-concierge). These images should be used in production.
+
+## Log Level
+
+We use log levels to control the verbosity of the logs. The default log level is `info`. To change the log level, 
+set the `CLOUDCONCIERGE_LOG_LEVEL` environment variable to one of the following values: `debug`, `info`.
 
 ## Code of Conduct
 We expect all contributors to follow our [Code of Conduct](https://www.contributor-covenant.org/version/2/1/code_of_conduct/) when participating in our community. Please review prior to contributing.

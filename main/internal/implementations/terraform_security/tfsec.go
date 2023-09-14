@@ -9,6 +9,8 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/sirupsen/logrus"
+
 	driftDetector "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_managed_resources_drift_detector/drift_detector"
 	terraformValueObjects "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_value_objects"
 )
@@ -64,20 +66,25 @@ func NewTFSec(provider terraformValueObjects.Provider) *TFSec {
 // ExecuteScan is called from the main job flow to execute the tfsec command and save the output
 // to show to the user in the PR
 func (s *TFSec) ExecuteScan(_ context.Context) error {
+	logrus.Debugf("[tfsec][execute_scan][provider: %s]", s.provider)
+
 	contentResults, err := s.runTFSec()
 	if err != nil {
 		return fmt.Errorf("[tfsec][execute_scan][error running tfsec command][%v]", err)
 	}
+	logrus.Debugf("[tfsec][execute_scan][tfsec results: %s]", string(contentResults))
 
 	parsedContentResults, err := s.parseContentResults(contentResults)
 	if err != nil {
 		return fmt.Errorf("[tfsec][execute_scan][error parsing tfsec results][%v]", err)
 	}
+	logrus.Debugf("[tfsec][execute_scan][tfsec results parsed: %v]", parsedContentResults)
 
 	resultsWithID, err := s.addIDToResources(*parsedContentResults)
 	if err != nil {
 		return fmt.Errorf("[tfsec][execute_scan][error adding the id to the tfsec results][%v]", err)
 	}
+	logrus.Debugf("[tfsec][execute_scan][tfsec results with id: %v]", resultsWithID)
 
 	err = s.writeResultsToMappingFile(*resultsWithID)
 	if err != nil {

@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"cloud.google.com/go/storage"
+	"github.com/sirupsen/logrus"
 	"google.golang.org/api/option"
 
 	"github.com/dragondrop-cloud/cloud-concierge/main/internal/interfaces"
@@ -26,6 +27,8 @@ type GCSBackend struct {
 
 // FindTerraformWorkspaces returns a map of Terraform workspace names to their respective directories.
 func (b *GCSBackend) FindTerraformWorkspaces(ctx context.Context) (map[string]string, error) {
+	logrus.Debugf("[GCS Terraform workspace] Finding Terraform workspaces in %v", b.config.WorkspaceDirectories)
+
 	workspaces, workspaceToBackendDetails, err := findTerraformWorkspaces(ctx, b.dragonDrop, b.config.WorkspaceDirectories, "gcs")
 	if err != nil {
 		return nil, err
@@ -44,6 +47,7 @@ func NewGCSBackend(ctx context.Context, config TfStackConfig, dragonDrop interfa
 
 // DownloadWorkspaceState downloads from the remote Azure Blob Storage backend the latest state file
 func (b *GCSBackend) DownloadWorkspaceState(ctx context.Context, workspaceToDirectory map[string]string) error {
+	logrus.Debugf("[GCS Terraform workspace] Downloading workspace state files for %v", workspaceToDirectory)
 	b.dragonDrop.PostLog(ctx, "Beginning download of state files to local memory.")
 
 	for workspaceName := range workspaceToDirectory {

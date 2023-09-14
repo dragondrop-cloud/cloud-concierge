@@ -5,12 +5,15 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	log "github.com/sirupsen/logrus"
 )
 
 func main() {
+	configureLogLevel()
+
 	log.Info("Entrypoint on go binary")
 	ctx := context.Background()
 	ctx, cancel := context.WithTimeout(ctx, 15*time.Minute)
@@ -42,6 +45,21 @@ func main() {
 	}
 
 	log.Info("Done executing go binary")
+}
+
+func configureLogLevel() {
+	logLevel := "info"
+	envLogLevel := os.Getenv("CLOUDCONCIERGE_LOG_LEVEL")
+	if strings.ToLower(envLogLevel) == "debug" {
+		logLevel = "debug"
+	}
+
+	level, err := log.ParseLevel(logLevel)
+	if err != nil {
+		log.SetLevel(log.InfoLevel)
+	} else {
+		log.SetLevel(level)
+	}
 }
 
 // RemoveSubDirectories removes all subdirectories within the container's volume prior to container startup

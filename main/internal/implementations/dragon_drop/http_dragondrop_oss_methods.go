@@ -13,6 +13,7 @@ import (
 
 // AuthorizeJob Checks with DragonDropAPI for valid auth of the current job, for an oss job
 func (c *HTTPDragonDropClient) AuthorizeJob(ctx context.Context) (string, error) {
+	log.Debugf("[authorize_job] org token: %s, job token: %s", c.config.OrgToken, c.config.JobID)
 	request, err := c.newRequest(
 		ctx,
 		"GetJobAuthorization",

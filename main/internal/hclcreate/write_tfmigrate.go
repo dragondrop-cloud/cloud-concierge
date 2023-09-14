@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/hcl/v2/hclwrite"
+	"github.com/sirupsen/logrus"
 	"github.com/zclconf/go-cty/cty"
 )
 
@@ -18,6 +19,7 @@ func (h *hclCreate) CreateTFMigrate(uniqueID string, workspaceToDirectory map[st
 	if err != nil {
 		return fmt.Errorf("[os.ReadFile] outputs/resources-to-import-location.json error: %v", err)
 	}
+	logrus.Debugf("[hclcreate][write_import_blocks] resourceToImportLoc: %v", string(resourceToImportLoc))
 
 	resourceToImportDataPair := ResourceToImportDataPair{}
 	err = json.Unmarshal(resourceToImportLoc, &resourceToImportDataPair)
@@ -30,6 +32,7 @@ func (h *hclCreate) CreateTFMigrate(uniqueID string, workspaceToDirectory map[st
 	if err != nil {
 		return fmt.Errorf("[os.ReadFile] outputs/new-resources-to-workspace.json error: %v", err)
 	}
+	logrus.Debugf("[hclcreate][write_import_blocks] resourceToWorkspace: %v", string(resourceToWorkspace))
 
 	newResourceToWorkspace := NewResourceToWorkspace{}
 	err = json.Unmarshal(resourceToWorkspace, &newResourceToWorkspace)
@@ -58,6 +61,8 @@ func (h *hclCreate) CreateTFMigrate(uniqueID string, workspaceToDirectory map[st
 // CreateTFMigrateConfiguration saves HCL which defines TFMigrate configuration.
 func (h *hclCreate) CreateTFMigrateConfiguration(workspaceToDirectory map[string]string) error {
 	for workspace, directory := range workspaceToDirectory {
+		logrus.Debugf("[hclcreate][write_import_blocks] workspace: %v", workspace)
+
 		err := os.MkdirAll(fmt.Sprintf("repo%vcloud-concierge/tfmigrate", directory), 0400)
 		if err != nil {
 			return fmt.Errorf("[os.MkdirAll] cloud-concierge/tfmigrate within %v: %v", directory, err)
@@ -204,6 +209,7 @@ func (h *hclCreate) generateImportStatement(
 	resourceImportData := resourceToImportDataPair[fmt.Sprintf("%v.%v", resourceIDStruct.resourceType, resourceIDStruct.resourceName)]
 
 	importText := h.generateImportStatementText(resourceImportData.RemoteCloudReference, resourceIDStruct)
+	logrus.Debugf("Import statement for %v: %v", resource, importText)
 	return importText, nil
 }
 

@@ -7,6 +7,8 @@ import (
 	"os"
 
 	"github.com/Jeffail/gabs/v2"
+	"github.com/sirupsen/logrus"
+
 	terraformValueObjects "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_value_objects"
 	"github.com/dragondrop-cloud/cloud-concierge/main/internal/interfaces"
 )
@@ -41,12 +43,14 @@ func NewTerraformImportMigrationGenerator(ctx context.Context, config Config, dr
 
 // Execute generates terraform state migration statements for identified resources.
 func (i *TerraformImportMigrationGenerator) Execute(ctx context.Context) error {
+	logrus.Debugf("[terraform_import_migration_generator][Execute]")
 	i.dragonDrop.PostLog(ctx, "Beginning to map resources to import location.")
 
 	resourceImports, err := i.GenericResourcesToImportLocation(i.provider)
 	if err != nil {
 		return fmt.Errorf("[terraform_import_migration_generator][error in GenericResourcesToImportLocation]%w", err)
 	}
+	logrus.Debugf("[terraform_import_migration_generator][Execute] resourceImports: %v", resourceImports)
 
 	err = i.dragonDrop.InformCloudResourcesMappedToStateFile(ctx)
 	if err != nil {
@@ -57,6 +61,7 @@ func (i *TerraformImportMigrationGenerator) Execute(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("[terraform_import_migration_generator][error converting Provider to resource import]%w", err)
 	}
+	logrus.Debugf("[terraform_import_migration_generator][Execute] resourceImportMapJSON: %v", resourceImportMapJSON)
 
 	err = i.writeResourcesMap(resourceImportMapJSON)
 	if err != nil {

@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/sirupsen/logrus"
 
 	terraformValueObjects "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_value_objects"
 	"github.com/dragondrop-cloud/cloud-concierge/main/internal/interfaces"
@@ -44,6 +45,7 @@ func NewS3Backend(ctx context.Context, config TfStackConfig, dragonDrop interfac
 
 // FindTerraformWorkspaces returns a map of TerraformCloudFile workspace names to their respective directories.
 func (s *S3Backend) FindTerraformWorkspaces(ctx context.Context) (map[string]string, error) {
+	logrus.Debugf("[S3 Terraform workspace] Finding Terraform workspaces in %v", s.config.WorkspaceDirectories)
 	workspaces, workspaceToBackendDetails, err := findTerraformWorkspaces(ctx, s.dragonDrop, s.config.WorkspaceDirectories, "s3")
 	if err != nil {
 		return nil, err
@@ -56,6 +58,7 @@ func (s *S3Backend) FindTerraformWorkspaces(ctx context.Context) (map[string]str
 // DownloadWorkspaceState downloads from the remote S3 backend the latest state file
 // for each "workspace".
 func (s *S3Backend) DownloadWorkspaceState(ctx context.Context, workspaceToDirectory map[string]string) error {
+	logrus.Debugf("[S3 Terraform workspace] Downloading workspace state files for %v", workspaceToDirectory)
 	s.dragonDrop.PostLog(ctx, "Beginning download of state files to local memory.")
 
 	for workspaceName := range workspaceToDirectory {
@@ -78,6 +81,7 @@ type AWSCredentials struct {
 
 // configureS3Client configures the S3 client to use the correct credentials that have read-access for the specified storage bucket.
 func (s *S3Backend) configureS3Client(credential terraformValueObjects.Credential) error {
+	logrus.Debugf("[S3 Terraform workspace] Configuring S3 client with credentials: %v", credential)
 	awsCredentials := new(AWSCredentials)
 	err := json.Unmarshal([]byte(credential), &awsCredentials)
 	if err != nil {
