@@ -2,6 +2,7 @@ package markdowncreation
 
 import (
 	"fmt"
+	"sort"
 
 	"github.com/atsushinee/go-markdown-generator/doc"
 )
@@ -25,11 +26,22 @@ func (m *MarkdownCreator) setSecurityRiskData(report *doc.MarkDownDoc) {
 	}
 
 	securityRisksByID := make(map[string][]SecurityRisk)
+	securityRiskIDs := make([]string, 0)
 	for _, securityRisk := range m.securityScan {
 		securityRisksByID[securityRisk.ID] = append(securityRisksByID[securityRisk.ID], securityRisk)
+		securityRiskIDs = append(securityRiskIDs, securityRisk.ID)
 	}
 
-	for _, securityRisk := range securityRisksByID {
+	sort.Strings(securityRiskIDs)
+	securityRiskIDSet := make(map[string]bool)
+
+	for _, securityRiskID := range securityRiskIDs {
+		if securityRiskIDSet[securityRiskID] {
+			continue
+		}
+		securityRisk := securityRisksByID[securityRiskID]
+		securityRiskIDSet[securityRiskID] = true
+
 		report.Write(fmt.Sprintf("**Instance ID**: `%s`", securityRisk[0].ID)).Writeln()
 
 		report.Write("|Rule Description")
