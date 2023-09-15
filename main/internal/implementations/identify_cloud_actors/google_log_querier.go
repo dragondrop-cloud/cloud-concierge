@@ -99,7 +99,6 @@ func (glc *GoogleLogQuerier) QueryForAllResources(ctx context.Context) (terrafor
 		currentResourceName := uniqueDriftedResourceToName(driftedResource)
 		resourceActions[currentResourceName] = &currentResourceAction
 	}
-	logrus.Debugf("resourceActions: %s", resourceActions)
 
 	glc.UpdateManagedDriftAttributeDifferences(resourceActions)
 
@@ -169,7 +168,6 @@ func (glc *GoogleLogQuerier) adminLogSearch(
 	if err != nil {
 		return terraformValueObjects.ResourceActions{}, fmt.Errorf("[glc.ExtractDataFromResourceResult]%w", err)
 	}
-	logrus.Debugf("received resourceActions for %s: %s", resourceID, resourceActions)
 
 	return resourceActions, nil
 }
