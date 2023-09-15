@@ -33,7 +33,7 @@ func TestMarkdownCreator_setDeletedResourcesData(t *testing.T) {
 	markdownCreator.setDeletedResourcesData(report)
 
 	// Then
-	title := "# Drifted Resources Deleted\n\n"
+	title := "# Deleted Resources\n\n"
 
 	tableHeaders := "|Type|Name|Module|State File|\n| :---: | :---: | :---: | :---: |\n"
 	tableContent := "|aws_instance|example|module.example|terraform.tfstate|\n|aws_instance|example2|module.example2|terraform.tfstate|\n\n"

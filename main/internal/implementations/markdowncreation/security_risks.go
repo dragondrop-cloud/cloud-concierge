@@ -42,9 +42,9 @@ func (m *MarkdownCreator) setSecurityRiskData(report *doc.MarkDownDoc) {
 			report.Write(fmt.Sprintf("|%s", risk.RuleDescription))
 			report.Write(fmt.Sprintf("|%s", risk.Severity))
 			report.Write(fmt.Sprintf("|%s", risk.Resolution))
-			report.Write(fmt.Sprintf("|[Rule](%s), [Tf Doc](%s)|", risk.Links[0], risk.Links[1]))
+			report.Write(fmt.Sprintf("|[Rule](%s), [Tf Doc](%s)|", risk.Links[0], risk.Links[1])).Writeln()
 		}
 
-		report.Writeln().Writeln()
+		report.Writeln()
 	}
 }

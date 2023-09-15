@@ -8,7 +8,7 @@ import (
 
 // setDeletedResourcesData sets the deleted resources data in the markdown report
 func (m *MarkdownCreator) setDeletedResourcesData(report *doc.MarkDownDoc) {
-	report.Write("# Drifted Resources Deleted").Writeln().Writeln()
+	report.Write("# Deleted Resources").Writeln().Writeln()
 
 	if len(m.deletedResources) == 0 {
 		report.Write("No deleted resources found!").Writeln()
