@@ -100,7 +100,6 @@ func getScanner(config TerraformerExecutorConfig, cliConfig Config, provider ter
 // Execute runs the workflow needed to capture the current state of an
 // external cloud environment via the terraformer package.
 func (e *TerraformerExecutor) Execute(ctx context.Context) error {
-	log.Debugf("[TerraformerExecutor][Execute] config: %v", e.config)
 	e.dragonDrop.PostLog(ctx, "Beginning to make main.tf file.")
 
 	err := e.makeProviderVersionFile()

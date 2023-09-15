@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/hashicorp/hcl/v2/hclwrite"
-	"github.com/sirupsen/logrus"
 	"github.com/zclconf/go-cty/cty"
 )
 
@@ -19,7 +18,6 @@ func (h *hclCreate) WriteImportBlocks(uniqueID string, workspaceToDirectory map[
 	if err != nil {
 		return fmt.Errorf("[os.ReadFile] outputs/resources-to-import-location.json error: %v", err)
 	}
-	logrus.Debugf("[hclcreate][write_import_blocks] resourceToImportLoc: %v", string(resourceToImportLoc))
 
 	resourcetoImportDataPair := ResourceToImportDataPair{}
 	err = json.Unmarshal(resourceToImportLoc, &resourcetoImportDataPair)
@@ -32,7 +30,6 @@ func (h *hclCreate) WriteImportBlocks(uniqueID string, workspaceToDirectory map[
 	if err != nil {
 		return fmt.Errorf("[os.ReadFile] outputs/new-resources-to-workspace.json error: %v", err)
 	}
-	logrus.Debugf("[hclcreate][write_import_blocks] resourceToWorkspace: %v", string(resourceToWorkspace))
 
 	newResourceToWorkspace := NewResourceToWorkspace{}
 	err = json.Unmarshal(resourceToWorkspace, &newResourceToWorkspace)
@@ -41,7 +38,6 @@ func (h *hclCreate) WriteImportBlocks(uniqueID string, workspaceToDirectory map[
 	}
 
 	workspacesWithMigrations := h.setOfWorkspacesWithMigrationsStruct(newResourceToWorkspace)
-	logrus.Debugf("[hclcreate][write_import_blocks] workspacesWithMigrations: %v", workspacesWithMigrations)
 
 	for workspace, directory := range workspaceToDirectory {
 		if _, ok := workspacesWithMigrations[workspace]; !ok {

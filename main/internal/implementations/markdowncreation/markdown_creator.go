@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/atsushinee/go-markdown-generator/doc"
-	log "github.com/sirupsen/logrus"
 )
 
 // OutputPath is the path where the markdown file will be created
@@ -105,7 +104,6 @@ func (m *MarkdownCreator) CreateMarkdownFile(jobName string) error {
 func (m *MarkdownCreator) initData() error {
 	filePathRoot := "outputs/"
 	newResourcesBytes, err := readFile(filePathRoot + "new-resources-to-documents.json")
-	log.Debugf("newResourcesBytes: %s", string(newResourcesBytes))
 
 	if err != nil {
 		return fmt.Errorf("[markdown_creator][init_data] error reading new resources file: %w", err)
@@ -117,7 +115,6 @@ func (m *MarkdownCreator) initData() error {
 	}
 
 	resourcesToCloudActionsBytes, err := readFile(filePathRoot + "resources-to-cloud-actions.json")
-	log.Debugf("resourcesToCloudActionsBytes: %s", string(resourcesToCloudActionsBytes))
 
 	if err != nil {
 		return fmt.Errorf("[markdown_creator][init_data] error reading resources to cloud actions file: %w", err)
@@ -129,7 +126,6 @@ func (m *MarkdownCreator) initData() error {
 	}
 
 	costEstimatesBytes, err := readFile(filePathRoot + "cost-estimates.json")
-	log.Debugf("costEstimatesBytes: %s", string(costEstimatesBytes))
 
 	if err != nil {
 		return fmt.Errorf("[markdown_creator][init_data] error reading cost estimates file: %w", err)
@@ -141,7 +137,6 @@ func (m *MarkdownCreator) initData() error {
 	}
 
 	securityScanBytes, err := readFile(filePathRoot + "security-scan.json")
-	log.Debugf("securityScanBytes: %s", string(securityScanBytes))
 
 	if err != nil {
 		return fmt.Errorf("[markdown_creator][init_data] error reading security scan file: %w", err)
@@ -153,7 +148,6 @@ func (m *MarkdownCreator) initData() error {
 	}
 
 	managedDriftBytes, err := readFile(filePathRoot + "drift-resources-differences.json")
-	log.Debugf("managedDriftBytes: %s", string(managedDriftBytes))
 
 	if err != nil {
 		return fmt.Errorf("[markdown_creator][init_data] error reading drift resources differences file: %w", err)
@@ -165,7 +159,6 @@ func (m *MarkdownCreator) initData() error {
 	}
 
 	deletedResourcesBytes, err := readFile(filePathRoot + "drift-resources-deleted.json")
-	log.Debugf("deletedResourcesBytes: %s", string(deletedResourcesBytes))
 
 	if err != nil {
 		return fmt.Errorf("[markdown_creator][init_data] error reading drift resources deleted file: %w", err)

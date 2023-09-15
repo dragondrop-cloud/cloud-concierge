@@ -19,7 +19,6 @@ func (h *hclCreate) CreateTFMigrate(uniqueID string, workspaceToDirectory map[st
 	if err != nil {
 		return fmt.Errorf("[os.ReadFile] outputs/resources-to-import-location.json error: %v", err)
 	}
-	logrus.Debugf("[hclcreate][write_import_blocks] resourceToImportLoc: %v", string(resourceToImportLoc))
 
 	resourceToImportDataPair := ResourceToImportDataPair{}
 	err = json.Unmarshal(resourceToImportLoc, &resourceToImportDataPair)
@@ -32,7 +31,6 @@ func (h *hclCreate) CreateTFMigrate(uniqueID string, workspaceToDirectory map[st
 	if err != nil {
 		return fmt.Errorf("[os.ReadFile] outputs/new-resources-to-workspace.json error: %v", err)
 	}
-	logrus.Debugf("[hclcreate][write_import_blocks] resourceToWorkspace: %v", string(resourceToWorkspace))
 
 	newResourceToWorkspace := NewResourceToWorkspace{}
 	err = json.Unmarshal(resourceToWorkspace, &newResourceToWorkspace)

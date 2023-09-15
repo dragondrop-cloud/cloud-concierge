@@ -16,7 +16,6 @@ func (i *TerraformImportMigrationGenerator) GenericResourcesToImportLocation(pro
 	if err != nil {
 		return nil, err
 	}
-	log.Debugf("[terraform_import_migration_generator][GenericResourcesToImportLocation] stateFileContent: %v", string(stateFileContent))
 
 	return i.mapResourcesToImportLocation(provider, stateFileContent)
 }
