@@ -100,7 +100,6 @@ func (ce *CostEstimator) WriteCostEstimates() error {
 	if err != nil {
 		return fmt.Errorf("[os.ReadFile]%v", err)
 	}
-	logrus.Debugf("Costs: %s", costs)
 
 	err = os.WriteFile("outputs/cost-estimates.json", costs, 0400)
 	if err != nil {

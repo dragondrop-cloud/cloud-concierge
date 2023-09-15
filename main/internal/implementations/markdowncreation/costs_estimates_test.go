@@ -20,6 +20,7 @@ func TestMarkdownCreator_setCostsEstimatesData_ManagedResources(t *testing.T) {
 		{
 			Price:        "5.84",
 			ResourceName: "aws_instance.example2",
+			IsUsageBased: true,
 		},
 	}
 	markdownCreator.newResources = map[string]string{
@@ -34,7 +35,7 @@ func TestMarkdownCreator_setCostsEstimatesData_ManagedResources(t *testing.T) {
 	title := "# Calculable Cloud Costs (Monthly)\n\n"
 
 	tableHeaders := "|Uncontrolled Resources Cost|Terraform Controlled Resources Cost|\n| :---: | :---: |\n"
-	tableContent := "|$0.00|$22.26|\n\n"
+	tableContent := "|$0.00|$16.42|\n\n"
 
 	expectedMarkdown := fmt.Sprintf("%s%s%s", title, tableHeaders, tableContent)
 	assert.Equal(t, expectedMarkdown, report.String())
@@ -52,6 +53,7 @@ func TestMarkdownCreator_setCostsEstimatesData_NewResources(t *testing.T) {
 		{
 			Price:        "5.84",
 			ResourceName: "aws_instance.example2",
+			IsUsageBased: false,
 		},
 	}
 	markdownCreator.newResources = map[string]string{

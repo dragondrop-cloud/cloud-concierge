@@ -163,8 +163,6 @@ type GCSBackendBlock struct {
 
 // extractBackendDetails extracts the backend details from a .tf file if it exists.
 func extractBackendDetails(_ context.Context, fileContent []byte, backendType string) (interface{}, error) {
-	log.Debugf("extracting backend details for %s: %s", backendType, string(fileContent))
-
 	switch backendType {
 	case "s3":
 		return extractAttributesFromBackendDetails(fileContent, "s3", []string{"bucket", "key", "region"},

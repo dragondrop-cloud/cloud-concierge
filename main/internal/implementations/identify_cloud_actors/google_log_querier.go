@@ -8,14 +8,13 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"strings"
-
-	"github.com/sirupsen/logrus"
 
 	"github.com/dragondrop-cloud/cloud-concierge/main/internal/hclcreate"
 	resourcesCalculator "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/resources_calculator"
 	driftDetector "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_managed_resources_drift_detector/drift_detector"
 	terraformValueObjects "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_value_objects"
+	"github.com/sirupsen/logrus"
+	"golang.org/x/oauth2/google"
 )
 
 // GoogleLogQuerier implements the LogQuerier interface for Google Cloud.
@@ -85,9 +84,9 @@ func (glc *GoogleLogQuerier) QueryForAllResources(ctx context.Context) (terrafor
 		return resourceActions, fmt.Errorf("[glc.loadUpstreamDataToGoogleLogQuerier]%v", err)
 	}
 
-	err = glc.gcloudAuthToken()
+	err = glc.getAuthToken()
 	if err != nil {
-		return resourceActions, fmt.Errorf("[glc.gcloudAuthToken]%v", err)
+		return resourceActions, fmt.Errorf("[glc.getAuthToken]%v", err)
 	}
 
 	// Calculating cloud actors for managed resource drift
@@ -143,6 +142,9 @@ func (glc *GoogleLogQuerier) UpdateManagedDriftAttributeDifferences(
 
 		if _, ok := divisionResourceActions[currentDifferenceResourceName]; ok {
 			resourceAction := divisionResourceActions[currentDifferenceResourceName]
+			if resourceAction.Modifier == nil {
+				continue
+			}
 
 			attributeDifference.RecentActor = resourceAction.Modifier.Actor
 			attributeDifference.RecentActionTimestamp = resourceAction.Modifier.Timestamp
@@ -166,6 +168,7 @@ func (glc *GoogleLogQuerier) adminLogSearch(
 	if err != nil {
 		return terraformValueObjects.ResourceActions{}, fmt.Errorf("[glc.ExtractDataFromResourceResult]%w", err)
 	}
+
 	return resourceActions, nil
 }
 
@@ -325,20 +328,23 @@ func (glc *GoogleLogQuerier) ExtractDataFromResourceResult(resourceResult []byte
 	return resourceActions, nil
 }
 
-// gcloudAuthToken gets an authentication token for REST API requests.
-func (glc *GoogleLogQuerier) gcloudAuthToken() error {
+// getAuthToken gets an authentication token for REST API requests.
+func (glc *GoogleLogQuerier) getAuthToken() error {
 	err := os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", "current_cloud/credentials/google.json")
 	if err != nil {
 		return fmt.Errorf("[os.Setenv][error in setting GOOGLE_APPLICATION_CREDENTIALS]%w", err)
 	}
 
-	printAccessTokenArgs := []string{"auth", "application-default", "print-access-token"}
-	token, err := executeCommand("gcloud", printAccessTokenArgs...)
+	tokenSource, err := google.DefaultTokenSource(context.Background())
 	if err != nil {
-		return fmt.Errorf("[executeCommand][gcloud auth print-access-token]%w", err)
+		return fmt.Errorf("[google.DefaultTokenSource]%w", err)
 	}
 
-	glc.authToken = strings.Replace(token, "\n", "", -1)
+	token, err := tokenSource.Token()
+	if err != nil {
+		return fmt.Errorf("[tokenSource.Token()]%w", err)
+	}
 
+	glc.authToken = token.AccessToken
 	return nil
 }

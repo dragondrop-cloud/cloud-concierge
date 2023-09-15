@@ -3,8 +3,6 @@ package driftdetector
 import (
 	"encoding/json"
 	"fmt"
-
-	"github.com/sirupsen/logrus"
 )
 
 // StateFileName encapsulates the state file name string
@@ -19,7 +17,6 @@ func ParseTerraformerStateFile(stateFileContent []byte) (TerraformerStateFile, e
 	if err := json.Unmarshal(stateFileContent, &stateFile); err != nil {
 		return TerraformerStateFile{}, fmt.Errorf("failed to parse state file: %v", err)
 	}
-	logrus.Debugf("[drift_detector] state file: %v", stateFile)
 
 	for _, resource := range stateFile.Resources {
 		if resource.Module == "" {

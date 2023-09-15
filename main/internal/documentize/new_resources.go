@@ -6,7 +6,6 @@ import (
 	"strconv"
 
 	"github.com/Jeffail/gabs/v2"
-	"github.com/sirupsen/logrus"
 )
 
 // ResourceData contains data on a Terraform resource type and the id for that resource
@@ -183,7 +182,6 @@ func extractResourceIdsFromWorkspaceState(tfStateParsed *gabs.Container) (map[Re
 // NewResourceDocuments creates a map between new resources and a document extracted from that
 // resource definition.
 func (d *documentize) NewResourceDocuments(resourceSet map[ResourceData]bool) (map[ResourceName]string, error) {
-	logrus.Debugf("[documentize] NewResourceDocuments: %+v", resourceSet)
 	outputMap := map[ResourceName]string{}
 
 	tfrStateBytes, err := os.ReadFile("current_cloud/terraform.tfstate")
@@ -198,7 +196,6 @@ func (d *documentize) NewResourceDocuments(resourceSet map[ResourceData]bool) (m
 
 	for resource := range resourceSet {
 		resourceName, resourceDoc, err := d.pullResourceDocumentFromDiv(tfrStateParsed, resource)
-		logrus.Debugf("[documentize] NewResourceDocuments: resourceName: %v, resourceDoc: %v", resourceName, resourceDoc)
 
 		if err != nil {
 			return nil, fmt.Errorf("[d.pullResourceDocumentFromDiv] Error: %v", err)
@@ -254,8 +251,6 @@ func (d *documentize) extractResourceDocument(tfStateParsed *gabs.Container, isA
 	if err != nil {
 		return "", fmt.Errorf("[regexProviderName] %v", err)
 	}
-
-	logrus.Debugf("[documentize][new resources]current provider: %v", currentTFProvider)
 
 	switch currentTFProvider {
 	case "provider[\"registry.terraform.io/hashicorp/google\"]", "provider[\"registry.terraform.io/hashicorp/google-beta\"]":

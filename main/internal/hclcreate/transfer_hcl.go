@@ -30,37 +30,31 @@ func (h *hclCreate) ExtractResourceDefinitions(noNewResources bool, workspaceToD
 	if err != nil {
 		return fmt.Errorf("[os.ReadFile resources-to-cloud-actions.json]%v", err)
 	}
-	logrus.Debugf("[hclcreate][ExtractResourceDefinitions] rawCloudActions: %v", string(rawCloudActions))
 
 	parsedCloudActions, err := gabs.ParseJSON(rawCloudActions)
 	if err != nil {
 		return fmt.Errorf("[gabs.ParseJSON rawCloudActions]%v", err)
 	}
-	logrus.Debugf("[hclcreate][ExtractResourceDefinitions] parsedCloudActions: %v", parsedCloudActions.String())
 
 	rawCloudCosts, err := os.ReadFile("outputs/cost-estimates.json")
 	if err != nil {
 		return fmt.Errorf("[os.ReadFile cost-estimates.json]%v", err)
 	}
-	logrus.Debugf("[hclcreate][ExtractResourceDefinitions] rawCloudCosts: %v", string(rawCloudCosts))
 
 	parsedCloudCosts, err := gabs.ParseJSON(rawCloudCosts)
 	if err != nil {
 		return fmt.Errorf("[gabs.ParseJSON rawCloudCosts]%v", err)
 	}
-	logrus.Debugf("[hclcreate][ExtractResourceDefinitions] parsedCloudCosts: %v", parsedCloudCosts.String())
 
 	costEstimates, err := gabsContainerToCostsStruct(parsedCloudCosts)
 	if err != nil {
 		return fmt.Errorf("[gabsContainerToAllCostsStruct]%v", err)
 	}
-	logrus.Debugf("[hclcreate][ExtractResourceDefinitions] costEstimates: %v", costEstimates)
 
 	hclBytes, err := os.ReadFile("current_cloud/resources.tf")
 	if err != nil {
 		return fmt.Errorf("[os.ReadFile()] Error reading in resources.tf")
 	}
-	logrus.Debugf("[hclcreate][ExtractResourceDefinitions] hclBytes: %v", string(hclBytes))
 
 	terraformerResources, hclDiagnostics := hclwrite.ParseConfig(
 		hclBytes,
@@ -76,7 +70,6 @@ func (h *hclCreate) ExtractResourceDefinitions(noNewResources bool, workspaceToD
 	if err != nil {
 		return fmt.Errorf("[h.subsetCloudActionsToCurrentDivision]%v", err)
 	}
-	logrus.Debugf("[hclcreate][ExtractResourceDefinitions] resourceActions: %v", resourceActions)
 
 	// Read in new-resources-to-workspace.json, parse as gabs file
 	newResourcesToWorkspace := []byte("{}")
@@ -274,7 +267,6 @@ func (h *hclCreate) writeNewResourceFiles(
 ) error {
 	for workspace, hclFile := range completeWorkspaceToHCLFile {
 		fileContent := hclwrite.Format(hclFile.Bytes())
-		logrus.Debugf("[hclcreate][writeNewResourceFiles] fileContent: %v", string(fileContent))
 
 		subDirectory := workspaceToDirectoryMap[workspace]
 

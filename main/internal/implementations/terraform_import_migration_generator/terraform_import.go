@@ -50,7 +50,6 @@ func (i *TerraformImportMigrationGenerator) Execute(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("[terraform_import_migration_generator][error in GenericResourcesToImportLocation]%w", err)
 	}
-	logrus.Debugf("[terraform_import_migration_generator][Execute] resourceImports: %v", resourceImports)
 
 	err = i.dragonDrop.InformCloudResourcesMappedToStateFile(ctx)
 	if err != nil {
@@ -61,7 +60,6 @@ func (i *TerraformImportMigrationGenerator) Execute(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("[terraform_import_migration_generator][error converting Provider to resource import]%w", err)
 	}
-	logrus.Debugf("[terraform_import_migration_generator][Execute] resourceImportMapJSON: %v", resourceImportMapJSON)
 
 	err = i.writeResourcesMap(resourceImportMapJSON)
 	if err != nil {

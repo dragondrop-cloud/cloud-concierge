@@ -7,7 +7,6 @@ import (
 	"strconv"
 
 	"github.com/Jeffail/gabs/v2"
-	"github.com/sirupsen/logrus"
 )
 
 // AllWorkspaceStatesToDocuments converts all workspace states to documents of non-sensitive strings.
@@ -16,7 +15,6 @@ func (d *documentize) AllWorkspaceStatesToDocuments(workspaceToDirectory map[str
 
 	for workspace := range workspaceToDirectory {
 		doc, err := d.WorkspaceStateToDocument(Workspace(workspace))
-		logrus.Debugf("Workspace %v doc: %v", workspace, string(doc))
 
 		if err != nil {
 			return nil, fmt.Errorf("[WorkspaceStateToDocument] Error while documentizing %v: %v", workspace, err)
