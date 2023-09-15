@@ -8,8 +8,8 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/dragondrop-cloud/cloud-concierge/main/internal/hclcreate"
+	"github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/markdowncreation"
 	"github.com/dragondrop-cloud/cloud-concierge/main/internal/interfaces"
-	"github.com/dragondrop-cloud/cloud-concierge/main/internal/pyscriptexec"
 )
 
 // TerraformResourceWriter is a struct that implements the ResourcesWriter interface for usage within
@@ -21,8 +21,8 @@ type TerraformResourceWriter struct {
 	// vcs instance needed to manage pull request changes
 	vcs interfaces.VCS
 
-	// pyScriptExec is the python script executor
-	pyScriptExec pyscriptexec.PyScriptExec
+	// markdownCreator is an instance of the MarkdownCreator struct that is used to create markdown
+	markdownCreator *markdowncreation.MarkdownCreator
 
 	// jobName is the name of the current job
 	jobName string
@@ -32,8 +32,8 @@ type TerraformResourceWriter struct {
 }
 
 // NewTerraformResourceWriter instantiates and returns a new instance of the TerraformResourceWriter.
-func NewTerraformResourceWriter(hclCreate hclcreate.HCLCreate, vcs interfaces.VCS, pyScriptExec pyscriptexec.PyScriptExec, dragonDrop interfaces.DragonDrop) interfaces.ResourcesWriter {
-	return &TerraformResourceWriter{hclCreate: hclCreate, vcs: vcs, pyScriptExec: pyScriptExec, dragonDrop: dragonDrop}
+func NewTerraformResourceWriter(hclCreate hclcreate.HCLCreate, vcs interfaces.VCS, markdownCreator *markdowncreation.MarkdownCreator, dragonDrop interfaces.DragonDrop) interfaces.ResourcesWriter {
+	return &TerraformResourceWriter{hclCreate: hclCreate, vcs: vcs, markdownCreator: markdownCreator, dragonDrop: dragonDrop}
 }
 
 // Execute writes new resources to the relevant version control system,
@@ -102,12 +102,7 @@ func (w *TerraformResourceWriter) commitChangesOpenPullRequest(ctx context.Conte
 func (w *TerraformResourceWriter) writeNewMarkdownAnalysis(ctx context.Context) error {
 	w.dragonDrop.PostLog(ctx, "Beginning to generate and save markdown analysis.")
 
-	id, err := w.vcs.GetID()
-	if err != nil {
-		return fmt.Errorf("[write_new_resources_and_migration_statements][error getting the vcs id]%w", err)
-	}
-
-	err = w.pyScriptExec.RunStateOfCloudReport(id, w.jobName)
+	err := w.markdownCreator.CreateMarkdownFile(w.jobName)
 	if err != nil {
 		return fmt.Errorf("[write_new_resources_and_migration_statements][error in pse.RunStateOfCloudReport]%w", err)
 	}
