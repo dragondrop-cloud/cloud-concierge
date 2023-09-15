@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/sirupsen/logrus"
+
 	terraformValueObjects "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_value_objects"
 )
 
@@ -33,6 +35,7 @@ func NewAWSScanner(credential terraformValueObjects.Credential, cliConfig Config
 
 // Scan uses the TerraformerCLI interface to scan a given division's cloud environment
 func (awsScanner *AWSScanner) Scan(_ terraformValueObjects.Division, credential terraformValueObjects.Credential, _ ...string) error {
+	logrus.Debugf("[AWSScanner][Scan] Scanning AWS account %v", credential)
 	err := awsScanner.configureEnvironment(credential)
 	if err != nil {
 		return fmt.Errorf("[AWS Scanner] Error configuring environment %w", err)
@@ -67,6 +70,7 @@ type AWSEnvironment struct {
 
 // configureEnvironment loads and sets as environment variables AWS credentials for a given AWS account.
 func (awsScanner *AWSScanner) configureEnvironment(credential terraformValueObjects.Credential) error {
+	logrus.Debugf("[AWSScanner][configure_environment] Configuring environment for AWS account %v", credential)
 	env := new(AWSEnvironment)
 	err := json.Unmarshal([]byte(credential), &env)
 	if err != nil {

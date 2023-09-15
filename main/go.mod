@@ -6,6 +6,7 @@ require (
 	cloud.google.com/go/storage v1.32.0
 	github.com/Azure/azure-storage-blob-go v0.15.0
 	github.com/Jeffail/gabs/v2 v2.7.0
+	github.com/atsushinee/go-markdown-generator v0.0.0-20191121114853-83f9e1f68504
 	github.com/aws/aws-sdk-go v1.45.1
 	github.com/go-git/go-git/v5 v5.8.1
 	github.com/google/go-github/v45 v45.2.0

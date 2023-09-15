@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/Azure/azure-storage-blob-go/azblob"
+	"github.com/sirupsen/logrus"
 
 	terraformValueObjects "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_value_objects"
 	"github.com/dragondrop-cloud/cloud-concierge/main/internal/interfaces"
@@ -27,6 +28,7 @@ type AzureBlobBackend struct {
 
 // FindTerraformWorkspaces returns a map of Terraform workspace names to their respective directories.
 func (b *AzureBlobBackend) FindTerraformWorkspaces(ctx context.Context) (map[string]string, error) {
+	logrus.Debugf("[Azure Terraform workspace] Finding Terraform workspaces in %v", b.config.WorkspaceDirectories)
 	workspaces, workspaceToBackendDetails, err := findTerraformWorkspaces(ctx, b.dragonDrop, b.config.WorkspaceDirectories, "azurerm")
 	if err != nil {
 		return nil, err
@@ -45,6 +47,7 @@ func NewAzurermBlobBackend(ctx context.Context, config TfStackConfig, dragonDrop
 
 // DownloadWorkspaceState downloads from the remote Azure Blob Storage backend the latest state file
 func (b *AzureBlobBackend) DownloadWorkspaceState(ctx context.Context, workspaceToDirectory map[string]string) error {
+	logrus.Debugf("[Azure Terraform workspace] Downloading workspace state files for %v", workspaceToDirectory)
 	b.dragonDrop.PostLog(ctx, "Beginning download of state files to local memory.")
 
 	for workspaceName := range workspaceToDirectory {

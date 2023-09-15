@@ -44,6 +44,8 @@ github.com/antihax/optional v1.0.0/go.mod h1:uupD/76wgC+ih3iEmQUL+0Ugr19nfwCT1kd
 github.com/apparentlymart/go-textseg/v15 v15.0.0 h1:uYvfpb3DyLSCGWnctWKGj857c6ew1u1fNQOlOtuGxQY=
 github.com/apparentlymart/go-textseg/v15 v15.0.0/go.mod h1:K8XmNZdhEBkdlyDdvbmmsvpAG721bKi0joRfFdHIWJ4=
 github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5 h1:0CwZNZbxp69SHPdPJAN/hZIm0C4OItdklCFmMRWYpio=
+github.com/atsushinee/go-markdown-generator v0.0.0-20191121114853-83f9e1f68504 h1:R1/AOzdMbopSliUTTEHvHbyNmnZ3YxY5GvdhTkpPsSY=
+github.com/atsushinee/go-markdown-generator v0.0.0-20191121114853-83f9e1f68504/go.mod h1:kHBCvAXJIatTX1pw6tLiOspjGc3MhUDRlog9yrCUS+k=
 github.com/aws/aws-sdk-go v1.45.1 h1:PXuxDZIo/Y9Bvtg2t055+dY4hRwNAEcq6bUMv9fXcjk=
 github.com/aws/aws-sdk-go v1.45.1/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
 github.com/bwesterb/go-ristretto v1.2.3/go.mod h1:fUIoIZaG73pV5biE2Blr2xEzDoMj7NFEuV9ekS419A0=

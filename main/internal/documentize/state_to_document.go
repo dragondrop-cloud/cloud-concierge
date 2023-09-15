@@ -43,19 +43,16 @@ func (d *documentize) ConvertWorkspaceDocumentsToJSON(workspaceDocMap map[Worksp
 // WorkspaceStateToDocument converts a workspace state to a document of non-sensitive strings.
 func (d *documentize) WorkspaceStateToDocument(workspace Workspace) ([]byte, error) {
 	tfState, err := os.ReadFile(fmt.Sprintf("state_files/%v.json", string(workspace)))
-
 	if err != nil {
 		return nil, fmt.Errorf("Error reading in terraform state file for workspace %v: %v", workspace, err)
 	}
 
 	tfStateParsed, err := gabs.ParseJSON(tfState)
-
 	if err != nil {
 		return nil, fmt.Errorf("Error parsing terraform state file for workspace %v via gabs: %v", workspace, err)
 	}
 
 	workspaceDoc, err := d.workspaceDocFromTFState(tfStateParsed)
-
 	if err != nil {
 		return nil, fmt.Errorf("[resourceDetailsFromTFState] Error extracting resource details: %v", err)
 	}

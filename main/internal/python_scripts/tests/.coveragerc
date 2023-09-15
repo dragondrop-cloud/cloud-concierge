@@ -1,4 +1,0 @@
-[run]
-omit =
-    python_scripts/tests/*
-    */__init__.py

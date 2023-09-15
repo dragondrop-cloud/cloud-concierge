@@ -43,20 +43,3 @@ jobs:
           cd main/
           go mod tidy
           go test ./...
-
-# TODO: Refactor needed here as we remove all internal Python scripts from the core container
-  test-python-scripts:
-    runs-on: ubuntu-latest
-    container: python:3.10.1-slim-buster
-
-    timeout-minutes: 5
-
-    steps:
-      - name: Checkout branch
-        uses: actions/checkout@v3
-
-      - name: Install dependencies & run tests
-        run: |
-          cd main/internal/
-          pip3 install -r python_scripts/requirements.txt
-          coverage run -m pytest --cov ./  --cov-branch --cov-report term-missing --cov-config=./python_scripts/tests/.coveragerc

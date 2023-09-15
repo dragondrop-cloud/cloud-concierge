@@ -6,6 +6,8 @@ import (
 	"strings"
 
 	"github.com/Jeffail/gabs/v2"
+	"github.com/sirupsen/logrus"
+
 	terraformValueObjects "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_value_objects"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
@@ -15,6 +17,8 @@ import (
 // ExtractResourceDefinitions outputs a bytes slice which defines needed Terraform resources extracted from
 // another configuration file.
 func (h *hclCreate) ExtractResourceDefinitions(noNewResources bool, workspaceToDirectory map[string]string) error {
+	logrus.Debugf("[hclcreate][ExtractResourceDefinitions] noNewResources: %v", noNewResources)
+
 	// Mapping between workspace and the new hclwrite document for that workspace
 	workspaceToHCLFile := WorkspaceToHCL{}
 
@@ -26,6 +30,7 @@ func (h *hclCreate) ExtractResourceDefinitions(noNewResources bool, workspaceToD
 	if err != nil {
 		return fmt.Errorf("[os.ReadFile resources-to-cloud-actions.json]%v", err)
 	}
+
 	parsedCloudActions, err := gabs.ParseJSON(rawCloudActions)
 	if err != nil {
 		return fmt.Errorf("[gabs.ParseJSON rawCloudActions]%v", err)
@@ -35,17 +40,18 @@ func (h *hclCreate) ExtractResourceDefinitions(noNewResources bool, workspaceToD
 	if err != nil {
 		return fmt.Errorf("[os.ReadFile cost-estimates.json]%v", err)
 	}
+
 	parsedCloudCosts, err := gabs.ParseJSON(rawCloudCosts)
 	if err != nil {
 		return fmt.Errorf("[gabs.ParseJSON rawCloudCosts]%v", err)
 	}
+
 	costEstimates, err := gabsContainerToCostsStruct(parsedCloudCosts)
 	if err != nil {
 		return fmt.Errorf("[gabsContainerToAllCostsStruct]%v", err)
 	}
 
 	hclBytes, err := os.ReadFile("current_cloud/resources.tf")
-
 	if err != nil {
 		return fmt.Errorf("[os.ReadFile()] Error reading in resources.tf")
 	}
@@ -175,6 +181,8 @@ func (h *hclCreate) generateHCLCloudActorsComment(
 	resourceType string, resourceName string,
 	resourceToCloudActions terraformValueObjects.ResourceActionMap,
 ) hclwrite.Tokens {
+	logrus.Debugf("[hclcreate][generateHCLCloudActorsComment] resourceType: %v, resourceName: %v", resourceType, resourceName)
+
 	completeResourceName := fmt.Sprintf("%v.%v", resourceType, resourceName)
 	cloudActorActionStatement := ""
 	cloudActions, ok := resourceToCloudActions[terraformValueObjects.ResourceName(completeResourceName)]

@@ -9,6 +9,8 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/sirupsen/logrus"
+
 	driftDetector "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_managed_resources_drift_detector/drift_detector"
 	terraformValueObjects "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_value_objects"
 )
@@ -64,6 +66,7 @@ func NewTFSec(provider terraformValueObjects.Provider) *TFSec {
 // ExecuteScan is called from the main job flow to execute the tfsec command and save the output
 // to show to the user in the PR
 func (s *TFSec) ExecuteScan(_ context.Context) error {
+	logrus.Debugf("[tfsec][execute_scan][provider: %s]", s.provider)
 	contentResults, err := s.runTFSec()
 	if err != nil {
 		return fmt.Errorf("[tfsec][execute_scan][error running tfsec command][%v]", err)

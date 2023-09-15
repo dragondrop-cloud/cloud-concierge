@@ -7,6 +7,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/sirupsen/logrus"
+
 	terraformWorkspace "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_workspace"
 )
 
@@ -16,6 +18,7 @@ func readFile(filename string) ([]byte, error) {
 	if err != nil {
 		return []byte{}, fmt.Errorf("[error reading output file]%w", err)
 	}
+	logrus.Debugf("[dragon_drop][cloud_perch_utils] read file %s", filename)
 
 	return fileBytes, nil
 }
@@ -73,5 +76,6 @@ func getAllTFFiles(_ context.Context, directories terraformWorkspace.WorkspaceDi
 		}
 	}
 
+	logrus.Debugf("[dragon_drop][cloud_perch_utils] found %d terraform files", len(tfFiles))
 	return tfFiles
 }

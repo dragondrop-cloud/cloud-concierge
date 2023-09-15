@@ -14,6 +14,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/google/go-github/v45/github"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 
 	"github.com/dragondrop-cloud/cloud-concierge/main/internal/interfaces"
@@ -86,6 +87,8 @@ func (g *GitHub) GetDefaultBranch() error {
 	}
 
 	g.defaultBranch = repoReference.GetDefaultBranch()
+
+	logrus.Debugf("[Github] Default branch is %v", g.defaultBranch)
 	return nil
 }
 
@@ -96,6 +99,7 @@ func (g *GitHub) GetID() (string, error) {
 		return "", errors.New("[vcs][get_id][id not generated]")
 	}
 
+	logrus.Debugf("[Github] ID is %v", g.ID)
 	return g.ID, nil
 }
 
@@ -119,11 +123,14 @@ func (g *GitHub) Clone() error {
 	}
 
 	g.repository = repo
+
+	logrus.Debugf("[Github] Cloned repo %v", g.config.VCSRepo)
 	return nil
 }
 
 // AddChanges adds all code changes to be included in the next commit.
 func (g *GitHub) AddChanges() error {
+	logrus.Debugf("[Github] Adding changes to repo %v", g.config.VCSRepo)
 	addOptions := &git.AddOptions{
 		All: true,
 	}
@@ -175,11 +182,14 @@ func (g *GitHub) Checkout(jobName string) error {
 	g.workTree = workTree
 	g.ID = branchUniqueID
 
+	logrus.Debugf("[Github] Checked out branch %v", g.newBranchName)
 	return nil
 }
 
 // Commit commits code changes to the current branch of the remote repository.
 func (g *GitHub) Commit() error {
+	logrus.Debugf("[Github] Committing changes to repo %v", g.config.VCSRepo)
+
 	commitOptions := &git.CommitOptions{
 		All: true,
 		Author: &object.Signature{
@@ -202,6 +212,8 @@ func (g *GitHub) Commit() error {
 
 // Push pushes current branch to remote repository.
 func (g *GitHub) Push() error {
+	logrus.Debugf("[Github] Pushing changes to repo %v", g.config.VCSRepo)
+
 	pushOptions := &git.PushOptions{
 		Auth:     g.authBasic,
 		Progress: os.Stdout,
@@ -219,6 +231,7 @@ func (g *GitHub) Push() error {
 // OpenPullRequest opens a new pull request of committed changes to the remote repository.
 func (g *GitHub) OpenPullRequest(jobName string) (string, error) {
 	prTitle := fmt.Sprintf("%v - %v", jobName, g.ID)
+	logrus.Debugf("[Github] Opening PR with title %v", prTitle)
 
 	reportContent, err := os.ReadFile("state_of_cloud/report.md")
 	if err != nil {
@@ -275,6 +288,7 @@ func (g *GitHub) OpenPullRequest(jobName string) (string, error) {
 		}
 	}
 
+	logrus.Debugf("[Github] PR opened with url %v", pr.GetURL())
 	return pr.GetURL(), nil
 }
 

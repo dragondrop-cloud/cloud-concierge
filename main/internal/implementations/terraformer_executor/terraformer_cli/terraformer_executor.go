@@ -61,6 +61,7 @@ func NewTerraformerExecutor(ctx context.Context, hclCreate hclcreate.HCLCreate, 
 
 // getScanner provisions the cloud environment scanner for the specified provider.
 func getScanner(config TerraformerExecutorConfig, cliConfig Config, provider terraformValueObjects.Provider) (Scanner, error) {
+	log.Debugf("[NewTerraformerExec] provider: %s", provider)
 
 	switch provider {
 	case "google":

@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/dragondrop-cloud/cloud-concierge/main/internal/pyscriptexec"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/dragondrop-cloud/cloud-concierge/main/internal/hclcreate"
+	"github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/markdowncreation"
 	terraformValueObjects "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_value_objects"
 	"github.com/dragondrop-cloud/cloud-concierge/main/internal/interfaces"
 )
@@ -35,9 +35,7 @@ func (f *Factory) bootstrappedResourceWriter(ctx context.Context, vcs interfaces
 		log.Errorf("[cannot instantiate hclCreate config]%s", err.Error())
 		return nil, fmt.Errorf("[cannot instantiate hclCreate config]%w", err)
 	}
-
 	dragonDrop.PostLog(ctx, "Created HCLCreate client.")
 
-	pyScriptExec := pyscriptexec.NewPyScriptExec()
-	return NewTerraformResourceWriter(hclCreate, vcs, pyScriptExec, dragonDrop), nil
+	return NewTerraformResourceWriter(hclCreate, vcs, markdowncreation.NewMarkdownCreator(), dragonDrop), nil
 }

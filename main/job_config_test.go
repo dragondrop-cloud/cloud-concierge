@@ -19,7 +19,6 @@ import (
 func validJobConfig() *JobConfig {
 	return &JobConfig{
 		IsManagedDriftOnly: false,
-		InfracostAPIToken:  "InfracostAPIToken",
 		APIPath:            "https://api.dragondrop.cloud",
 		CloudRegions:       terraformValueObjects.CloudRegionsDecoder{"us-east1"},
 		CloudCredential:    "{}",
@@ -182,8 +181,8 @@ func TestGetCostEstimationConfig(t *testing.T) {
 
 	// Then
 	want := costEstimation.CostEstimatorConfig{
-		CloudCredential:   "{}",
-		InfracostAPIToken: jobConfig.InfracostAPIToken,
+		CloudCredential:          "{}",
+		InfracostCloudPricingAPI: jobConfig.InfracostCloudPricingAPI,
 	}
 
 	assert.Equal(t, want, got, "CostEstimationConfig should be equal")

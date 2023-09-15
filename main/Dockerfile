@@ -1,10 +1,10 @@
 # This dockerfile performs a multi-stage build.
 # Stage 1) Creates a reference to the tfswitch binary.
-# Stage 2) Creates a reference to the infracost binary.
-# Stage 3) Creates a reference to the gcloud image.
-# Stage 4) References the terraformer image.
+# Stage 2) Creates a reference to the tfsec binary.
+# Stage 3) Creates a reference to the infracost binary.
+# Stage 4) Creates a reference to the terraformer binary.
 # Stage 5) Builds an executable binary out of the cloud-concierge go-code.
-# Stage 6) Places binaries within the gcloud container from stage 2 and executes
+# Stage 6) Places binaries within a base Alpine container and executes
 ###################################################################################################
 # 1) Reference to tfswitch binary
 ###################################################################################################
@@ -23,17 +23,12 @@ FROM aquasec/tfsec:v1.28.1 as tfsec
 FROM infracost/infracost:0.10.19 as infracost
 
 ###################################################################################################
-# 4) Building the gcloud cli with config-connector
-###################################################################################################
-FROM --platform=linux/amd64 gcr.io/google.com/cloudsdktool/google-cloud-cli:436.0.0-slim as gcloud
-
-###################################################################################################
-# 5) Reference to terraformer binary
+# 4) Reference to terraformer binary
 ###################################################################################################
 FROM dragondropcloud/terraformer:latest as terraformer
 
 ###################################################################################################
-# 6) Building the cloud-concierge executable
+# 5) Building the cloud-concierge executable
 ###################################################################################################
 FROM golang:1.21-alpine3.18 as cloud-concierge
 RUN apk update && apk add --no-cache bash git make
@@ -52,14 +47,10 @@ RUN  CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
      -o /go/bin/cloud-concierge .
 
 ###################################################################################################
-# 8) Creating the final light-weight container that contains only the executables from previous steps.
+# 6) Creating the final light-weight container that contains only the executables from previous steps.
 ###################################################################################################
-FROM gcloud
-
-# Installing python dependencies
-RUN pip3 install --upgrade pip
-COPY internal/python_scripts/requirements.txt python_scripts/requirements.txt
-RUN pip3 install -r python_scripts/requirements.txt
+FROM alpine:3.18.3
+RUN apk update && apk add --no-cache gcompat
 
 # Code that changes most frequently is copied into the container last.
 COPY --from=tfswitch /usr/local/bin/tfswitch /usr/local/bin/
@@ -67,6 +58,7 @@ COPY --from=terraformer /go/bin/terraformer /usr/local/bin/
 COPY --from=infracost /usr/bin/infracost /usr/local/bin/
 COPY --from=tfsec /usr/bin/tfsec /usr/local/bin/
 COPY --from=cloud-concierge /go/bin/cloud-concierge /go/bin/cloud-concierge
-COPY internal/python_scripts python_scripts
+
+RUN echo $PATH
 
 ENTRYPOINT ["/go/bin/cloud-concierge"]

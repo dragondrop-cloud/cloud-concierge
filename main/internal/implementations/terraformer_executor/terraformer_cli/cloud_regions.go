@@ -1,6 +1,10 @@
 package terraformercli
 
-import terraformValueObjects "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_value_objects"
+import (
+	"github.com/sirupsen/logrus"
+
+	terraformValueObjects "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_value_objects"
+)
 
 func getValidRegions(cloudRegions []terraformValueObjects.CloudRegion, providerRegions map[string]bool, defaultRegions []string) []string {
 	if len(cloudRegions) == 0 {
@@ -19,5 +23,6 @@ func getValidRegions(cloudRegions []terraformValueObjects.CloudRegion, providerR
 		return defaultRegions
 	}
 
+	logrus.Debugf("[terraformer_executor][getValidRegions] Valid regions: %v", regions)
 	return regions
 }

@@ -15,10 +15,10 @@ type DragonDrop interface {
 	InformStarted(ctx context.Context) error
 
 	// AuthorizeJob Check with DragonDropAPI for valid auth of the current job when run oss
-	AuthorizeJob(ctx context.Context) error
+	AuthorizeJob(ctx context.Context) (string, error)
 
 	// AuthorizeManagedJob Check with DragonDropAPI for valid auth of the current job, for a dragondop managed job
-	AuthorizeManagedJob(ctx context.Context) (string, error)
+	AuthorizeManagedJob(ctx context.Context) (string, string, error)
 
 	// InformRepositoryCloned Informs to DragonDropAPI when job cloned the repository
 	InformRepositoryCloned(ctx context.Context) error
@@ -80,15 +80,15 @@ func (m *DragonDropMock) InformStarted(ctx context.Context) error {
 }
 
 // AuthorizeJob Check with DragonDropAPI for valid auth of the current OSS job
-func (m *DragonDropMock) AuthorizeJob(ctx context.Context) error {
+func (m *DragonDropMock) AuthorizeJob(ctx context.Context) (string, error) {
 	args := m.Called(ctx)
-	return args.Error(0)
+	return args.String(0), args.Error(1)
 }
 
 // AuthorizeManagedJob Check with DragonDropAPI for valid auth of the current managed job
-func (m *DragonDropMock) AuthorizeManagedJob(ctx context.Context) (string, error) {
+func (m *DragonDropMock) AuthorizeManagedJob(ctx context.Context) (string, string, error) {
 	args := m.Called(ctx)
-	return args.String(0), args.Error(1)
+	return args.String(0), args.String(1), args.Error(2)
 }
 
 // InformComplete Informs to DragonDropAPI when job is Complete

@@ -8,6 +8,8 @@ import (
 	"os"
 	"os/exec"
 
+	"github.com/sirupsen/logrus"
+
 	terraformValueObjects "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_value_objects"
 	"github.com/dragondrop-cloud/cloud-concierge/main/internal/interfaces"
 )
@@ -56,6 +58,8 @@ func NewIdentifyCloudActors(config Config, dragonDrop interfaces.DragonDrop, pro
 // Execute creates structured query_param_data mapping new or drifted resources to the cloud actor (service principal or user)
 // responsible for the latest changes for that resource.
 func (ica *IdentifyCloudActors) Execute(ctx context.Context) error {
+	logrus.Debugf("Executing IdentifyCloudActors for %v", ica.provider)
+
 	jsonBytes := []byte("{}")
 	if ica.logQuerier != nil {
 		fmt.Printf("Beginning to pull cloud actors for %v divisions\n", ica.provider)
@@ -63,11 +67,13 @@ func (ica *IdentifyCloudActors) Execute(ctx context.Context) error {
 		if err != nil {
 			return fmt.Errorf("[%v logQuerier.QueryForAllResources]%v", ica.provider, err)
 		}
+		logrus.Debugf("resourceActions: %v", resourceActions)
 
 		jsonBytes, err = ica.convertResourceActionsToJSON(resourceActions)
 		if err != nil {
 			return fmt.Errorf("[ica.convertProviderResourceActionsToJSON]%v", err)
 		}
+		logrus.Debugf("jsonBytes: %v", string(jsonBytes))
 	}
 	err := os.WriteFile("outputs/resources-to-cloud-actions.json", jsonBytes, 0400)
 	if err != nil {

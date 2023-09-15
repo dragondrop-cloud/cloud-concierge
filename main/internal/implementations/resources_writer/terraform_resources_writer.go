@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/dragondrop-cloud/cloud-concierge/main/internal/hclcreate"
+	"github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/markdowncreation"
 	"github.com/dragondrop-cloud/cloud-concierge/main/internal/interfaces"
-	"github.com/dragondrop-cloud/cloud-concierge/main/internal/pyscriptexec"
 )
 
 // TerraformResourceWriter is a struct that implements the ResourcesWriter interface for usage within
@@ -19,8 +21,8 @@ type TerraformResourceWriter struct {
 	// vcs instance needed to manage pull request changes
 	vcs interfaces.VCS
 
-	// pyScriptExec is the python script executor
-	pyScriptExec pyscriptexec.PyScriptExec
+	// markdownCreator is an instance of the MarkdownCreator struct that is used to create markdown
+	markdownCreator *markdowncreation.MarkdownCreator
 
 	// jobName is the name of the current job
 	jobName string
@@ -30,14 +32,15 @@ type TerraformResourceWriter struct {
 }
 
 // NewTerraformResourceWriter instantiates and returns a new instance of the TerraformResourceWriter.
-func NewTerraformResourceWriter(hclCreate hclcreate.HCLCreate, vcs interfaces.VCS, pyScriptExec pyscriptexec.PyScriptExec, dragonDrop interfaces.DragonDrop) interfaces.ResourcesWriter {
-	return &TerraformResourceWriter{hclCreate: hclCreate, vcs: vcs, pyScriptExec: pyScriptExec, dragonDrop: dragonDrop}
+func NewTerraformResourceWriter(hclCreate hclcreate.HCLCreate, vcs interfaces.VCS, markdownCreator *markdowncreation.MarkdownCreator, dragonDrop interfaces.DragonDrop) interfaces.ResourcesWriter {
+	return &TerraformResourceWriter{hclCreate: hclCreate, vcs: vcs, markdownCreator: markdownCreator, dragonDrop: dragonDrop}
 }
 
 // Execute writes new resources to the relevant version control system,
 // and returns a pull request url corresponding to the new changes.
 func (w *TerraformResourceWriter) Execute(ctx context.Context, jobName string, createDummyFile bool, workspaceToDirectory map[string]string) (string, error) {
 	w.jobName = jobName
+	logrus.Debugf("[terraform_resource_writer] Executing with jobName: %v, createDummyFile: %v, workspaceToDirectory: %v", jobName, createDummyFile, workspaceToDirectory)
 
 	err := w.checkoutNewBranch(ctx)
 	if err != nil {
@@ -66,6 +69,7 @@ func (w *TerraformResourceWriter) Execute(ctx context.Context, jobName string, c
 // commitChangesOpenPullRequest adds new files to the VCS, commits the changes,
 // and opens a pull request for the branch.
 func (w *TerraformResourceWriter) commitChangesOpenPullRequest(ctx context.Context) (string, error) {
+	logrus.Debugf("[commit_changes_open_pull_request] Executing with jobName: %v", w.jobName)
 	w.dragonDrop.PostLog(ctx, "Beginning to add, commit, push and open a pull request for changes made.")
 
 	err := w.vcs.AddChanges()
@@ -88,6 +92,7 @@ func (w *TerraformResourceWriter) commitChangesOpenPullRequest(ctx context.Conte
 		return "", fmt.Errorf("[commit_changes_open_pull_request][error in vcs.OpenPullRequest]%w", err)
 	}
 
+	logrus.Debugf("[commit_changes_open_pull_request] prURL: %v", prURL)
 	w.dragonDrop.PostLog(ctx, "Done opening a pull request for changes made.")
 	return prURL, nil
 }
@@ -97,12 +102,7 @@ func (w *TerraformResourceWriter) commitChangesOpenPullRequest(ctx context.Conte
 func (w *TerraformResourceWriter) writeNewMarkdownAnalysis(ctx context.Context) error {
 	w.dragonDrop.PostLog(ctx, "Beginning to generate and save markdown analysis.")
 
-	id, err := w.vcs.GetID()
-	if err != nil {
-		return fmt.Errorf("[write_new_resources_and_migration_statements][error getting the vcs id]%w", err)
-	}
-
-	err = w.pyScriptExec.RunStateOfCloudReport(id, w.jobName)
+	err := w.markdownCreator.CreateMarkdownFile(w.jobName)
 	if err != nil {
 		return fmt.Errorf("[write_new_resources_and_migration_statements][error in pse.RunStateOfCloudReport]%w", err)
 	}
@@ -114,6 +114,7 @@ func (w *TerraformResourceWriter) writeNewMarkdownAnalysis(ctx context.Context) 
 // writeNewResourcesAndMigrationStatements writes new resources and tfmigrate migration configuration to
 // the customer's current code branch.
 func (w *TerraformResourceWriter) writeNewResourcesAndMigrationStatements(ctx context.Context, createDummyFile bool, workspaceToDirectory map[string]string) error {
+	logrus.Debugf("[write_new_resources_and_migration_statements] createDummyFile: %v, workspaceToDirectory: %v", createDummyFile, workspaceToDirectory)
 	if createDummyFile {
 		w.dragonDrop.PostLog(ctx, "Beginning to write dummy file because there are no new resources.")
 
@@ -148,10 +149,10 @@ func (w *TerraformResourceWriter) writeNewResourcesAndMigrationStatements(ctx co
 
 // checkoutNewBranch checks out a new branch within the version control system
 func (w *TerraformResourceWriter) checkoutNewBranch(ctx context.Context) error {
+	logrus.Debugf("[terraform_resource_writer] Executing checkoutNewBranch with jobName: %v", w.jobName)
 	w.dragonDrop.PostLog(ctx, "Beginning to checkout new branch.")
 
 	err := w.vcs.Checkout(w.jobName)
-
 	if err != nil {
 		return fmt.Errorf("[checkout_new_branch][error in checkout to new branch with vcs]%w", err)
 	}

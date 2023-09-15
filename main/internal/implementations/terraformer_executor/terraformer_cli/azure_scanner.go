@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/sirupsen/logrus"
+
 	terraformValueObjects "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_value_objects"
 )
 
@@ -42,6 +44,7 @@ type AzureEnvironment struct {
 
 // Scan uses the TerraformerCLI interface to scan a given division's cloud environment
 func (azureScanner *AzureScanner) Scan(_ terraformValueObjects.Division, credential terraformValueObjects.Credential, _ ...string) error {
+	logrus.Debugf("[AzureScanner][Scan] Scanning Azure environment %v", credential)
 	env := new(AzureEnvironment)
 	credentialBytes := bytes.TrimPrefix([]byte(credential), []byte("\xef\xbb\xbf"))
 
@@ -79,6 +82,8 @@ func (azureScanner *AzureScanner) Scan(_ terraformValueObjects.Division, credent
 }
 
 func (azureScanner *AzureScanner) configureEnvironment(env AzureEnvironment) error {
+	logrus.Debugf("[AzureScanner][configureEnvironment] Configuring environment %v", env)
+
 	err := os.Setenv("ARM_CLIENT_ID", env.ClientID)
 	if err != nil {
 		return fmt.Errorf("[azure_scanner][configure_environment][error setting client_id credential] %w", err)

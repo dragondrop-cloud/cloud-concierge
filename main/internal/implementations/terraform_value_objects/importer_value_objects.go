@@ -3,6 +3,8 @@ package terraformvalueobjects
 import (
 	"fmt"
 	"strings"
+
+	"github.com/sirupsen/logrus"
 )
 
 // ResourceName is the name of a cloud computing resource
@@ -13,6 +15,8 @@ type ResourceNameList []ResourceName
 
 // Decode allows ResourceNameList to be decoded by the ENVConfig function.
 func (rnl *ResourceNameList) Decode(value string) error {
+	logrus.Debugf("Decoding terraform resource name list %v", value)
+
 	if value == "None" {
 		*rnl = nil
 		return nil
