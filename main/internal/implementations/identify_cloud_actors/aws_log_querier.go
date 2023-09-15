@@ -1,17 +1,16 @@
 package identifycloudactors
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math"
 	"net/http"
 	"os"
-	"os/exec"
-	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/cloudtrail"
 	"github.com/dragondrop-cloud/cloud-concierge/main/internal/hclcreate"
 	queryParamData "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/identify_cloud_actors/query_param_data"
 	resourcesCalculator "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/resources_calculator"
@@ -27,6 +26,9 @@ type AWSLogQuerier struct {
 
 	// cloudCredential is a map between a division and request cloud credentials.
 	cloudCredential terraformValueObjects.Credential `required:"true"`
+
+	// awsSession from the AWS Go SDK.
+	awsSession *session.Session
 
 	// division is the division that the AWSLogQuerier is querying for.
 	division terraformValueObjects.Division
@@ -51,29 +53,6 @@ type AWSLogQuerier struct {
 type AWSEnvironment struct {
 	AWSAccessKeyID     string `json:"awsAccessKeyID"`
 	AWSSecretKeyAccess string `json:"awsSecretAccessKey"`
-}
-
-// CloudTrailEvents is a struct containing all the data returned from the AWS CLI command
-// `aws cloudtrail lookup-events`.
-type CloudTrailEvents struct {
-	Events []CloudTrailEvent `json:"Events"`
-}
-
-// CloudTrailEvent is a struct for a single event within return data from the AWS CLI
-// command `aws cloudtrail lookup-events`.
-type CloudTrailEvent struct {
-	EventID              string  `json:"EventId"`
-	EventName            string  `json:"EventName"`
-	EventTimeUnformatted float64 `json:"EventTime"`
-	EventTime            string
-	UserName             string               `json:"Username"`
-	Resources            []CloudTrailResource `json:"Resources"`
-}
-
-// CloudTrailResource is a struct for a resource identity within a CloudTrailEvent.
-type CloudTrailResource struct {
-	ResourceType string `json:"ResourceType"`
-	ResourceName string `json:"ResourceName"`
 }
 
 // NewAWSLogQuerier instantiates a new instance of GoogleLogQuerier
@@ -124,6 +103,8 @@ func (alc *AWSLogQuerier) QueryForAllResources(ctx context.Context) (terraformVa
 	if err != nil {
 		return nil, fmt.Errorf("[alc.setAWSCredentials]%v", err)
 	}
+
+	alc.awsSession = session.Must(session.NewSession())
 
 	// Calculating cloud actors for managed resource drift
 	for _, driftedResource := range alc.uniqueManagedDriftedResources {
@@ -198,49 +179,54 @@ func (alc *AWSLogQuerier) UpdateManagedDriftAttributeDifferences(
 
 // cloudTrailEventHistorySearch runs AWS CLI commands to pull data on who modified and created the cloud resource in question.
 func (alc *AWSLogQuerier) cloudTrailEventHistorySearch(_ context.Context, resourceType string, resourceID string, resourceRegion string, isNewToTerraform bool) (terraformValueObjects.ResourceActions, error) {
-	lookupAttributeString := fmt.Sprintf("AttributeKey=ResourceName,AttributeValue=%v", resourceID)
-	cloudTrailCommand := []string{"cloudtrail", "lookup-events", "--max-results", "50", "--output", "json", "--region", resourceRegion, "--lookup-attributes", lookupAttributeString}
+	svc := cloudtrail.New(alc.awsSession, aws.NewConfig().WithRegion(resourceRegion))
 
-	result, err := executeCommandReturnStdOut("aws", cloudTrailCommand...)
+	maxResults := int64(50)
+
+	result, err := svc.LookupEvents(&cloudtrail.LookupEventsInput{
+		MaxResults: &maxResults,
+		LookupAttributes: []*cloudtrail.LookupAttribute{
+			{
+				AttributeKey:   aws.String("ResourceName"),
+				AttributeValue: aws.String(resourceID),
+			},
+		},
+	})
 	if err != nil {
-		return terraformValueObjects.ResourceActions{}, fmt.Errorf("[executeCommandReturnStdOut]%v", err)
+		return terraformValueObjects.ResourceActions{}, fmt.Errorf("[alc.cloudTrailClient.LookupEvents]%v", err)
 	}
 	log.Debugf("[aws_log_querier][cloudTrailEventHistorySearch] result: %v", result)
 
-	return alc.ExtractDataFromResourceResult([]byte(result), resourceType, isNewToTerraform)
+	return alc.ExtractDataFromResourceResult(result.Events, resourceType, isNewToTerraform)
 }
 
 // ExtractDataFromResourceResult parses the log response from the provider API
 // and extracts needed data (namely who made the most recent relevant change to the resource).
-func (alc *AWSLogQuerier) ExtractDataFromResourceResult(resourceResult []byte, resourceType string, isNewToTerraform bool) (terraformValueObjects.ResourceActions, error) {
-	log.Debugf("[aws_log_querier][ExtractDataFromResourceResult] resourceResult: %v", string(resourceResult))
+func (alc *AWSLogQuerier) ExtractDataFromResourceResult(resourceResult []*cloudtrail.Event, resourceType string, isNewToTerraform bool) (terraformValueObjects.ResourceActions, error) {
+	log.Debugf("[aws_log_querier][ExtractDataFromResourceResult] resourceResult: %v", resourceResult)
 	resourceActions := terraformValueObjects.ResourceActions{}
 
-	var cloudTrailEvents CloudTrailEvents
-	if err := json.Unmarshal(resourceResult, &cloudTrailEvents); err != nil {
-		return resourceActions, fmt.Errorf("failed to parse resource results to cloudTrailEvents struct: %v", err)
-	}
-	if len(cloudTrailEvents.Events) == 0 {
+	if len(resourceResult) == 0 {
 		return resourceActions, ErrNoCloudTrailEvents
 	}
 
 	resourceType = string(alc.resourceToCloudTrailType[resourceType])
 
-	eventsLength := len(cloudTrailEvents.Events)
+	eventsLength := len(resourceResult)
 	isComplete := false
 	isModificationIdentified := false
 	i := 0
 
 	for !isComplete {
-		event := cloudTrailEvents.Events[i]
-		classification := determineActionClass(event.EventName)
-		event.EventTime = decimalToFormattedTimestamp(event.EventTimeUnformatted)
+		event := resourceResult[i]
+		classification := determineActionClass(*event.EventName)
+		cleanedTime := event.EventTime.Format("2006-01-02")
 
 		// check to ensure that ResourceType is present within one of the event.Resources elements
 		// if not, move on to the next event
 		isValidResourceType := false
 		for _, resource := range event.Resources {
-			if resource.ResourceType == resourceType || resource.ResourceType == "" {
+			if *resource.ResourceType == resourceType || *resource.ResourceType == "" {
 				isValidResourceType = true
 				break
 			}
@@ -257,8 +243,8 @@ func (alc *AWSLogQuerier) ExtractDataFromResourceResult(resourceResult []byte, r
 		case "creation":
 			if isNewToTerraform {
 				resourceActions.Creator = &terraformValueObjects.CloudActorTimeStamp{
-					Actor:     terraformValueObjects.CloudActor(event.UserName),
-					Timestamp: terraformValueObjects.Timestamp(event.EventTime),
+					Actor:     terraformValueObjects.CloudActor(*event.Username),
+					Timestamp: terraformValueObjects.Timestamp(cleanedTime),
 				}
 				return resourceActions, nil
 			}
@@ -266,8 +252,8 @@ func (alc *AWSLogQuerier) ExtractDataFromResourceResult(resourceResult []byte, r
 			if !isModificationIdentified {
 				isModificationIdentified = true
 				resourceActions.Modifier = &terraformValueObjects.CloudActorTimeStamp{
-					Actor:     terraformValueObjects.CloudActor(event.UserName),
-					Timestamp: terraformValueObjects.Timestamp(event.EventTime),
+					Actor:     terraformValueObjects.CloudActor(*event.Username),
+					Timestamp: terraformValueObjects.Timestamp(cleanedTime),
 				}
 				if !isNewToTerraform {
 					return resourceActions, nil
@@ -282,31 +268,6 @@ func (alc *AWSLogQuerier) ExtractDataFromResourceResult(resourceResult []byte, r
 	}
 
 	return resourceActions, nil
-}
-
-// decimalToFormattedTimestamp is a function to convert decimal to a unix timestamp
-func decimalToFormattedTimestamp(decimal float64) string {
-	sec, dec := math.Modf(decimal)
-	return time.Unix(int64(sec), int64(dec*(1e9))).Format("2006-01-02")
-}
-
-// executeCommandReturnStdOut wraps os.exec.Command with capturing of std output and errors.
-// It also returns the command results.
-func executeCommandReturnStdOut(command string, args ...string) (string, error) {
-	cmd := exec.Command(command, args...)
-
-	// Setting up logging objects
-	var out bytes.Buffer
-	cmd.Stdout = &out
-
-	var stderr bytes.Buffer
-	cmd.Stderr = &stderr
-	err := cmd.Run()
-
-	if err != nil {
-		return "", fmt.Errorf("%v\n\n%v", err, stderr.String()+out.String())
-	}
-	return out.String(), nil
 }
 
 // setAWSCredentials loads and sets as environment variables AWS credentials for a given AWS account.
