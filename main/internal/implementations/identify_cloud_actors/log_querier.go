@@ -19,10 +19,6 @@ type LogQuerier interface {
 
 	// QueryForAllResources coordinates API calls that receive data on user actions on individual resources.
 	QueryForAllResources(ctx context.Context) (terraformValueObjects.ResourceActionMap, error)
-
-	// ExtractDataFromResourceResult parses the log response from the provider API
-	// and extracts needed data (namely who made the most recent relevant change to the resource).
-	ExtractDataFromResourceResult(resourceResult []byte, resourceType string, isNewToTerraform bool) (terraformValueObjects.ResourceActions, error)
 }
 
 type UniqueDriftedResources map[terraformValueObjects.ResourceName]UniqueDriftedResource

@@ -56,17 +56,11 @@ RUN  CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
 ###################################################################################################
 FROM gcloud
 
-# Installing python dependencies
-RUN pip3 install --upgrade pip
-COPY internal/python_scripts/requirements.txt python_scripts/requirements.txt
-RUN pip3 install -r python_scripts/requirements.txt
-
 # Code that changes most frequently is copied into the container last.
 COPY --from=tfswitch /usr/local/bin/tfswitch /usr/local/bin/
 COPY --from=terraformer /go/bin/terraformer /usr/local/bin/
 COPY --from=infracost /usr/bin/infracost /usr/local/bin/
 COPY --from=tfsec /usr/bin/tfsec /usr/local/bin/
 COPY --from=cloud-concierge /go/bin/cloud-concierge /go/bin/cloud-concierge
-COPY internal/python_scripts python_scripts
 
 ENTRYPOINT ["/go/bin/cloud-concierge"]
