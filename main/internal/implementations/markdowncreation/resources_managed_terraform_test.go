@@ -1,7 +1,6 @@
 package markdowncreation
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/atsushinee/go-markdown-generator/doc"
@@ -63,7 +62,23 @@ func TestMarkdownCreator_setDriftedResourcesManagedByTerraformData(t *testing.T)
 	date2 := "**Most Recent Action Date**: `2023-01-01`\n\n"
 	tableContent2 := "|attribute_name2|terraform_value2|cloud_value2|\n\n"
 
-	expectedMarkdown := fmt.Sprintf("%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s", title, stateFile, resourcePath1, instanceID1, actor1, date1,
-		complete, tableHeaders, tableContent1, resourcePath2, instanceID2, actor2, date2, complete, tableHeaders, tableContent2)
-	assert.Equal(t, expectedMarkdown, report.String())
+	actualMarkdown := report.String()
+	assert.Equal(t, title, actualMarkdown[:len(title)])
+
+	staticContentLength := len(title) + len(stateFile)
+	assert.Equal(t, stateFile, actualMarkdown[len(title):staticContentLength])
+
+	if actualMarkdown[len(title)+len(stateFile):staticContentLength+len(resourcePath1)] == resourcePath1 {
+		expectedDynamicContentPath1 := resourcePath1 + instanceID1 + actor1 + date1 + complete + tableHeaders + tableContent1
+		assert.Equal(t, expectedDynamicContentPath1, actualMarkdown[staticContentLength:staticContentLength+len(expectedDynamicContentPath1)])
+
+		expectedDynamicContentPath2 := resourcePath2 + instanceID2 + actor2 + date2 + complete + tableHeaders + tableContent2
+		assert.Equal(t, expectedDynamicContentPath2, actualMarkdown[staticContentLength+len(expectedDynamicContentPath1):])
+	} else {
+		expectedDynamicContentPath2 := resourcePath2 + instanceID2 + actor2 + date2 + complete + tableHeaders + tableContent2
+		assert.Equal(t, expectedDynamicContentPath2, actualMarkdown[staticContentLength:staticContentLength+len(expectedDynamicContentPath2)])
+
+		expectedDynamicContentPath1 := resourcePath1 + instanceID1 + actor1 + date1 + complete + tableHeaders + tableContent1
+		assert.Equal(t, expectedDynamicContentPath1, actualMarkdown[staticContentLength+len(expectedDynamicContentPath2):])
+	}
 }
