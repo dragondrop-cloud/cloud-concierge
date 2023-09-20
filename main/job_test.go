@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	resourcesCalculator "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/resources_calculator"
 	. "github.com/dragondrop-cloud/cloud-concierge/main/internal/interfaces"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestAuthorize_Success(t *testing.T) {
