@@ -8,6 +8,14 @@
    <img src="https://img.shields.io/badge/Go_Report-A+-green" />
 </a>
 
+<a href="https://github.com/dragondrop-cloud/cloud-concierge/blob/dev/coverage_report.txt" alt="Coverage Report">
+   <img src="https://img.shields.io/badge/coverage_report-grey" />
+</a>
+
+<a href="https://github.com/dragondrop-cloud/cloud-concierge/actions/workflows/ci.yml?query=branch%3Aprod" alt="Coverage Report">
+   <img src="https://img.shields.io/badge/tests-passing-green" />
+</a>
+
 <a href="https://hub.docker.com/r/dragondropcloud/cloud-concierge/tags" alt="Latest Docker Version">
    <img src="https://img.shields.io/badge/docker-v0.1.5-blue" />
 </a>

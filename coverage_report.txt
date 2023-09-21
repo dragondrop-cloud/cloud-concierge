@@ -1,0 +1,20 @@
+?   	github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/identify_cloud_actors/query_param_data	[no test files]
+ok  	github.com/dragondrop-cloud/cloud-concierge/main	(cached)	coverage: 34.6% of statements
+ok  	github.com/dragondrop-cloud/cloud-concierge/main/internal/documentize	(cached)	coverage: 67.3% of statements
+ok  	github.com/dragondrop-cloud/cloud-concierge/main/internal/hclcreate	(cached)	coverage: 47.0% of statements
+ok  	github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/cost_estimation	(cached)	coverage: 50.6% of statements
+ok  	github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/dragon_drop	(cached)	coverage: 41.8% of statements
+ok  	github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/identify_cloud_actors	(cached)	coverage: 28.7% of statements
+ok  	github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/markdowncreation	(cached)	coverage: 82.7% of statements
+ok  	github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/resources_calculator	(cached)	coverage: 23.7% of statements
+ok  	github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/resources_writer	(cached)	coverage: 3.3% of statements
+ok  	github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_import_migration_generator	(cached)	coverage: 36.1% of statements
+?   	github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_managed_resources_drift_detector	[no test files]
+ok  	github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_managed_resources_drift_detector/drift_detector	(cached)	coverage: 60.9% of statements
+ok  	github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_security	(cached)	coverage: 21.2% of statements
+ok  	github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_value_objects	(cached)	coverage: 98.5% of statements
+ok  	github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_workspace	(cached)	coverage: 13.0% of statements
+ok  	github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraformer_executor	(cached)	coverage: 30.0% of statements
+ok  	github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraformer_executor/terraformer_cli	(cached)	coverage: 13.1% of statements
+?   	github.com/dragondrop-cloud/cloud-concierge/main/internal/interfaces	[no test files]
+ok  	github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/vcs	(cached)	coverage: 12.7% of statements
