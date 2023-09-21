@@ -42,4 +42,4 @@ jobs:
         run: |
           cd main/
           go mod tidy
-          go test ./...
+          go test ./... --cover
