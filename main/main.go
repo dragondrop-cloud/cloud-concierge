@@ -12,6 +12,9 @@ import (
 )
 
 func main() {
+	versionChecker := VersionChecker{}
+	versionChecker.checkCloudConciergeVersion()
+
 	configureLogLevel()
 
 	log.Info("Entrypoint on go binary")
