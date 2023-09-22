@@ -10,12 +10,12 @@ import (
 )
 
 // setCostsEstimatesData sets the costs estimates data in the markdown report
-func (m *MarkdownCreator) setCostsEstimatesData(report *doc.MarkDownDoc) {
+func (m *MarkdownCreator) setCostsEstimatesData(report *doc.MarkDownDoc) string {
 	report.Write("# Calculable Cloud Costs (Monthly)").Writeln().Writeln()
 
 	if len(m.costEstimates) == 0 {
 		report.Write("No cost estimates calculated for scanned resources.").Writeln()
-		return
+		return "0.00"
 	}
 
 	newResourcesCosts, notNewResourcesCosts := m.getNewAndNotNewResourcesCosts()
@@ -30,6 +30,8 @@ func (m *MarkdownCreator) setCostsEstimatesData(report *doc.MarkDownDoc) {
 	report.Write(fmt.Sprintf("|$%s|", notNewResourcesCosts))
 
 	report.Writeln().Writeln()
+
+	return newResourcesCosts
 }
 
 // getNewAndNotNewResourcesCosts returns the costs of new and not new resources
@@ -46,27 +48,7 @@ func (m *MarkdownCreator) getNewAndNotNewResourcesCosts() (string, string) {
 	newResourcesCosts := 0.0
 	notNewResourcesCosts := 0.0
 	for _, costEstimate := range m.costEstimates {
-		totalCost := 0.0
-
-		// If the resource has a definitive monthly cost from infracost, we use that value
-		if costEstimate.MonthlyCost != "" && costEstimate.MonthlyCost != "0" {
-			monthlyCostFloat, err := strconv.ParseFloat(costEstimate.MonthlyCost, 32)
-			if err != nil {
-				log.Debugf("[markdown_creator][get_new_and_not_new_resources_costs] error parsing monthly cost: %s", err)
-				monthlyCostFloat = 0.0
-			}
-
-			totalCost = monthlyCostFloat
-			// If no monthly cost, only add the unit price if the resource is not usage based
-		} else if !costEstimate.IsUsageBased {
-			priceCostFloat, err := strconv.ParseFloat(costEstimate.Price, 32)
-			if err != nil {
-				log.Debugf("[markdown_creator][get_new_and_not_new_resources_costs] error parsing price: %s", err)
-				priceCostFloat = 0.0
-			}
-
-			totalCost = priceCostFloat
-		}
+		totalCost := m.getActualMonthlyCostEstimate(costEstimate)
 
 		if newResources[costEstimate.ResourceName] {
 			newResourcesCosts += totalCost
@@ -74,6 +56,32 @@ func (m *MarkdownCreator) getNewAndNotNewResourcesCosts() (string, string) {
 			notNewResourcesCosts += totalCost
 		}
 	}
+	log.Debugf("New resources costs: %f", newResourcesCosts)
+	log.Debugf("Not new resources costs: %f", notNewResourcesCosts)
 
 	return fmt.Sprintf("%.2f", newResourcesCosts), fmt.Sprintf("%.2f", notNewResourcesCosts)
+}
+
+func (m *MarkdownCreator) getActualMonthlyCostEstimate(costEstimate CostEstimate) float64 {
+	// If the resource has a definitive monthly cost from infracost, we use that value
+	if costEstimate.MonthlyCost != "" && costEstimate.MonthlyCost != "0" {
+		monthlyCostFloat, err := strconv.ParseFloat(costEstimate.MonthlyCost, 32)
+		if err != nil {
+			log.Debugf("[markdown_creator][get_new_and_not_new_resources_costs] error parsing monthly cost: %s", err)
+			monthlyCostFloat = 0.0
+		}
+
+		return monthlyCostFloat
+		// If no monthly cost, only add the unit price if the resource is not usage based
+	} else if !costEstimate.IsUsageBased {
+		priceCostFloat, err := strconv.ParseFloat(costEstimate.Price, 32)
+		if err != nil {
+			log.Debugf("[markdown_creator][get_new_and_not_new_resources_costs] error parsing price: %s", err)
+			priceCostFloat = 0.0
+		}
+
+		return priceCostFloat
+	}
+
+	return 0.0
 }
