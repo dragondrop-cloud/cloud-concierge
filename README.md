@@ -57,7 +57,7 @@ This left us asking: What if we could add drift detection, codification, securit
 
 ## Quick Start
 ### All Cloud Provider Pre-requisites
-0) Obtain an API token at https://app.dragondrop.cloud. We only collect data on when a cloud-concierge starts up (this can be verified here).
+0) Obtain an API token at https://app.dragondrop.cloud. For open source executions, we only collect data on when a cloud-concierge starts up (see the Telemetry section below).
 1) Configure an environment variable file (use one of our [templates](https://github.com/dragondrop-cloud/cloud-concierge/tree/dev/examples/environments/) to get started) to control the specifics of cloud-concierge's coverage.
 2) Make sure you have Docker available on your local machine, and run `docker pull dragondropcloud/cloud-concierge:latest` to pull the latest image.
 
