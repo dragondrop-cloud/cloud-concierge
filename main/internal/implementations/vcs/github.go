@@ -56,22 +56,11 @@ type GitHub struct {
 
 // NewGitHub creates a new instance of the GitHub struct.
 func NewGitHub(ctx context.Context, dragonDrop interfaces.DragonDrop, config Config) interfaces.VCS {
-	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: config.VCSToken},
-	)
-	tc := oauth2.NewClient(context.Background(), ts)
-
-	authenticatedClient := github.NewClient(tc)
 	dragonDrop.PostLog(ctx, "Created VCS client.")
 
 	return &GitHub{
-		config: config,
-		authBasic: &http.BasicAuth{
-			Username: config.VCSUser,
-			Password: config.VCSToken,
-		},
-		oauth2Client: authenticatedClient,
-		dragonDrop:   dragonDrop,
+		config:     config,
+		dragonDrop: dragonDrop,
 	}
 }
 
@@ -290,6 +279,24 @@ func (g *GitHub) OpenPullRequest(jobName string) (string, error) {
 
 	logrus.Debugf("[Github] PR opened with url %v", pr.GetURL())
 	return pr.GetURL(), nil
+}
+
+// SetToken sets the github token for the GitHub struct.
+func (g *GitHub) SetToken(token string) {
+	g.authBasic = &http.BasicAuth{
+		Username: "x-access-token",
+		Password: token,
+	}
+
+	ts := oauth2.StaticTokenSource(
+		&oauth2.Token{
+			TokenType:   "Bearer",
+			AccessToken: token,
+		},
+	)
+	tc := oauth2.NewClient(context.Background(), ts)
+	authenticatedClient := github.NewClient(tc)
+	g.oauth2Client = authenticatedClient
 }
 
 // extractOrgAndRepoName pulls out the organization and repository name from the
