@@ -91,22 +91,24 @@ func (j *Job) Authorize(ctx context.Context) error {
 			return fmt.Errorf("[create_job][error informing started job][%w]", err)
 		}
 
-		infracostToken, jobName, err := j.dragonDrop.AuthorizeManagedJob(ctx)
+		infracostToken, jobName, githubToken, err := j.dragonDrop.AuthorizeManagedJob(ctx)
 		if err != nil {
 			return fmt.Errorf("[create_job][error authorizing managed job][%w]", err)
 		}
 		log.Debugf("Job name: %s", jobName)
 		j.costEstimator.SetInfracostAPIToken(infracostToken)
+		j.vcs.SetToken(githubToken)
 		j.name = jobName
 		j.dragonDrop.PostLog(ctx, "Authorized against billing plan.")
 	} else {
-		infracostToken, err := j.dragonDrop.AuthorizeJob(ctx)
+		infracostToken, githubToken, err := j.dragonDrop.AuthorizeJob(ctx)
 		if err != nil {
 			fmt.Printf("Error authenticating the job run, please get an Organization token by signing up at https://app.dragondrop.cloud.")
 			return fmt.Errorf("[create_job][error authorizing job][%w]", err)
 		}
 
 		j.costEstimator.SetInfracostAPIToken(infracostToken)
+		j.vcs.SetToken(githubToken)
 		j.name = j.config.JobName
 	}
 	return nil

@@ -7,52 +7,65 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"regexp"
 
 	log "github.com/sirupsen/logrus"
 )
 
 // AuthorizeJob Checks with DragonDropAPI for valid auth of the current job, for an oss job
-func (c *HTTPDragonDropClient) AuthorizeJob(ctx context.Context) (string, error) {
+func (c *HTTPDragonDropClient) AuthorizeJob(ctx context.Context) (string, string, error) {
 	log.Debugf("[authorize_job] org token: %s, job token: %s", c.config.OrgToken, c.config.JobID)
 	request, err := c.newRequest(
 		ctx,
 		"GetJobAuthorization",
 		"GET",
-		fmt.Sprintf("%v/job/authorize/oss/", c.config.APIPath),
+		fmt.Sprintf("%v/job/authorize/oss/?repository=%s", c.config.APIPath, getOrgAndRepo(c.config.VCSRepo)),
 		nil,
 	)
 
 	if err != nil {
-		return "", fmt.Errorf("[authorize_job][error in newRequest]%w", err)
+		return "", "", fmt.Errorf("[authorize_job][error in newRequest]%w", err)
 	}
 
 	response, err := c.httpClient.Do(request)
 
 	if err != nil {
-		return "", fmt.Errorf("[authorize_job] error in http GET request]%w", err)
+		return "", "", fmt.Errorf("[authorize_job] error in http GET request]%w", err)
 	}
 
 	defer response.Body.Close()
 	if response.StatusCode != 200 {
-		return "", fmt.Errorf("[authorize_job][was unsuccessful, with the server returning: %v]", response.StatusCode)
+		return "", "", fmt.Errorf("[authorize_job][was unsuccessful, with the server returning: %v]", response.StatusCode)
 	}
 
 	// Read in response body to bytes array.
 	outputBytes, err := io.ReadAll(response.Body)
 	if err != nil {
-		return "", fmt.Errorf("[authorize_job][error in reading response into bytes array]%w", err)
+		return "", "", fmt.Errorf("[authorize_job][error in reading response into bytes array]%w", err)
 	}
 
 	var jobAuthResponse struct {
-		InfracostAPIToken string
+		InfracostAPIToken string `json:"infracost_api_token"`
+		GithubToken       string `json:"github_token"`
 	}
 
 	err = json.Unmarshal(outputBytes, &jobAuthResponse)
 	if err != nil {
-		return "", fmt.Errorf("[authorize_job][unable to unmarshal %v]", string(outputBytes))
+		return "", "", fmt.Errorf("[authorize_job][unable to unmarshal %v]", string(outputBytes))
 	}
 
-	return jobAuthResponse.InfracostAPIToken, nil
+	return jobAuthResponse.InfracostAPIToken, jobAuthResponse.GithubToken, nil
+}
+
+// getOrgAndRepo returns the org and repo name from a full GitHub repo url.
+func getOrgAndRepo(repo string) string {
+	githubRepoExp := regexp.MustCompile(`https://github.com/(.*).git`)
+	matches := githubRepoExp.FindStringSubmatch(repo)
+	if len(matches) != 2 {
+		return ""
+	}
+
+	return matches[1]
 }
 
 type NLPEnginePostBody struct {

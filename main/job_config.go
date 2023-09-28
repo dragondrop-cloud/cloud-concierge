@@ -71,13 +71,6 @@ type JobConfig struct {
 	// Provider is a map between a cloud provider and the version for that provider.
 	Provider map[terraformValueObjects.Provider]string `required:"true"`
 
-	// VCSToken is the auth token needed to read code and open pull requests within a customer's VCS
-	// environment.
-	VCSToken string `required:"true"`
-
-	// VCSUser is the name of the user with whom VCSToken is associated.
-	VCSUser string `required:"true"`
-
 	// VCSRepo is the full path of the repo containing a customer's infrastructure specification.
 	// At the moment, must be a valid GitHub repository URL.
 	VCSRepo string `required:"true"`
@@ -113,6 +106,7 @@ func validateJobConfig(config JobConfig) error {
 // getDragonDropConfig returns the configuration for the DragonDrop client.
 func (c JobConfig) getDragonDropConfig() dragonDrop.HTTPDragonDropClientConfig {
 	return dragonDrop.HTTPDragonDropClientConfig{
+		VCSRepo:              c.VCSRepo,
 		APIPath:              c.APIPath,
 		JobID:                c.JobID,
 		NLPEndpoint:          c.NLPEndpoint,
@@ -124,8 +118,6 @@ func (c JobConfig) getDragonDropConfig() dragonDrop.HTTPDragonDropClientConfig {
 func (c JobConfig) getVCSConfig() vcs.Config {
 	return vcs.Config{
 		VCSRepo:       c.VCSRepo,
-		VCSToken:      c.VCSToken,
-		VCSUser:       c.VCSUser,
 		PullReviewers: c.PullReviewers,
 	}
 }
