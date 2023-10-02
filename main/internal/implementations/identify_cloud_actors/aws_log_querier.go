@@ -195,7 +195,6 @@ func (alc *AWSLogQuerier) cloudTrailEventHistorySearch(_ context.Context, resour
 	if err != nil {
 		return terraformValueObjects.ResourceActions{}, fmt.Errorf("[alc.cloudTrailClient.LookupEvents]%v", err)
 	}
-	log.Debugf("[aws_log_querier][cloudTrailEventHistorySearch] result: %v", result)
 
 	return alc.ExtractDataFromResourceResult(result.Events, resourceType, isNewToTerraform)
 }
@@ -203,7 +202,6 @@ func (alc *AWSLogQuerier) cloudTrailEventHistorySearch(_ context.Context, resour
 // ExtractDataFromResourceResult parses the log response from the provider API
 // and extracts needed data (namely who made the most recent relevant change to the resource).
 func (alc *AWSLogQuerier) ExtractDataFromResourceResult(resourceResult []*cloudtrail.Event, resourceType string, isNewToTerraform bool) (terraformValueObjects.ResourceActions, error) {
-	log.Debugf("[aws_log_querier][ExtractDataFromResourceResult] resourceResult: %v", resourceResult)
 	resourceActions := terraformValueObjects.ResourceActions{}
 
 	if len(resourceResult) == 0 {

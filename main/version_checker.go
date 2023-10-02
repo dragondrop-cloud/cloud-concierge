@@ -11,7 +11,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const currentVersion = "v0.1.6"
+const currentVersion = "v0.1.7"
 const footer = "###########################################################################################################################################################"
 
 // VersionChecker is a struct that contains the http client used to make http requests to GitHub and validate the latest version of cloud-concierge.
