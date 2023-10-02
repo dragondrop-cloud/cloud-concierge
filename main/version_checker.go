@@ -14,7 +14,7 @@ import (
 const currentVersion = "v0.1.6"
 const footer = "###########################################################################################################################################################"
 
-// VersionChecker is a struct that contains the http client used to make http requests to github and validate the latest version of cloud-concierge.
+// VersionChecker is a struct that contains the http client used to make http requests to GitHub and validate the latest version of cloud-concierge.
 type VersionChecker struct {
 	// httpClient is a http client shared across all http requests within this package.
 	httpClient http.Client
