@@ -24,7 +24,7 @@
 <img src="https://img.shields.io/badge/slack-Join_Us-blueviolet" />
 </a>
 <h3 align="center">
-<a href="https://github.com/dragondrop-cloud/cloud-concierge-example/pull/2" target="_blank">Example Output</a> |
+<a href="https://github.com/dragondrop-cloud/cloud-concierge-example/pull/3" target="_blank">Example Output</a> |
 <a href="https://docs.cloudconcierge.io" target="_blank">Docs</a>
 </h3>
 
@@ -62,7 +62,7 @@ II) Run the cloud-concierge container using the following command:
 
 If running on Windows, the substitute `$HOME/.aws:` for `~/.aws:` in the above command.
 
-III) Check the Pull Request that has been created by cloud-concierge ([example output](https://github.com/dragondrop-cloud/cloud-concierge-example/pull/2)).
+III) Check the Pull Request that has been created by cloud-concierge ([example output](https://github.com/dragondrop-cloud/cloud-concierge-example/pull/3)).
 
 ### Azure & GCP Quickstart
 See more [here](https://docs.cloudconcierge.io/quick-start#gcp).
@@ -92,7 +92,7 @@ If you are looking to use cloud-concierge at scale, however, the [dragondrop.clo
 - Continue to self-host cloud-concierge instances within your cloud using [serverless infrastructure](https://registry.terraform.io/namespaces/dragondrop-cloud).
 
 ## Resources
-- [Example Output](https://github.com/dragondrop-cloud/cloud-concierge-example/pull/2)
+- [Example Output](https://github.com/dragondrop-cloud/cloud-concierge-example/pull/3)
 - [Documentation](https://docs.cloudconcierge.io)
 - [Roadmap](https://github.com/dragondrop-cloud/cloud-concierge/wiki/Roadmap)
 - [Blog](https://medium.com/@hello_9187)
