@@ -35,7 +35,10 @@ func (c *HTTPDragonDropClient) AuthorizeJob(ctx context.Context) (string, string
 
 	defer response.Body.Close()
 	if response.StatusCode != 200 {
-		return "", "", fmt.Errorf("[authorize_job][was unsuccessful, with the server returning: %v]", response.StatusCode)
+		return "", "", fmt.Errorf(
+			"[authorize_job][was unsuccessful, with the server returning: %v]\nDouble check that the desired repo has the cloud-concierge GitHub App installed\nhttps://github.com/apps/cloud-concierge",
+			response.StatusCode,
+		)
 	}
 
 	// Read in response body to bytes array.
