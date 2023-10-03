@@ -29,8 +29,8 @@
 </h3>
 
 ## Why cloud-concierge?
-cloud-concierge is a container that integrates with your existing Terraform management stack.
-All results and codified resources are output via a digestible [Pull Request](https://github.com/dragondrop-cloud/cloud-concierge-example/pull/2) to a repository of your choice, providing you with a "State of Cloud"
+cloud-concierge is a container that integrates with your existing Terraform management set up.
+All results and codified resources are output via a digestible [Pull Request](https://github.com/dragondrop-cloud/cloud-concierge-example/pull/3) to a repository of your choice, providing you with a "State of Cloud"
 report in a GitOps manner. It provides:
 - &#9989; Cloud codification, identify un-managed resources and generate corresponding Terraform code and import statements/import blocks
 
