@@ -94,7 +94,7 @@ def authenticate_invocation(token: str):
     url = os.getenv("DRAGONDROP_API_URL")
 
     response = requests.get(
-        url=f"{url}/job/authorize/oss/",
+        url=f"{url}/job/authorize/nlp-engine/",
         headers={
             "Authorization": "Bearer " + token,
             "Content-Type": "application/json",

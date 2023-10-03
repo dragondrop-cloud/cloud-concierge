@@ -54,3 +54,8 @@ func (v *IsolatedVCS) OpenPullRequest(_ string) (string, error) {
 func (v *IsolatedVCS) GetID() (string, error) {
 	return "", nil
 }
+
+// SetToken sets the token for the VCS
+func (v *IsolatedVCS) SetToken(_ string) {
+
+}

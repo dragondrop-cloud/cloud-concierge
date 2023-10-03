@@ -13,7 +13,8 @@ import (
 // AuthorizeManagedJobRequestBody is a struct for sending a request to the dragondrop API to
 // authorize a managed job.
 type AuthorizeManagedJobRequestBody struct {
-	JobID string
+	JobID      string `json:"job_id"`
+	Repository string `json:"repository"`
 }
 
 // PutPRURLRequest is a struct for the data in a request to the dragondrop API to
@@ -248,16 +249,17 @@ func (c *HTTPDragonDropClient) PutJobPullRequestURL(ctx context.Context, prURL s
 
 // AuthorizeManagedJob check with DragonDropAPI for valid auth of the current job, for a job managed
 // by dragondrop.
-func (c *HTTPDragonDropClient) AuthorizeManagedJob(ctx context.Context) (string, string, error) {
+func (c *HTTPDragonDropClient) AuthorizeManagedJob(ctx context.Context) (string, string, string, error) {
 	logrus.Debugf("Authorize managed job: %s", c.config.JobID)
 	// Building authorization request body
 	jsonBody, err := json.Marshal(
 		AuthorizeManagedJobRequestBody{
-			JobID: c.config.JobID,
+			JobID:      c.config.JobID,
+			Repository: getOrgAndRepo(c.config.VCSRepo),
 		})
 
 	if err != nil {
-		return "", "", fmt.Errorf("[authorize_managed_job][error in json marshal]%v", err)
+		return "", "", "", fmt.Errorf("[authorize_managed_job][error in json marshal]%v", err)
 	}
 
 	request, err := c.newRequest(
@@ -269,34 +271,35 @@ func (c *HTTPDragonDropClient) AuthorizeManagedJob(ctx context.Context) (string,
 	)
 
 	if err != nil {
-		return "", "", fmt.Errorf("[authorize_managed_job][error in newRequest]%w", err)
+		return "", "", "", fmt.Errorf("[authorize_managed_job][error in newRequest]%w", err)
 	}
 
 	response, err := c.httpClient.Do(request)
 
 	if err != nil {
-		return "", "", fmt.Errorf("[authorize_managed_job][error in http GET request]%w", err)
+		return "", "", "", fmt.Errorf("[authorize_managed_job][error in http GET request]%w", err)
 	}
 
 	defer response.Body.Close()
 	if response.StatusCode != 200 {
-		return "", "", fmt.Errorf("[authorize_managed_job][was unsuccessful, with the server returning: %v]", response.StatusCode)
+		return "", "", "", fmt.Errorf("[authorize_managed_job][was unsuccessful, with the server returning: %v]", response.StatusCode)
 	}
 
 	// Read in response body to bytes array.
 	outputBytes, err := io.ReadAll(response.Body)
 	if err != nil {
-		return "", "", fmt.Errorf("[authorize_job][error in reading response into bytes array]%w", err)
+		return "", "", "", fmt.Errorf("[authorize_job][error in reading response into bytes array]%w", err)
 	}
 
 	var jobAuthResponse struct {
-		JobName           string
-		InfracostAPIToken string
+		JobName           string `json:"job_name"`
+		InfracostAPIToken string `json:"infracost_api_token"`
+		GithubToken       string `json:"github_token"`
 	}
 	err = json.Unmarshal(outputBytes, &jobAuthResponse)
 	if err != nil {
-		return "", "", fmt.Errorf("[authorize_job][unable to unmarshal %v]", string(outputBytes))
+		return "", "", "", fmt.Errorf("[authorize_job][unable to unmarshal %v]", string(outputBytes))
 	}
 
-	return jobAuthResponse.InfracostAPIToken, jobAuthResponse.JobName, nil
+	return jobAuthResponse.InfracostAPIToken, jobAuthResponse.JobName, jobAuthResponse.GithubToken, nil
 }

@@ -28,6 +28,8 @@ type VCS interface {
 	// GetID returns a string which is a random, 10 character unique identifier
 	// for a dragondrop built commit/pull request
 	GetID() (string, error)
+
+	SetToken(token string)
 }
 
 // VCSMock implements the VCS interface solely for testing purposes.
@@ -77,4 +79,9 @@ func (m *VCSMock) OpenPullRequest(_ string) (string, error) {
 func (m *VCSMock) GetID() (string, error) {
 	args := m.Called()
 	return args.String(0), args.Error(1)
+}
+
+// SetToken sets the token for the VCS
+func (m *VCSMock) SetToken(token string) {
+	m.Called(token)
 }

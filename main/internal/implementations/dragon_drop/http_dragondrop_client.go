@@ -19,6 +19,10 @@ type HTTPDragonDropClientConfig struct {
 	// APIPath is the dragondrop api path to which requests are sent.
 	APIPath string
 
+	// VCSRepo is the full path of the repo containing a customer's infrastructure specification.
+	// At the moment, must be a valid GitHub repository URL.
+	VCSRepo string `required:"true"`
+
 	// JobID is the unique identification string for the current job run.
 	JobID string
 

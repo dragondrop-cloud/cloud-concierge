@@ -37,8 +37,6 @@ func validJobConfig() *JobConfig {
 		Provider: map[terraformValueObjects.Provider]string{
 			"aws": "~>4.57.0",
 		},
-		VCSToken:           "VCSToken",
-		VCSUser:            "VCSUser",
 		VCSRepo:            "VCSRepo",
 		PullReviewers:      []string{"PullReviewer1", "PullReviewer2"},
 		ResourcesWhiteList: terraformValueObjects.ResourceNameList{"Resource1", "Resource2"},
@@ -63,6 +61,7 @@ func TestGetDragonDropConfig(t *testing.T) {
 		APIPath:              jobConfig.APIPath,
 		JobID:                jobConfig.JobID,
 		OrgToken:             jobConfig.OrgToken,
+		VCSRepo:              jobConfig.VCSRepo,
 		WorkspaceDirectories: jobConfig.WorkspaceDirectories,
 	}
 
@@ -79,8 +78,6 @@ func TestGetVCSConfig(t *testing.T) {
 	// Then
 	want := vcs.Config{
 		VCSRepo:       jobConfig.VCSRepo,
-		VCSToken:      jobConfig.VCSToken,
-		VCSUser:       jobConfig.VCSUser,
 		PullReviewers: jobConfig.PullReviewers,
 	}
 

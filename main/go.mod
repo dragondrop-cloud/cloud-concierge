@@ -8,6 +8,7 @@ require (
 	github.com/Jeffail/gabs/v2 v2.7.0
 	github.com/atsushinee/go-markdown-generator v0.0.0-20191121114853-83f9e1f68504
 	github.com/aws/aws-sdk-go v1.45.1
+	github.com/fatih/color v1.15.0
 	github.com/go-git/go-git/v5 v5.8.1
 	github.com/google/go-github/v45 v45.2.0
 	github.com/hashicorp/hcl/v2 v2.18.0
@@ -34,7 +35,6 @@ require (
 	github.com/cloudflare/circl v1.3.3 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
-	github.com/fatih/color v1.15.0 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
 	github.com/go-git/go-billy/v5 v5.4.1 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
