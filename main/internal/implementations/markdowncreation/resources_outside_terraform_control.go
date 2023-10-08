@@ -2,6 +2,7 @@ package markdowncreation
 
 import (
 	"fmt"
+	"math"
 	"strings"
 
 	"github.com/atsushinee/go-markdown-generator/doc"
@@ -94,7 +95,7 @@ func (m *MarkdownCreator) resourcesWithCostEstimates(report *doc.MarkDownDoc, re
 				report.Write("|$0.00*")
 				report.Write("|True|")
 			} else {
-				report.Write(fmt.Sprintf("|$%.2f", resourceDetail.MonthlyCost))
+				report.Write(fmt.Sprintf("|$%.2f", roundFloat(resourceDetail.MonthlyCost)))
 				report.Write("|False|")
 			}
 		} else {
@@ -107,6 +108,12 @@ func (m *MarkdownCreator) resourcesWithCostEstimates(report *doc.MarkDownDoc, re
 	}
 
 	report.Writeln()
+}
+
+// roundFloat rounds a float to 2 decimal places
+func roundFloat(val float64) float64 {
+	ratio := math.Pow(10, float64(2))
+	return math.Round(val*ratio) / ratio
 }
 
 // resourcesWithoutCostEstimates sets the resources outside terraform control data in the markdown report

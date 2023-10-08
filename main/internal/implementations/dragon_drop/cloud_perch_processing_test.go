@@ -97,14 +97,12 @@ func TestHTTPDragonDropClient_getResourceInventoryData(t *testing.T) {
 	require.NoError(t, err, "failed to unmarshal deleted resources")
 
 	// When
-	resourceInventory, newResources, err := client.getResourceInventoryData(newResources, driftedResources, deletedResources)
+	resourceInventory, err := client.getResourceInventoryData(newResources, driftedResources, deletedResources)
 
 	// Then
 	require.NoError(t, err)
 	require.Equal(t, 2, resourceInventory.DriftedResources)
 	require.Equal(t, 2, resourceInventory.ResourcesOutsideTerraformControl)
-	require.NotNil(t, newResources["resource_id_1"])
-	require.NotNil(t, newResources["resource_id_2"])
 	require.Equal(t, 3, resourceInventory.DeletedResources)
 }
 
@@ -236,8 +234,91 @@ func TestHTTPDragonDropClient_getCloudCostsData(t *testing.T) {
 
 	// Then
 	require.NoError(t, err)
-	require.Equal(t, 22.265, cloudCosts.CostsOutsideOfTerraform)
-	require.Equal(t, 123.546, cloudCosts.CostsTerraformControlled)
+	require.Equal(t, 22.27, cloudCosts.CostsOutsideOfTerraform)
+	require.Equal(t, 123.55, cloudCosts.CostsTerraformControlled)
+}
+
+func TestHTTPDragonDropClient_getCloudCostsData_EdgeAWSCase(t *testing.T) {
+	// Given
+	ctx := context.Background()
+	client := HTTPDragonDropClient{}
+
+	newResources := map[string]any{
+		"aws_db_instance.resource_terraformer_name_1":     "terraform name of resource terraformer name 1",
+		"aws_db_snapshot.resource_terraformer_name_2":     "terraform name of resource terraformer name 2",
+		"aws_db_snapshot.resource_terraformer_name_3":     "terraform name of resource terraformer name 3",
+		"aws_db_snapshot.resource_terraformer_name_4":     "terraform name of resource terraformer name 4",
+		"aws_db_subnet_group.resource_terraformer_name_5": "terraform name of resource terraformer name 5",
+		"aws_lb_listener.resource_terraformer_name_6":     "terraform name of resource terraformer name 6",
+	}
+
+	costEstimateBytes := []byte(`
+	[
+		{
+			"cost_component": "Database instance",
+			"is_usage_based": false,
+			"monthly_cost": "13.14",
+			"monthly_quantity": "730",
+			"price": "0.018",
+			"resource_name": "aws_db_instance.resource_terraformer_name_1",
+			"sub_resource_name": "",
+			"unit": "hours"
+		},
+		{
+			"cost_component": "Database snapshot",
+			"is_usage_based": false,
+			"monthly_cost": "2.3",
+			"monthly_quantity": "20",
+			"price": "0.115",
+			"resource_name": "aws_db_instance.resource_terraformer_name_1",
+			"sub_resource_name": "",
+			"unit": "GB"
+		},
+		{
+			"cost_component": "Database snapshot",
+			"is_usage_based": false,
+			"monthly_cost": "",
+			"monthly_quantity": "",
+			"price": "0.095",
+			"resource_name": "aws_db_instance.resource_terraformer_name_1",
+			"sub_resource_name": "",
+			"unit": "GB"
+		},
+		{
+			"cost_component": "Application load balancer",
+			"is_usage_based": false,
+			"monthly_cost": "16.425",
+			"monthly_quantity": "730",
+			"price": "0.0225",
+			"resource_name": "resource_type_4.resource_terraformer_name_4",
+			"sub_resource_name": "",
+			"unit": "hours"
+		},
+		{
+			"cost_component": "Application load balancer",
+			"is_usage_based": false,
+			"monthly_cost": "",
+			"monthly_quantity": "",
+			"price": "5.84",
+			"resource_name": "resource_type_4.resource_terraformer_name_4",
+			"sub_resource_name": "",
+			"unit": "LCU"
+		}
+	]`)
+
+	var costEstimate []interface{}
+	err := json.Unmarshal(costEstimateBytes, &costEstimate)
+	if err != nil {
+		t.Errorf("[error unmarshalling bytes]%v", err)
+	}
+
+	// When
+	cloudCosts, err := client.getCloudCostsData(ctx, newResources, costEstimate)
+
+	// Then
+	require.NoError(t, err)
+	require.Equal(t, 15.54, cloudCosts.CostsOutsideOfTerraform)
+	require.Equal(t, 22.27, cloudCosts.CostsTerraformControlled)
 }
 
 func TestHTTPDragonDropClient_getCloudActorDataSimple(t *testing.T) {
