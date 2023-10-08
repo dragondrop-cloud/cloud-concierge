@@ -59,7 +59,7 @@ func (m *MarkdownCreator) getNewAndNotNewResourcesCosts() (string, string) {
 	log.Debugf("New resources costs: %f", newResourcesCosts)
 	log.Debugf("Not new resources costs: %f", notNewResourcesCosts)
 
-	return fmt.Sprintf("%.2f", newResourcesCosts), fmt.Sprintf("%.2f", notNewResourcesCosts)
+	return fmt.Sprintf("%.2f", roundFloat(newResourcesCosts)), fmt.Sprintf("%.2f", roundFloat(notNewResourcesCosts))
 }
 
 func (m *MarkdownCreator) getActualMonthlyCostEstimate(costEstimate CostEstimate) float64 {

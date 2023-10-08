@@ -84,12 +84,12 @@ func formatResources(resources map[string]interface{}) map[string]interface{} {
 }
 
 // getResourceInventoryData returns the number of resources outside of terraform control and the number of drifted resources
-func (c *HTTPDragonDropClient) getResourceInventoryData(newResources map[string]interface{}, driftedResources []interface{}, deletedResources []interface{}) (ResourceInventoryData, map[string]interface{}, error) {
+func (c *HTTPDragonDropClient) getResourceInventoryData(newResources map[string]interface{}, driftedResources []interface{}, deletedResources []interface{}) (ResourceInventoryData, error) {
 	return ResourceInventoryData{
 		DriftedResources:                 getUniqueDriftedResourceCount(driftedResources),
 		DeletedResources:                 len(deletedResources),
 		ResourcesOutsideTerraformControl: len(newResources),
-	}, newResources, nil
+	}, nil
 }
 
 // getUniqueDriftedResourceCount returns the number of unique drifted resources
@@ -162,23 +162,24 @@ func (c *HTTPDragonDropClient) getCloudActorData(_ context.Context, cloudActorBy
 
 // getCloudCostsData returns the costs of the resources outside of Terraform control and the costs of the resources
 // already controlled by Terraform.
-func (c *HTTPDragonDropClient) getCloudCostsData(_ context.Context, newResources map[string]interface{}, costEstimation []interface{}) (CloudCostsData, error) {
+func (c *HTTPDragonDropClient) getCloudCostsData(_ context.Context, newResources map[string]any, costEstimation []any) (CloudCostsData, error) {
 	if len(costEstimation) == 0 {
 		return CloudCostsData{}, nil
 	}
 
 	cloudCostsData := CloudCostsData{}
 	for _, costEstimate := range costEstimation {
-		costEstimateMap := costEstimate.(map[string]interface{})
-		_, ok := newResources[costEstimateMap["resource_name"].(string)]
+		costEstimateMap := costEstimate.(map[string]any)
 
-		if ok {
-			cloudCostsData.CostsOutsideOfTerraform = roundFloat(cloudCostsData.CostsOutsideOfTerraform + getMonthlyCost(costEstimateMap))
+		if _, isNewResource := newResources[costEstimateMap["resource_name"].(string)]; isNewResource {
+			cloudCostsData.CostsOutsideOfTerraform = roundFloat(cloudCostsData.CostsOutsideOfTerraform+getMonthlyCost(costEstimateMap), 3)
 		} else {
-			cloudCostsData.CostsTerraformControlled = roundFloat(cloudCostsData.CostsTerraformControlled + getMonthlyCost(costEstimateMap))
+			cloudCostsData.CostsTerraformControlled = roundFloat(cloudCostsData.CostsTerraformControlled+getMonthlyCost(costEstimateMap), 3)
 		}
 	}
 
+	cloudCostsData.CostsOutsideOfTerraform = roundFloat(cloudCostsData.CostsOutsideOfTerraform, 2)
+	cloudCostsData.CostsTerraformControlled = roundFloat(cloudCostsData.CostsTerraformControlled, 2)
 	return cloudCostsData, nil
 }
 
@@ -203,9 +204,9 @@ func getMonthlyCost(costEstimateMap map[string]interface{}) float64 {
 	return monthlyCostFloat
 }
 
-// roundFloat rounds a float to 3 decimal places
-func roundFloat(val float64) float64 {
-	ratio := math.Pow(10, float64(3))
+// roundFloat rounds a float to N decimal places
+func roundFloat(val float64, n uint) float64 {
+	ratio := math.Pow(10, float64(n))
 	return math.Round(val*ratio) / ratio
 }
 
