@@ -147,7 +147,7 @@ func (c *TerraformCloud) getWorkspaceState(ctx context.Context, workspaceName st
 		return fmt.Errorf("[get_workspace_state][error extracting raw state url]%w", err)
 	}
 
-	jsonResponseBytes, err = c.getRawTerraformStateFile(rawStateURL)
+	jsonResponseBytes, err = c.getRawTerraformStateFile(ctx, rawStateURL)
 
 	if err != nil {
 		return fmt.Errorf("[get_workspace_state][error getting raw terraform state file]%w", err)
@@ -210,7 +210,7 @@ func (c *TerraformCloud) terraformCloudRequest(request *http.Request, requestNam
 	}
 
 	defer response.Body.Close()
-	if response.StatusCode != 200 {
+	if response.StatusCode > 201 {
 		return nil, fmt.Errorf("[terraform_cloud_request][request %s was unsuccessful, with the server returning: %d]", requestName, response.StatusCode)
 	}
 
@@ -257,25 +257,18 @@ func (c *TerraformCloud) extractWorkspaceID(jsonBytes []byte) (string, error) {
 }
 
 // getRawTerraformStateFile gets the raw terraform state file contents from the passed url.
-func (c *TerraformCloud) getRawTerraformStateFile(rawStateURL string) ([]byte, error) {
-	resp, err := http.Get(rawStateURL) //nolint
+func (c *TerraformCloud) getRawTerraformStateFile(ctx context.Context, rawStateURL string) ([]byte, error) {
+	requestName := "getRawStateFromTFC"
+	request, err := c.buildTFCloudHTTPRequest(ctx, requestName, "GET", rawStateURL)
+
+	if err != nil {
+		return nil, fmt.Errorf("[get_workspace_state][error creating request %s]%w", requestName, err)
+	}
+
+	respBytes, err := c.terraformCloudRequest(request, requestName)
 
 	if err != nil {
 		return nil, fmt.Errorf("[get_raw_terraform_state_file][error executing http get request]%w", err)
 	}
-	defer resp.Body.Close()
-
-	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("[get_raw_terraform_state_file][was unsuccessful, with the server returning: %d]", resp.StatusCode)
-	}
-
-	// Read in response body to bytes array.
-	outputBytes, err := io.ReadAll(resp.Body)
-
-	if err != nil {
-		return nil, fmt.Errorf("[get_raw_terraform_state_file][error in reading response into bytes array]%w", err)
-	}
-
-	return outputBytes, nil
+	return respBytes, nil
 }
