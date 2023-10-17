@@ -59,6 +59,4 @@ COPY --from=infracost /usr/bin/infracost /usr/local/bin/
 COPY --from=tfsec /usr/bin/tfsec /usr/local/bin/
 COPY --from=cloud-concierge /go/bin/cloud-concierge /go/bin/cloud-concierge
 
-RUN echo $PATH
-
 ENTRYPOINT ["/go/bin/cloud-concierge"]
