@@ -13,11 +13,11 @@
 </a>
 
 <a href="https://hub.docker.com/r/dragondropcloud/cloud-concierge/tags" alt="Latest Docker Version">
-   <img src="https://img.shields.io/badge/docker-v0.1.9-blue" />
+   <img src="https://img.shields.io/badge/docker-v0.1.10-blue" />
 </a>
 
 <a href="https://hub.docker.com/r/dragondropcloud/cloud-concierge" alt="Total Downloads">
-   <img src="https://img.shields.io/badge/downloads-6.4k-maroon" />
+   <img src="https://img.shields.io/badge/downloads-7.2k-maroon" />
 </a>
 
 <a href="https://cloud-concierge.slack.com/join/shared_invite/zt-1xx3sqsb6-cekIXs2whccZvbU81Xn5qg#/shared-invite/email" alt="Slack">
