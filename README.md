@@ -17,12 +17,9 @@
 </a>
 
 <a href="https://hub.docker.com/r/dragondropcloud/cloud-concierge" alt="Total Downloads">
-   <img src="https://img.shields.io/badge/downloads-7.2k-maroon" />
+   <img src="https://img.shields.io/badge/downloads-10.2k-maroon" />
 </a>
 
-<a href="https://cloud-concierge.slack.com/join/shared_invite/zt-1xx3sqsb6-cekIXs2whccZvbU81Xn5qg#/shared-invite/email" alt="Slack">
-<img src="https://img.shields.io/badge/slack-Join_Us-blueviolet" />
-</a>
 <h3 align="center">
 <a href="https://github.com/dragondrop-cloud/cloud-concierge-example/pull/3" target="_blank">Example Output</a> |
 <a href="https://docs.cloudconcierge.io" target="_blank">Docs</a>
@@ -96,6 +93,5 @@ If you are looking to use cloud-concierge at scale, however, the [dragondrop.clo
 - [Documentation](https://docs.cloudconcierge.io)
 - [Roadmap](https://github.com/dragondrop-cloud/cloud-concierge/wiki/Roadmap)
 - [Blog](https://medium.com/@hello_9187)
-- [Slack](https://cloud-concierge.slack.com/join/shared_invite/zt-1xx3sqsb6-cekIXs2whccZvbU81Xn5qg#/shared-invite/email)
 - [Tool Walk Through (low stakes and purely educational)](https://calendly.com/dragondrop-cloud/cloud-concierge-walk-through)
 - [Managed Offering](https://docs.dragondrop.cloud/)
