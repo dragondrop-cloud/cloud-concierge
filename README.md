@@ -13,11 +13,11 @@
 </a>
 
 <a href="https://hub.docker.com/r/dragondropcloud/cloud-concierge/tags" alt="Latest Docker Version">
-   <img src="https://img.shields.io/badge/docker-v0.1.10-blue" />
+   <img src="https://img.shields.io/badge/docker-v0.1.11-blue" />
 </a>
 
 <a href="https://hub.docker.com/r/dragondropcloud/cloud-concierge" alt="Total Downloads">
-   <img src="https://img.shields.io/badge/downloads-10.2k-maroon" />
+   <img src="https://img.shields.io/badge/downloads-11.3k-maroon" />
 </a>
 
 <h3 align="center">
@@ -37,7 +37,7 @@ report in a GitOps manner. It provides:
 
 - &#9989; Whole-cloud cost estimation, powered by Infracost
 
-- &#9989; Whole-cloud security scanning, powered by tfsec (checkov integration coming soon)
+- &#9989; Whole-cloud security scanning, powered by tfsec
 
 ## In action (managed instance)
 https://github.com/dragondrop-cloud/cloud-concierge/assets/52042939/f81f567c-2c04-4aaf-ba75-963c49bcfab5
@@ -80,18 +80,8 @@ can be viewed [here](https://github.com/dragondrop-cloud/cloud-concierge/blob/de
 ## Contributing
 Contributions in any form are highly encouraged. Check out our [contributing guide](CONTRIBUTING.md) to get started.
 
-## Using at Scale with dragondrop.cloud
-The cloud-concierge container is easy to manage in a single configuration.
-If you are looking to use cloud-concierge at scale, however, the [dragondrop.cloud](https://dragondrop.cloud/how-it-works) management platform allows you to:
-- Manage multiple cloud-concierge configurations through a user interface
-- Manage different cron jobs for executing each configuration at desired intervals
-- Consolidate multiple cloud-concierge executions into anonymized visualizations of drift, uncodified resources, cloud costs, and security risks.
-- Continue to self-host cloud-concierge instances within your cloud using [serverless infrastructure](https://registry.terraform.io/namespaces/dragondrop-cloud).
-
 ## Resources
 - [Example Output](https://github.com/dragondrop-cloud/cloud-concierge-example/pull/3)
 - [Documentation](https://docs.cloudconcierge.io)
 - [Roadmap](https://github.com/dragondrop-cloud/cloud-concierge/wiki/Roadmap)
-- [Blog](https://medium.com/@hello_9187)
-- [Tool Walk Through (low stakes and purely educational)](https://calendly.com/dragondrop-cloud/cloud-concierge-walk-through)
-- [Managed Offering](https://docs.dragondrop.cloud/)
+- [Tool Walk Through (low stakes and educational)](https://calendly.com/dragondrop-cloud/cloud-concierge-walk-through)
