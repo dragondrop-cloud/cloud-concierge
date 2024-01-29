@@ -6,75 +6,45 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
-	"regexp"
 
-	log "github.com/sirupsen/logrus"
+	terraformWorkspace "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_workspace"
+	"github.com/dragondrop-cloud/cloud-concierge/main/internal/interfaces"
 )
 
-// AuthorizeJob Checks with DragonDropAPI for valid auth of the current job, for an oss job
-func (c *HTTPDragonDropClient) AuthorizeJob(ctx context.Context) (string, string, error) {
-	log.Debugf("[authorize_job] org token: %s, job token: %s", c.config.OrgToken, c.config.JobID)
-	request, err := c.newRequest(
-		ctx,
-		"GetJobAuthorization",
-		"GET",
-		fmt.Sprintf("%v/job/authorize/oss/?repository=%s", c.config.APIPath, getOrgAndRepo(c.config.VCSRepo)),
-		nil,
-	)
+// HTTPDragonDropClientConfig is configuration for the HTTPDragonDropClient struct that conforms
+// to envconfig's format expectations.
+type HTTPDragonDropClientConfig struct {
+	// VCSRepo is the full path of the repo containing a customer's infrastructure specification.
+	// At the moment, must be a valid GitHub repository URL.
+	VCSRepo string `required:"true"`
 
-	if err != nil {
-		return "", "", fmt.Errorf("[authorize_job][error in newRequest]%w", err)
-	}
+	// NLPEndpoint is the endpoint for the NLP service.
+	NLPEndpoint string
 
-	response, err := c.httpClient.Do(request)
-
-	if err != nil {
-		return "", "", fmt.Errorf("[authorize_job] error in http GET request]%w", err)
-	}
-
-	defer response.Body.Close()
-	if response.StatusCode != 200 {
-		return "", "", fmt.Errorf(
-			"[authorize_job][was unsuccessful, with the server returning: %v]\nDouble check that the desired repo has the cloud-concierge GitHub App installed\nhttps://github.com/apps/cloud-concierge",
-			response.StatusCode,
-		)
-	}
-
-	// Read in response body to bytes array.
-	outputBytes, err := io.ReadAll(response.Body)
-	if err != nil {
-		return "", "", fmt.Errorf("[authorize_job][error in reading response into bytes array]%w", err)
-	}
-
-	var jobAuthResponse struct {
-		InfracostAPIToken string `json:"infracost_api_token"`
-		GithubToken       string `json:"github_token"`
-	}
-
-	err = json.Unmarshal(outputBytes, &jobAuthResponse)
-	if err != nil {
-		return "", "", fmt.Errorf("[authorize_job][unable to unmarshal %v]", string(outputBytes))
-	}
-
-	return jobAuthResponse.InfracostAPIToken, jobAuthResponse.GithubToken, nil
+	// WorkspaceDirectories is a slice of directories that contains terraform workspaces within the user repo.
+	WorkspaceDirectories terraformWorkspace.WorkspaceDirectoriesDecoder `required:"true"`
 }
 
-// getOrgAndRepo returns the org and repo name from a full GitHub repo url.
-func getOrgAndRepo(repo string) string {
-	githubRepoExp := regexp.MustCompile(`https://github.com/(.*).git`)
-	matches := githubRepoExp.FindStringSubmatch(repo)
-	if len(matches) != 2 {
-		return ""
-	}
+// HTTPDragonDropClient is a struct that implements the DragonDrop interface and makes
+// HTTP calls to the dragondrop API.
+type HTTPDragonDropClient struct {
+	// httpClient is a http client shared across all http requests within this package.
+	httpClient http.Client
 
-	return matches[1]
+	// Configuration parameters
+	config HTTPDragonDropClientConfig
+}
+
+// NewHTTPDragonDropClient creates a new instance of HTTPDragonDropClient, which implements the DragonDrop interface.
+func NewHTTPDragonDropClient(httpDragonDropClientConfig HTTPDragonDropClientConfig) interfaces.DragonDrop {
+	return &HTTPDragonDropClient{config: httpDragonDropClientConfig}
 }
 
 type NLPEnginePostBody struct {
 	NewResourceToDoc string `json:"new_resource_docs"`
 	WorkspaceToDoc   string `json:"workspace_docs"`
-	Token            string `json:"token"`
 }
 
 // PostNLPEngine posts a correctly formatted request to the NLP engine endpoint, receiving and then saving out
@@ -92,7 +62,6 @@ func (c *HTTPDragonDropClient) PostNLPEngine(ctx context.Context) error {
 	jsonBody, err := json.Marshal(&NLPEnginePostBody{
 		NewResourceToDoc: string(newResourceToDocBytes),
 		WorkspaceToDoc:   string(workspaceToDocBytes),
-		Token:            c.config.OrgToken,
 	})
 
 	if err != nil {
