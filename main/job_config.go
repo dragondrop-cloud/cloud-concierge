@@ -30,11 +30,8 @@ type JobConfig struct {
 	// Division is the name of a cloud division. In AWS this is an account, in GCP this is a project name, and in Azure this is a subscription.
 	Division terraformValueObjects.Division `required:"true"`
 
-	// InfracostCloudPricingAPI is the API endpoint for an Infracost cloud pricing API.
-	InfracostCloudPricingAPI string `required:"true"`
-
-	// APIPath is the dragondrop api path to which requests are sent.
-	APIPath string `default:"https://api.dragondrop.cloud"`
+	// InfracostToken is the token for accessing Infracost's cloud-pricing API.
+	InfracostToken string `required:"true"`
 
 	// JobID is the unique identification string for the current job run.
 	JobID string `default:"empty"`
@@ -154,8 +151,7 @@ func (c JobConfig) getTerraformImportMigrationGeneratorConfig() terraformImportM
 
 func (c JobConfig) getCostEstimationConfig() costEstimation.CostEstimatorConfig {
 	return costEstimation.CostEstimatorConfig{
-		CloudCredential:          c.CloudCredential,
-		InfracostCloudPricingAPI: c.InfracostCloudPricingAPI,
+		CloudCredential: c.CloudCredential,
 	}
 }
 
