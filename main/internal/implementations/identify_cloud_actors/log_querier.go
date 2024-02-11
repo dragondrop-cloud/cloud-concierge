@@ -16,7 +16,6 @@ import (
 // LogQuerier is an interface for querying information from a single cloud providers
 // administrative logs.
 type LogQuerier interface {
-
 	// QueryForAllResources coordinates API calls that receive data on user actions on individual resources.
 	QueryForAllResources(ctx context.Context) (terraformValueObjects.ResourceActionMap, error)
 }

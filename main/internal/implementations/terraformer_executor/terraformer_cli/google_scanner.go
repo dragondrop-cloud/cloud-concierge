@@ -35,16 +35,14 @@ func NewGoogleScanner(credential terraformValueObjects.Credential, cliConfig Con
 // Scan uses the TerraformerCLI interface to scan a given division's cloud environment
 func (gcpScan *GoogleScanner) Scan(project terraformValueObjects.Division, credential terraformValueObjects.Credential, _ ...string) error {
 	logrus.Debugf("[Scan] Scanning GCP project %v", project)
-	_ = os.MkdirAll("credentials", 0660)
+	_ = os.MkdirAll("credentials", 0o660)
 
-	err := os.WriteFile("credentials/google.json", []byte(credential), 0400)
-
+	err := os.WriteFile("credentials/google.json", []byte(credential), 0o400)
 	if err != nil {
 		return fmt.Errorf("[Scan] error saving credential file: %v", err)
 	}
 
 	err = os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", "credentials/google.json")
-
 	if err != nil {
 		return fmt.Errorf("[Scan] Error in setting GOOGLE_APPLICATION_CREDENTIALS value: %v", err)
 	}
@@ -57,13 +55,11 @@ func (gcpScan *GoogleScanner) Scan(project terraformValueObjects.Division, crede
 		AdditionalArgs: []string{projectsFlag},
 		IsCompact:      true,
 	})
-
 	if err != nil {
 		return fmt.Errorf("[Scan] Error in terraformer.Import(): %v", err)
 	}
 
 	err = gcpScan.terraformer.UpdateState("google")
-
 	if err != nil {
 		return fmt.Errorf("[Scan] Error in terraformer.UpdateState(): %v", err)
 	}

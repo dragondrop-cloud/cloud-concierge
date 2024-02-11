@@ -9,8 +9,7 @@ import (
 
 // IsolatedIdentifyCloudActors is a struct that implements interfaces.IdentifyCloudActors
 // for the purpose of running end to end unit tests.
-type IsolatedIdentifyCloudActors struct {
-}
+type IsolatedIdentifyCloudActors struct{}
 
 // NewIsolatedIdentifyCloudActors returns an instance of IdentifyCloudActors
 func NewIsolatedIdentifyCloudActors() interfaces.IdentifyCloudActors {

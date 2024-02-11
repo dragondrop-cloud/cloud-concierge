@@ -40,7 +40,6 @@ func (m *ManagedResourcesDriftDetector) identifyResourceDifferences(
 	attributeDifferences := make([]AttributeDifference, 0)
 
 	for id, data := range terraformResources {
-
 		if terraformerResource, ok := terraformerResources[id]; ok {
 			terraformInstanceConverted, err := convertNestedMapToFlatAttributes(data.Attributes)
 			if err != nil {

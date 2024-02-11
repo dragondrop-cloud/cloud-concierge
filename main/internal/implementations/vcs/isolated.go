@@ -57,5 +57,4 @@ func (v *IsolatedVCS) GetID() (string, error) {
 
 // SetToken sets the token for the VCS
 func (v *IsolatedVCS) SetToken(_ string) {
-
 }

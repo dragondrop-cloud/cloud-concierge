@@ -26,7 +26,6 @@ func (d *documentize) ConvertNewResourcesToJSON(resourceDocMap map[ResourceName]
 
 	for resourceName, doc := range resourceDocMap {
 		_, err := jsonObj.Set(doc, string(resourceName))
-
 		if err != nil {
 			return nil, fmt.Errorf("[ConvertNewResourcesToJSON] error in jsonObj.Set() for resource %v: %v", resourceName, err)
 		}
@@ -93,7 +92,6 @@ func (d *documentize) pullTerraformerResourceIdentifiers() (map[ResourceData]boo
 	}
 
 	resourceDataSet, err := extractResourceIdsFromTerraformerState(tfStateParsed)
-
 	if err != nil {
 		return nil, fmt.Errorf("[extractResourceIdsFromWorkspaceState] Error in reading resource ids from workspace state: %v", err)
 	}
@@ -136,19 +134,16 @@ func (d *documentize) pullWorkspaceResourceIdentifiers(workspaceToDirectory map[
 
 	for w := range workspaceToDirectory {
 		tfStateBytes, err := os.ReadFile(fmt.Sprintf("state_files/%v.json", w))
-
 		if err != nil {
 			return nil, fmt.Errorf("[os.ReadFile] Error reading in state for workspace %v: %v", w, err)
 		}
 
 		tfStateParsed, err := gabs.ParseJSON(tfStateBytes)
-
 		if err != nil {
 			return nil, fmt.Errorf("[gabs.ParseJSON] Error parsing state for workspace %v: %v", w, err)
 		}
 
 		resourceTypeToID, err := extractResourceIdsFromWorkspaceState(tfStateParsed)
-
 		if err != nil {
 			return nil, fmt.Errorf("[extractResourceIdsFromWorkspaceState] %v", err)
 		}
@@ -196,7 +191,6 @@ func (d *documentize) NewResourceDocuments(resourceSet map[ResourceData]bool) (m
 
 	for resource := range resourceSet {
 		resourceName, resourceDoc, err := d.pullResourceDocumentFromDiv(tfrStateParsed, resource)
-
 		if err != nil {
 			return nil, fmt.Errorf("[d.pullResourceDocumentFromDiv] Error: %v", err)
 		}

@@ -37,7 +37,6 @@ func TestAzureResourceExtractor_ExtractResourceDetails_NotFlat(t *testing.T) {
 			}
 		  ]
 	}`))
-
 	if err != nil {
 		t.Errorf("Unexpected error in gabs.ParseJSON(): %v", err)
 	}
@@ -91,7 +90,6 @@ func TestAzureResourceExtractor_ExtractResourceDetails(t *testing.T) {
 			}
 		  ]
 	}`))
-
 	if err != nil {
 		t.Errorf("Unexpected error in gabs.ParseJSON(): %v", err)
 	}

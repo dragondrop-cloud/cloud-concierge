@@ -5,11 +5,11 @@ import (
 	"errors"
 	"fmt"
 
+	nlpenginerequestor "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/nlp_engine_requester"
 	"github.com/kelseyhightower/envconfig"
 	log "github.com/sirupsen/logrus"
 
 	costEstimation "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/cost_estimation"
-	dragonDrop "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/dragon_drop"
 	identifyCloudActors "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/identify_cloud_actors"
 	resourcesCalculator "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/resources_calculator"
 	resourcesWriter "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/resources_writer"
@@ -47,9 +47,9 @@ type Job struct {
 	// definitions programmatically.
 	resourcesWriter interfaces.ResourcesWriter
 
-	// dragonDrop is the implementation of interfaces.DragonDrop for interacting with
-	// dragondrop API endpoints.
-	dragonDrop interfaces.DragonDrop
+	// nlpEngine is the implementation of interfaces.NLPEngine for interacting with
+	// the NLP engine endpoint.
+	nlpEngine interfaces.NLPEngine
 
 	// identifyCloudActors is the implementation of interfaces.IdentifyCloudActors for determining
 	// which cloud actor made resource changes outside of Terraform control.
@@ -76,55 +76,12 @@ type Job struct {
 	config JobConfig
 }
 
-// Authorize ensures that the Job is valid by checking against the dragondrop
-// API.
-func (j *Job) Authorize(ctx context.Context) error {
-	// For a Job managed by the dragondrop platform, we authorize and update the job name
-	if j.config.JobID != "empty" && j.config.JobID != "" {
-		err := j.dragonDrop.CheckLoggerAndToken(ctx)
-		if err != nil {
-			return fmt.Errorf("[create_job][error checking logger and token][%w]", err)
-		}
-
-		err = j.dragonDrop.InformStarted(ctx)
-		if err != nil {
-			return fmt.Errorf("[create_job][error informing started job][%w]", err)
-		}
-
-		infracostToken, jobName, githubToken, err := j.dragonDrop.AuthorizeManagedJob(ctx)
-		if err != nil {
-			return fmt.Errorf("[create_job][error authorizing managed job][%w]", err)
-		}
-		log.Debugf("Job name: %s", jobName)
-		j.costEstimator.SetInfracostAPIToken(infracostToken)
-		j.vcs.SetToken(githubToken)
-		j.name = jobName
-		j.dragonDrop.PostLog(ctx, "Authorized against billing plan.")
-	} else {
-		infracostToken, githubToken, err := j.dragonDrop.AuthorizeJob(ctx)
-		if err != nil {
-			fmt.Printf("Error authenticating the job run, please get an Organization token by signing up at https://app.dragondrop.cloud.")
-			return fmt.Errorf("[create_job][error authorizing job][%w]", err)
-		}
-
-		j.costEstimator.SetInfracostAPIToken(infracostToken)
-		j.vcs.SetToken(githubToken)
-		j.name = j.config.JobName
-	}
-	return nil
-}
-
 // Run runs an instance of the Job struct to completion by coordinating calls to different
 // interface implementations within the Job.
 func (j *Job) Run(ctx context.Context) error {
 	err := j.vcs.Clone()
 	if err != nil {
 		return fmt.Errorf("[run_job][error clonning repo][%w]", err)
-	}
-
-	err = j.dragonDrop.InformRepositoryCloned(ctx)
-	if err != nil {
-		return fmt.Errorf("[run_job][error posting cloned status]%w", err)
 	}
 
 	workspaceToDirectory, err := j.terraformWorkspace.FindTerraformWorkspaces(ctx)
@@ -167,29 +124,14 @@ func (j *Job) Run(ctx context.Context) error {
 	}
 	log.Debugf("Drifted resources identified: %v", driftedResourcesIdentified)
 
-	err = j.dragonDrop.InformCloudActorIdentification(ctx)
-	if err != nil {
-		return fmt.Errorf("[run_job][error posting cloud actor identification status]%w", err)
-	}
-
 	err = j.identifyCloudActors.Execute(ctx)
 	if err != nil {
 		return fmt.Errorf("[run_job][error identifying cloud actors]%w", err)
 	}
 
-	err = j.dragonDrop.InformCostEstimation(ctx)
-	if err != nil {
-		return fmt.Errorf("[run_job][error posting cost estimation status]%w", err)
-	}
-
 	err = j.costEstimator.Execute(ctx)
 	if err != nil {
 		return fmt.Errorf("[run_job][error estimating cost for identified resources]%w", err)
-	}
-
-	err = j.dragonDrop.InformSecurityScan(ctx)
-	if err != nil {
-		return fmt.Errorf("[run_job][error posting security scan status]%w", err)
 	}
 
 	err = j.terraformSecurity.ExecuteScan(ctx)
@@ -198,25 +140,12 @@ func (j *Job) Run(ctx context.Context) error {
 	}
 
 	createDummyFile := driftedResourcesIdentified && j.noNewResources
-	prURL, err := j.resourcesWriter.Execute(ctx, j.name, createDummyFile, workspaceToDirectory)
+	_, err = j.resourcesWriter.Execute(ctx, j.name, createDummyFile, workspaceToDirectory)
 	if err != nil {
 		return fmt.Errorf("[run_job][error writing resources on vcs][%w]", err)
 	}
 
-	err = j.dragonDrop.PutJobPullRequestURL(ctx, prURL)
-	if err != nil {
-		return fmt.Errorf("[run_job][error putting job pull request URL][%v]", err)
-	}
-
-	err = j.dragonDrop.SendCloudPerchData(ctx)
-	if err != nil {
-		log.WithError(err).Errorf("[failed to send cloudperch data][%v]", err)
-	}
-
-	err = j.dragonDrop.InformComplete(ctx)
-	if err != nil {
-		return fmt.Errorf("[run_job][error informing complete status][%w]", err)
-	}
+	// TODO: Log out PR URL for user to review and click on!
 
 	return nil
 }
@@ -243,29 +172,29 @@ func InitializeJobDependencies(ctx context.Context, env string) (*Job, error) {
 
 	jobConfig.CloudCredential = inferredData.CloudCredential
 
-	dragonDropInstance, err := (&dragonDrop.Factory{}).Instantiate(env, jobConfig.getDragonDropConfig())
+	nlpEngineRequestor, err := (&nlpenginerequestor.Factory{}).Instantiate(jobConfig.getNLPEngineConfig())
 	if err != nil {
 		return nil, err
 	}
-	vcsInstance, err := (&vcs.Factory{}).Instantiate(ctx, env, dragonDropInstance, jobConfig.getVCSConfig(), inferredData.VCSSystem)
+	vcsInstance, err := (&vcs.Factory{}).Instantiate(ctx, env, jobConfig.getVCSConfig(), inferredData.VCSSystem)
 	if err != nil {
 		return nil, err
 	}
-	workspace, err := (&terraformWorkspace.Factory{}).Instantiate(ctx, env, dragonDropInstance, jobConfig.getTerraformWorkspaceConfig())
+	workspace, err := (&terraformWorkspace.Factory{}).Instantiate(ctx, env, jobConfig.getTerraformWorkspaceConfig())
 	if err != nil {
 		return nil, err
 	}
-	executor, err := (&terraformerExecutor.Factory{}).Instantiate(ctx, env, dragonDropInstance, inferredData.Provider,
+	executor, err := (&terraformerExecutor.Factory{}).Instantiate(ctx, env, inferredData.Provider,
 		jobConfig.getHCLCreateConfig(), jobConfig.getTerraformerConfig(), jobConfig.getTerraformerCLIConfig())
 	if err != nil {
 		return nil, err
 	}
-	instantiate, err := (&terraformImportMigrationGenerator.Factory{}).Instantiate(ctx, env, dragonDropInstance, inferredData.Provider,
+	instantiate, err := (&terraformImportMigrationGenerator.Factory{}).Instantiate(ctx, env, inferredData.Provider,
 		jobConfig.getTerraformImportMigrationGeneratorConfig())
 	if err != nil {
 		return nil, err
 	}
-	calculator, err := (&resourcesCalculator.Factory{}).Instantiate(ctx, env, dragonDropInstance, inferredData.Provider)
+	calculator, err := (&resourcesCalculator.Factory{}).Instantiate(ctx, env, inferredData.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -273,11 +202,11 @@ func InitializeJobDependencies(ctx context.Context, env string) (*Job, error) {
 	if err != nil {
 		return nil, err
 	}
-	identifier, err := (&identifyCloudActors.Factory{}).Instantiate(ctx, env, dragonDropInstance, inferredData.Provider, jobConfig.getIdentifyCloudActorsConfig())
+	identifier, err := (&identifyCloudActors.Factory{}).Instantiate(ctx, env, inferredData.Provider, jobConfig.getIdentifyCloudActorsConfig())
 	if err != nil {
 		return nil, err
 	}
-	writer, err := (&resourcesWriter.Factory{}).Instantiate(ctx, env, vcsInstance, dragonDropInstance, inferredData.Provider, jobConfig.getHCLCreateConfig())
+	writer, err := (&resourcesWriter.Factory{}).Instantiate(ctx, env, vcsInstance, inferredData.Provider, jobConfig.getHCLCreateConfig())
 	if err != nil {
 		return nil, err
 	}
@@ -297,7 +226,7 @@ func InitializeJobDependencies(ctx context.Context, env string) (*Job, error) {
 		terraformImportMigrationGenerator: instantiate,
 		resourcesCalculator:               calculator,
 		resourcesWriter:                   writer,
-		dragonDrop:                        dragonDropInstance,
+		nlpEngine:                         nlpEngineRequestor,
 		costEstimator:                     costEstimator,
 		identifyCloudActors:               identifier,
 		driftDetector:                     driftDetector,

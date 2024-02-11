@@ -70,7 +70,6 @@ func TestGenerateImportStatementText(t *testing.T) {
 	if output != expectedOutput {
 		t.Errorf("got %v, expected %v", output, expectedOutput)
 	}
-
 }
 
 func TestIndividualTFMigrateConfigS3(t *testing.T) {

@@ -16,7 +16,6 @@ import (
 // CostEstimatorConfig is configuration for the CostEstimator struct that conforms
 // to envconfig's format expectations.
 type CostEstimatorConfig struct {
-
 	// CloudCredential is a cloud credential with read-only access to a cloud division and, if applicable, access to read Terraform state files.
 	CloudCredential terraformValueObjects.Credential
 
@@ -29,7 +28,6 @@ type CostEstimatorConfig struct {
 
 // CostEstimator is a struct that implements interfaces.CostEstimation.
 type CostEstimator struct {
-
 	// config is a struct of configuration parameters
 	config CostEstimatorConfig
 
@@ -101,7 +99,7 @@ func (ce *CostEstimator) WriteCostEstimates() error {
 		return fmt.Errorf("[os.ReadFile]%v", err)
 	}
 
-	err = os.WriteFile("outputs/cost-estimates.json", costs, 0400)
+	err = os.WriteFile("outputs/cost-estimates.json", costs, 0o400)
 	if err != nil {
 		return fmt.Errorf("[os.WriteFile]%v", err)
 	}
@@ -135,7 +133,6 @@ func executeCommand(command string, args ...string) (string, error) {
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
 	err := cmd.Run()
-
 	if err != nil {
 		return "", fmt.Errorf("[error executing command: %s, %s]%w", stderr.String(), out.String(), err)
 	}

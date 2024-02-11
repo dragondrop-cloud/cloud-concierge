@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"strings"
 
+	nlpenginerequestor "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/nlp_engine_requester"
 	"github.com/sirupsen/logrus"
 
 	"github.com/dragondrop-cloud/cloud-concierge/main/internal/hclcreate"
 	costEstimation "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/cost_estimation"
-	dragonDrop "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/dragon_drop"
 	identifyCloudActors "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/identify_cloud_actors"
 	terraformImportMigrationGenerator "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_import_migration_generator"
 	driftDetector "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_managed_resources_drift_detector/drift_detector"
@@ -31,7 +31,7 @@ type JobConfig struct {
 	Division terraformValueObjects.Division `required:"true"`
 
 	// InfracostCloudPricingAPI is the API endpoint for an Infracost cloud pricing API.
-	InfracostCloudPricingAPI string `default:"https://infracost.dragondrop.cloud"`
+	InfracostCloudPricingAPI string `required:"true"`
 
 	// APIPath is the dragondrop api path to which requests are sent.
 	APIPath string `default:"https://api.dragondrop.cloud"`
@@ -41,9 +41,6 @@ type JobConfig struct {
 
 	// JobName is the name of the job.
 	JobName string `default:"Cloud Concierge Report"`
-
-	// OrgToken is the token that authorizes access to the dragondrop API.
-	OrgToken string `required:"true"`
 
 	// MigrationHistoryStorage is a map containing information needed for specifying tfmigrate
 	// history storage appropriately.
@@ -75,6 +72,9 @@ type JobConfig struct {
 	// At the moment, must be a valid GitHub repository URL.
 	VCSRepo string `required:"true"`
 
+	// VCSPat is the personal access token for the VCS where a Pull Request should be output.
+	VCSPat string `required:"true"`
+
 	// PullReviewers is the name of the pull request reviewer who will be tagged on the opened pull request.
 	PullReviewers []string `default:"NoReviewer"`
 
@@ -101,18 +101,6 @@ func validateJobConfig(config JobConfig) error {
 		}
 	}
 	return nil
-}
-
-// getDragonDropConfig returns the configuration for the DragonDrop client.
-func (c JobConfig) getDragonDropConfig() dragonDrop.HTTPDragonDropClientConfig {
-	return dragonDrop.HTTPDragonDropClientConfig{
-		VCSRepo:              c.VCSRepo,
-		APIPath:              c.APIPath,
-		JobID:                c.JobID,
-		NLPEndpoint:          c.NLPEndpoint,
-		OrgToken:             c.OrgToken,
-		WorkspaceDirectories: c.WorkspaceDirectories,
-	}
 }
 
 func (c JobConfig) getVCSConfig() vcs.Config {
@@ -182,5 +170,13 @@ func (c JobConfig) getManagedResourceDriftDetectorConfig() driftDetector.Managed
 	return driftDetector.ManagedResourceDriftDetectorConfig{
 		ResourcesWhiteList: c.ResourcesWhiteList,
 		ResourcesBlackList: c.ResourcesBlackList,
+	}
+}
+
+func (c JobConfig) getNLPEngineConfig() nlpenginerequestor.HTTPNLPEngineClientConfig {
+	return nlpenginerequestor.HTTPNLPEngineClientConfig{
+		NLPEndpoint:          c.NLPEndpoint,
+		VCSRepo:              c.VCSRepo,
+		WorkspaceDirectories: c.WorkspaceDirectories,
 	}
 }

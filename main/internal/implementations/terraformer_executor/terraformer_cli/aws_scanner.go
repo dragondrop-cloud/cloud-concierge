@@ -48,13 +48,11 @@ func (awsScanner *AWSScanner) Scan(_ terraformValueObjects.Division, credential 
 		Regions:        getValidRegions(awsScanner.CloudRegions, terraformValueObjects.AwsRegions, defaultAwsRegions),
 		IsCompact:      true,
 	})
-
 	if err != nil {
 		return fmt.Errorf("[Scan] Error in terraformer.Import(): %v", err)
 	}
 
 	err = awsScanner.terraformer.UpdateState("aws")
-
 	if err != nil {
 		return fmt.Errorf("[Scan] Error in terraformer.UpdateState(): %v", err)
 	}

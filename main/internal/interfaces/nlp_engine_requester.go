@@ -4,12 +4,11 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// DragonDrop is the interface for communicating with the external DragonDrop API
-type DragonDrop interface {
-}
+// NLPEngine is the interface for communicating with the external NLPEngine API
+type NLPEngine interface{}
 
-// DragonDropMock is a struct that implements the DragonDrop interface solely for the purpose
+// NLPEngineMock is a struct that implements the NLPEngine interface solely for the purpose
 // of testing with the testify library.
-type DragonDropMock struct {
+type NLPEngineMock struct {
 	mock.Mock
 }

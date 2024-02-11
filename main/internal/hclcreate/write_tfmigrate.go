@@ -61,7 +61,7 @@ func (h *hclCreate) CreateTFMigrateConfiguration(workspaceToDirectory map[string
 	for workspace, directory := range workspaceToDirectory {
 		logrus.Debugf("[hclcreate][write_import_blocks] workspace: %v", workspace)
 
-		err := os.MkdirAll(fmt.Sprintf("repo%vcloud-concierge/tfmigrate", directory), 0400)
+		err := os.MkdirAll(fmt.Sprintf("repo%vcloud-concierge/tfmigrate", directory), 0o400)
 		if err != nil {
 			return fmt.Errorf("[os.MkdirAll] cloud-concierge/tfmigrate within %v: %v", directory, err)
 		}
@@ -73,7 +73,7 @@ func (h *hclCreate) CreateTFMigrateConfiguration(workspaceToDirectory map[string
 			return fmt.Errorf("[h.individualTFMigrateConfig] %v", err)
 		}
 
-		err = os.WriteFile(newFilePath, currentTfMigrateConfig, 0400)
+		err = os.WriteFile(newFilePath, currentTfMigrateConfig, 0o400)
 		if err != nil {
 			return fmt.Errorf("[os.writeFile] %v", err)
 		}
@@ -147,7 +147,7 @@ func (h *hclCreate) CreateTFMigrateMigration(
 
 		// outputting the file
 		outputPath := fmt.Sprintf("repo%vcloud-concierge/tfmigrate/%v_migrations.hcl", directory, uniqueID)
-		err = os.WriteFile(outputPath, migrationFileBytes, 0400)
+		err = os.WriteFile(outputPath, migrationFileBytes, 0o400)
 		if err != nil {
 			return fmt.Errorf("[os.WriteFile] Error writing %v: %v", outputPath, err)
 		}

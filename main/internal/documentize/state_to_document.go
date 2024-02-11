@@ -15,7 +15,6 @@ func (d *documentize) AllWorkspaceStatesToDocuments(workspaceToDirectory map[str
 
 	for workspace := range workspaceToDirectory {
 		doc, err := d.WorkspaceStateToDocument(Workspace(workspace))
-
 		if err != nil {
 			return nil, fmt.Errorf("[WorkspaceStateToDocument] Error while documentizing %v: %v", workspace, err)
 		}
@@ -30,7 +29,6 @@ func (d *documentize) ConvertWorkspaceDocumentsToJSON(workspaceDocMap map[Worksp
 	jsonObj := gabs.New()
 	for workspace, doc := range workspaceDocMap {
 		_, err := jsonObj.Set(string(doc), string(workspace))
-
 		if err != nil {
 			return nil, fmt.Errorf(
 				"[ConvertWorkpsaceDocumentsToJSON] error in jsonObj.Set() for Workspace %v and doc %v: %v",
@@ -94,7 +92,6 @@ func (d *documentize) workspaceDocFromTFState(tfStateParsed *gabs.Container) (st
 // regexProviderName extracts the terraform provider name from a string.
 func regexProviderName(rawProvider string) (string, error) {
 	r, err := regexp.Compile(`\.?(provider.*]).*$`)
-
 	if err != nil {
 		return "", fmt.Errorf("Error in regexp.Compile: %v", err)
 	}

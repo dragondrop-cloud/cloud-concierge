@@ -14,7 +14,6 @@ import (
 )
 
 type InferredData struct {
-
 	// CloudCredential is a cloud credential that is used to authenticate with a cloud provider. Credential should
 	// only require read-only access.
 	CloudCredential terraformValueObjects.Credential `required:"false"`

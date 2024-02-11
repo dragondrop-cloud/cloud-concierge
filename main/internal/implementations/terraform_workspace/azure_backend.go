@@ -19,9 +19,6 @@ type AzureBlobBackend struct {
 	// config is the configuration for the Azure Blob Storage backend.
 	config TfStackConfig
 
-	// dragonDrop is the DragonDrop interface that is used to communicate with the DragonDrop API.
-	dragonDrop interfaces.DragonDrop
-
 	// workspaceToBackendDetails is a map of Terraform workspace names to their respective backend details.
 	workspaceToBackendDetails map[string]interface{}
 }
@@ -29,7 +26,7 @@ type AzureBlobBackend struct {
 // FindTerraformWorkspaces returns a map of Terraform workspace names to their respective directories.
 func (b *AzureBlobBackend) FindTerraformWorkspaces(ctx context.Context) (map[string]string, error) {
 	logrus.Debugf("[Azure Terraform workspace] Finding Terraform workspaces in %v", b.config.WorkspaceDirectories)
-	workspaces, workspaceToBackendDetails, err := findTerraformWorkspaces(ctx, b.dragonDrop, b.config.WorkspaceDirectories, "azurerm")
+	workspaces, workspaceToBackendDetails, err := findTerraformWorkspaces(ctx, b.config.WorkspaceDirectories, "azurerm")
 	if err != nil {
 		return nil, err
 	}
@@ -39,16 +36,13 @@ func (b *AzureBlobBackend) FindTerraformWorkspaces(ctx context.Context) (map[str
 }
 
 // NewAzurermBlobBackend creates a new AzureBlobBackend instance.
-func NewAzurermBlobBackend(ctx context.Context, config TfStackConfig, dragonDrop interfaces.DragonDrop) interfaces.TerraformWorkspace {
-	dragonDrop.PostLog(ctx, "Created TFWorkspace client.")
-
-	return &AzureBlobBackend{config: config, dragonDrop: dragonDrop}
+func NewAzurermBlobBackend(ctx context.Context, config TfStackConfig) interfaces.TerraformWorkspace {
+	return &AzureBlobBackend{config: config}
 }
 
 // DownloadWorkspaceState downloads from the remote Azure Blob Storage backend the latest state file
 func (b *AzureBlobBackend) DownloadWorkspaceState(ctx context.Context, workspaceToDirectory map[string]string) error {
 	logrus.Debugf("[Azure Terraform workspace] Downloading workspace state files for %v", workspaceToDirectory)
-	b.dragonDrop.PostLog(ctx, "Beginning download of state files to local memory.")
 
 	for workspaceName := range workspaceToDirectory {
 		err := b.getWorkspaceStateFromAzureCredentials(ctx, workspaceName)
@@ -57,7 +51,6 @@ func (b *AzureBlobBackend) DownloadWorkspaceState(ctx context.Context, workspace
 		}
 	}
 
-	b.dragonDrop.PostLog(ctx, "Done with download of state files to local memory.")
 	return nil
 }
 

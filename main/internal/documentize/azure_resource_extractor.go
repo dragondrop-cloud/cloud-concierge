@@ -10,7 +10,6 @@ import (
 
 // azureResourceDetails is a struct for packaging all relevant information for an Azure cloud resource.
 type azureResourceDetails struct {
-
 	// terraformName is the name of the azure resource within Terraform configuration.
 	terraformName string
 
@@ -33,7 +32,6 @@ type azureResourceDetails struct {
 // azureResourceExtractor implements the ResourceExtractor interface for
 // azure cloud resources.
 type azureResourceExtractor struct {
-
 	// currentResourceDetails is a struct containing information about a resource necessary
 	// for generating a document about it.
 	currentResourceDetails *azureResourceDetails
@@ -173,7 +171,6 @@ func (arx *azureResourceExtractor) ResourceDetailsToSentence() string {
 // to extract and format as a sentence a resource's details from within a state file.
 func (arx *azureResourceExtractor) OutputResourceDetailsSentence(tfStateParsed *gabs.Container, isAttributesFlat bool, resourceIndex int, instanceIndex int) (string, error) {
 	err := arx.ExtractResourceDetails(tfStateParsed, isAttributesFlat, resourceIndex, instanceIndex)
-
 	if err != nil {
 		return "", fmt.Errorf("[arx.ExtractResourceDetails] %v", err)
 	}

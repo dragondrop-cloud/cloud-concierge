@@ -18,9 +18,6 @@ type GCSBackend struct {
 	// config is the configuration for the Azure Blob Storage backend.
 	config TfStackConfig
 
-	// dragonDrop is the DragonDrop interface that is used to communicate with the DragonDrop API.
-	dragonDrop interfaces.DragonDrop
-
 	// workspaceToBackendDetails is a map of Terraform workspace names to their respective backend details.
 	workspaceToBackendDetails map[string]interface{}
 }
@@ -29,7 +26,7 @@ type GCSBackend struct {
 func (b *GCSBackend) FindTerraformWorkspaces(ctx context.Context) (map[string]string, error) {
 	logrus.Debugf("[GCS Terraform workspace] Finding Terraform workspaces in %v", b.config.WorkspaceDirectories)
 
-	workspaces, workspaceToBackendDetails, err := findTerraformWorkspaces(ctx, b.dragonDrop, b.config.WorkspaceDirectories, "gcs")
+	workspaces, workspaceToBackendDetails, err := findTerraformWorkspaces(ctx, b.config.WorkspaceDirectories, "gcs")
 	if err != nil {
 		return nil, err
 	}
@@ -39,16 +36,13 @@ func (b *GCSBackend) FindTerraformWorkspaces(ctx context.Context) (map[string]st
 }
 
 // NewGCSBackend creates a new GCSBackend instance.
-func NewGCSBackend(ctx context.Context, config TfStackConfig, dragonDrop interfaces.DragonDrop) interfaces.TerraformWorkspace {
-	dragonDrop.PostLog(ctx, "Created TFWorkspace client.")
-
-	return &GCSBackend{config: config, dragonDrop: dragonDrop}
+func NewGCSBackend(ctx context.Context, config TfStackConfig) interfaces.TerraformWorkspace {
+	return &GCSBackend{config: config}
 }
 
 // DownloadWorkspaceState downloads from the remote Azure Blob Storage backend the latest state file
 func (b *GCSBackend) DownloadWorkspaceState(ctx context.Context, workspaceToDirectory map[string]string) error {
 	logrus.Debugf("[GCS Terraform workspace] Downloading workspace state files for %v", workspaceToDirectory)
-	b.dragonDrop.PostLog(ctx, "Beginning download of state files to local memory.")
 
 	for workspaceName := range workspaceToDirectory {
 		err := b.getWorkspaceStateByTestingAllGoogleCredentials(ctx, workspaceName)
@@ -57,13 +51,11 @@ func (b *GCSBackend) DownloadWorkspaceState(ctx context.Context, workspaceToDire
 		}
 	}
 
-	b.dragonDrop.PostLog(ctx, "Done with download of state files to local memory.")
 	return nil
 }
 
 // getWorkspaceStateByTestingAllGoogleCredentials attempts to download the state file for the given workspace using all
 func (b *GCSBackend) getWorkspaceStateByTestingAllGoogleCredentials(ctx context.Context, workspaceName string) error {
-
 	stateFileName := fmt.Sprintf("%v.json", workspaceName)
 
 	fileOutPath := fmt.Sprintf("state_files/%v", stateFileName)

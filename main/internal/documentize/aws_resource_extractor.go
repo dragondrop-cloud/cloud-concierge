@@ -10,7 +10,6 @@ import (
 
 // awsResourceDetails is a struct for packaging all relevant information for a AWS cloud resource.
 type awsResourceDetails struct {
-
 	// terraformName is the name of the aws resource within Terraform configuration.
 	terraformName string
 
@@ -36,7 +35,6 @@ type awsResourceDetails struct {
 // awsResourceExtractor implements the ResourceExtractor interface for
 // aws cloud resources.
 type awsResourceExtractor struct {
-
 	// currentResourceDetails is a struct containing information about a resource necessary
 	// for generating a document about it.
 	currentResourceDetails *awsResourceDetails
@@ -60,7 +58,6 @@ func (are *awsResourceExtractor) GetCurrentResourceDetails() *awsResourceDetails
 
 // ExtractResourceDetails extracts relevant data points from a terraform state resource.
 func (are *awsResourceExtractor) ExtractResourceDetails(tfStateParsed *gabs.Container, isAttributesFlat bool, resourceIndex int, instanceIndex int) error {
-
 	attribute := "attributes"
 	if isAttributesFlat {
 		attribute += "_flat"
@@ -172,7 +169,6 @@ func (are *awsResourceExtractor) ResourceDetailsToSentence() string {
 // to extract and format as a sentence a resource's details from within a state file.
 func (are *awsResourceExtractor) OutputResourceDetailsSentence(tfStateParsed *gabs.Container, isAttributesFlat bool, resourceIndex int, instanceIndex int) (string, error) {
 	err := are.ExtractResourceDetails(tfStateParsed, isAttributesFlat, resourceIndex, instanceIndex)
-
 	if err != nil {
 		return "", fmt.Errorf("[are.ExtractResourceDetails] %v", err)
 	}

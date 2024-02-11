@@ -17,11 +17,10 @@ func TestCreateIsolatedResourcesWriter(t *testing.T) {
 	resourcesWriterProvider := "isolated"
 	resourcesWriterFactory := new(Factory)
 	vcs := new(interfaces.VCSMock)
-	dragonDrop := new(interfaces.DragonDropMock)
 	provider := terraformValueObjects.Provider("")
 
 	// When
-	resourcesWriter, err := resourcesWriterFactory.Instantiate(ctx, resourcesWriterProvider, vcs, dragonDrop, provider, hclConfig)
+	resourcesWriter, err := resourcesWriterFactory.Instantiate(ctx, resourcesWriterProvider, vcs, provider, hclConfig)
 
 	// Then
 	assert.Nil(t, err)

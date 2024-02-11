@@ -11,7 +11,6 @@ import (
 // InfracostResourceData is a struct for handling individual data values for a resource entry in
 // infracost cost estimation output.
 type InfracostResourceData struct {
-
 	// resourceID is the terraformer resource name in Terraform configuration: {resource_type}.{resource_name}.
 	resourceID string
 
@@ -31,7 +30,6 @@ type InfracostResourceData struct {
 // SubResource is a billing mechanism that is owned by a primary resource
 // (like network egress billing on a storage bucket)
 type SubResource struct {
-
 	// name is the name of the sub-resource
 	name string
 
@@ -47,7 +45,6 @@ type SubResource struct {
 
 // CostComponent is a struct for organizing cost output for a single CostComponent in Infracost.
 type CostComponent struct {
-
 	// name is the cost component's name
 	name string
 
@@ -85,7 +82,7 @@ func (ce *CostEstimator) FormatCostEstimate() error {
 
 	formattedFilePath := "current_cloud/infracost-formatted.json"
 
-	err = os.WriteFile(formattedFilePath, []byte(output), 0400)
+	err = os.WriteFile(formattedFilePath, []byte(output), 0o400)
 	if err != nil {
 		return fmt.Errorf("[os.WriteFile]%v", err)
 	}

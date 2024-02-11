@@ -8,8 +8,7 @@ import (
 
 // IsolatedTerraformerExecutor  is a struct that implements the interfaces.TerraformerExecutor interface for
 // the purpose of end-to-end testing.
-type IsolatedTerraformerExecutor struct {
-}
+type IsolatedTerraformerExecutor struct{}
 
 // NewIsolatedTerraformerExecutor returns a new instance of IsolatedTerraformerExecutor
 func NewIsolatedTerraformerExecutor() interfaces.TerraformerExecutor {

@@ -5,7 +5,6 @@ import "github.com/stretchr/testify/mock"
 // VCS interface for interacting with version control systems. Since all major VCS systems
 // are git-based (GitHub, GitLab, BitBucket, etc.), they can share the same interface.
 type VCS interface {
-
 	// Clone pulls a remote repository's contents into local memory.
 	Clone() error
 

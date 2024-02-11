@@ -8,8 +8,7 @@ import (
 
 // IsolatedCostEstimator is a struct that implements interfaces.CostEstimation for the purpose
 // of end-to-end testing.
-type IsolatedCostEstimator struct {
-}
+type IsolatedCostEstimator struct{}
 
 // NewIsolatedCostEstimator creates an instance of IsolatedCostEstimator
 func NewIsolatedCostEstimator() interfaces.CostEstimation {

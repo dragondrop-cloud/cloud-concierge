@@ -8,7 +8,6 @@ import (
 
 // CostEstimation is an interface for estimating the cost of Terraform resources.
 type CostEstimation interface {
-
 	// Execute creates structured cost estimation data for the current identified/scanned
 	// cloud resources.
 	Execute(ctx context.Context) error

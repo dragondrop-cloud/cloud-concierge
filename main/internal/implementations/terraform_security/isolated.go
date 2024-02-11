@@ -3,8 +3,7 @@ package terraformsecurity
 import "context"
 
 // IsolatedTerraformSecurity is an isolated implementation from interfaces.TerraformSecurity
-type IsolatedTerraformSecurity struct {
-}
+type IsolatedTerraformSecurity struct{}
 
 // NewIsolatedTerraformSecurity generates an instance from IsolatedTerraformSecurity
 func NewIsolatedTerraformSecurity() *IsolatedTerraformSecurity {

@@ -17,7 +17,6 @@ type costs map[terraformValueObjects.ResourceName]resourceCosts
 // resourceCosts is a struct containing cost descriptions for resource costs from
 // costComponents and subResources.
 type resourceCosts struct {
-
 	// costComponents is a list of individual cost components for a resource.
 	costComponents []costComponent
 
@@ -28,7 +27,6 @@ type resourceCosts struct {
 // costComponent struct for organizing information on a resource's single
 // component cost.
 type costComponent struct {
-
 	// componentName is the name of the component.
 	componentName string
 

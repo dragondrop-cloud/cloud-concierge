@@ -8,8 +8,7 @@ import (
 
 // IsolatedTerraformWorkspace is a struct that implements the interfaces.TerraformWorkspace interface for
 // the purpose of end-to-end testing.
-type IsolatedTerraformWorkspace struct {
-}
+type IsolatedTerraformWorkspace struct{}
 
 // NewIsolatedTerraformWorkspace returns a new instance of IsolatedTerraformWorkspace
 func NewIsolatedTerraformWorkspace() *IsolatedTerraformWorkspace {
