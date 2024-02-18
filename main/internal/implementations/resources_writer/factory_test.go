@@ -1,7 +1,6 @@
 package resourceswriter
 
 import (
-	"context"
 	"testing"
 
 	"github.com/dragondrop-cloud/cloud-concierge/main/internal/hclcreate"
@@ -12,7 +11,6 @@ import (
 
 func TestCreateIsolatedResourcesWriter(t *testing.T) {
 	// Given
-	ctx := context.Background()
 	hclConfig := hclcreate.Config{}
 	resourcesWriterProvider := "isolated"
 	resourcesWriterFactory := new(Factory)
@@ -20,7 +18,7 @@ func TestCreateIsolatedResourcesWriter(t *testing.T) {
 	provider := terraformValueObjects.Provider("")
 
 	// When
-	resourcesWriter, err := resourcesWriterFactory.Instantiate(ctx, resourcesWriterProvider, vcs, provider, hclConfig)
+	resourcesWriter, err := resourcesWriterFactory.Instantiate(resourcesWriterProvider, vcs, provider, hclConfig)
 
 	// Then
 	assert.Nil(t, err)

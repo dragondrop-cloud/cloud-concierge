@@ -206,7 +206,7 @@ func InitializeJobDependencies(ctx context.Context, env string) (*Job, error) {
 	if err != nil {
 		return nil, err
 	}
-	writer, err := (&resourcesWriter.Factory{}).Instantiate(ctx, env, vcsInstance, inferredData.Provider, jobConfig.getHCLCreateConfig())
+	writer, err := (&resourcesWriter.Factory{}).Instantiate(env, vcsInstance, inferredData.Provider, jobConfig.getHCLCreateConfig())
 	if err != nil {
 		return nil, err
 	}

@@ -49,12 +49,12 @@ func (w *TerraformResourceWriter) Execute(ctx context.Context, jobName string, c
 		return "", fmt.Errorf("[terraform_resource_writer]%w", err)
 	}
 
-	err = w.writeNewMarkdownAnalysis(ctx)
+	err = w.writeNewMarkdownAnalysis()
 	if err != nil {
 		return "", fmt.Errorf("[terraform_resource_writer]%w", err)
 	}
 
-	prURL, err := w.commitChangesOpenPullRequest(ctx)
+	prURL, err := w.commitChangesOpenPullRequest()
 	if err != nil {
 		return "", fmt.Errorf("[terraform_resource_writer]%w", err)
 	}
@@ -63,7 +63,7 @@ func (w *TerraformResourceWriter) Execute(ctx context.Context, jobName string, c
 
 // commitChangesOpenPullRequest adds new files to the VCS, commits the changes,
 // and opens a pull request for the branch.
-func (w *TerraformResourceWriter) commitChangesOpenPullRequest(ctx context.Context) (string, error) {
+func (w *TerraformResourceWriter) commitChangesOpenPullRequest() (string, error) {
 	logrus.Debugf("[commit_changes_open_pull_request] Executing with jobName: %v", w.jobName)
 
 	err := w.vcs.AddChanges()
@@ -92,7 +92,7 @@ func (w *TerraformResourceWriter) commitChangesOpenPullRequest(ctx context.Conte
 
 // writeNewMarkdownAnalysis writes out the markdown analysis of the identified resources which are currently outside
 // of Terraform control.
-func (w *TerraformResourceWriter) writeNewMarkdownAnalysis(ctx context.Context) error {
+func (w *TerraformResourceWriter) writeNewMarkdownAnalysis() error {
 	err := w.markdownCreator.CreateMarkdownFile(w.jobName)
 	if err != nil {
 		return fmt.Errorf("[write_new_resources_and_migration_statements][error in pse.RunStateOfCloudReport]%w", err)
