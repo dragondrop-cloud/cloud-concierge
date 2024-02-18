@@ -152,7 +152,8 @@ func (c JobConfig) getTerraformImportMigrationGeneratorConfig() terraformImportM
 
 func (c JobConfig) getCostEstimationConfig() costEstimation.CostEstimatorConfig {
 	return costEstimation.CostEstimatorConfig{
-		CloudCredential: c.CloudCredential,
+		CloudCredential:   c.CloudCredential,
+		InfracostAPIToken: c.InfracostToken,
 	}
 }
 

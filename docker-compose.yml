@@ -24,7 +24,6 @@ services:
       # Version control system specific env vars
       - "CLOUDCONCIERGE_VCSREPO=$CLOUDCONCIERGE_VCSREPO"
       - "CLOUDCONCIERGE_VCSPAT=$CLOUDCONCIERGE_VCSPAT"
-      - "CLOUDCONCIERGE_PULLREVIEWERS=$CLOUDCONCIERGE_PULLREVIEWERS"
     networks:
       - network
     volumes:

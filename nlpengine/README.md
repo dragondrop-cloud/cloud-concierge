@@ -49,4 +49,4 @@ So, by hosting the service in a dedicated, Google Cloud Function endpoint we can
 
 ### Security
 On top of receiving only highly anonymized "document" and "category" data to train on, the NLP engine runs in ephemeral
-Google Cloud Functions and does not log or save any data. It is stateless and ephemeral.
+Google Cloud Functions and does not log or save any data.

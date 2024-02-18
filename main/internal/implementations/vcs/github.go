@@ -266,11 +266,14 @@ func (g *GitHub) OpenPullRequest(jobName string) (string, error) {
 		}
 	}
 
-	logrus.Debugf("[Github] PR opened with url %v", pr.GetURL())
+	rawURL := pr.GetURL()
+	rawURL = strings.ReplaceAll(rawURL, "https://api.github.com/repos/", "https://github.com/")
+	cleanedURL := strings.ReplaceAll(rawURL, "pulls/", "pull/")
+	logrus.Infof("[Github] PR opened with url %v", cleanedURL)
 	return pr.GetURL(), nil
 }
 
-// SetToken sets the github token for the GitHub struct.
+// SetToken sets the GitHub token for the GitHub struct.
 func (g *GitHub) SetToken() {
 	g.authBasic = &http.BasicAuth{
 		Username: "x-access-token",

@@ -18,7 +18,7 @@ func TestCreateIsolatedResourcesWriter(t *testing.T) {
 	provider := terraformValueObjects.Provider("")
 
 	// When
-	resourcesWriter, err := resourcesWriterFactory.Instantiate(resourcesWriterProvider, vcs, provider, hclConfig)
+	resourcesWriter, err := resourcesWriterFactory.Instantiate(resourcesWriterProvider, vcs, provider, hclConfig, "")
 
 	// Then
 	assert.Nil(t, err)

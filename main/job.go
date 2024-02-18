@@ -129,7 +129,7 @@ func (j *Job) Run(ctx context.Context) error {
 		return fmt.Errorf("[run_job][error identifying cloud actors]%w", err)
 	}
 
-	err = j.costEstimator.Execute(ctx)
+	err = j.costEstimator.Execute()
 	if err != nil {
 		return fmt.Errorf("[run_job][error estimating cost for identified resources]%w", err)
 	}
@@ -140,12 +140,10 @@ func (j *Job) Run(ctx context.Context) error {
 	}
 
 	createDummyFile := driftedResourcesIdentified && j.noNewResources
-	_, err = j.resourcesWriter.Execute(ctx, j.name, createDummyFile, workspaceToDirectory)
+	_, err = j.resourcesWriter.Execute(ctx, createDummyFile, workspaceToDirectory)
 	if err != nil {
 		return fmt.Errorf("[run_job][error writing resources on vcs][%w]", err)
 	}
-
-	// TODO: Log out PR URL for user to review and click on!
 
 	return nil
 }
@@ -206,7 +204,7 @@ func InitializeJobDependencies(ctx context.Context, env string) (*Job, error) {
 	if err != nil {
 		return nil, err
 	}
-	writer, err := (&resourcesWriter.Factory{}).Instantiate(env, vcsInstance, inferredData.Provider, jobConfig.getHCLCreateConfig())
+	writer, err := (&resourcesWriter.Factory{}).Instantiate(env, vcsInstance, inferredData.Provider, jobConfig.getHCLCreateConfig(), jobConfig.JobName)
 	if err != nil {
 		return nil, err
 	}

@@ -17,7 +17,7 @@
 </a>
 
 <a href="https://hub.docker.com/r/dragondropcloud/cloud-concierge" alt="Total Downloads">
-   <img src="https://img.shields.io/badge/downloads-11.3k-maroon" />
+   <img src="https://img.shields.io/badge/downloads-13.6k-maroon" />
 </a>
 
 <h3 align="center">
@@ -39,15 +39,10 @@ report in a GitOps manner. It provides:
 
 - &#9989; Whole-cloud security scanning, powered by tfsec
 
-## In action (managed instance)
-https://github.com/dragondrop-cloud/cloud-concierge/assets/52042939/f81f567c-2c04-4aaf-ba75-963c49bcfab5
-
 ## Quick Start
 ### All Cloud Provider Pre-requisites
-1) Obtain an API token at https://app.dragondrop.cloud. For open source executions, we only collect data on when a cloud-concierge starts up (see the Telemetry section below).
-2) Add the [cloud-concierge GitHub App](https://github.com/apps/cloud-concierge) to the repository into which generated Pull Requests should be output.
-3) Configure an environment variable file (use one of our [templates](https://github.com/dragondrop-cloud/cloud-concierge/tree/dev/examples/environments/) to get started) to control the specifics of cloud-concierge's coverage.
-4) Run `docker pull dragondropcloud/cloud-concierge:latest` to pull the latest image.
+1) Configure an environment variable file (use one of our [templates](https://github.com/dragondrop-cloud/cloud-concierge/tree/dev/examples/environments/) to get started) to control the specifics of cloud-concierge's coverage.
+2) Run `docker pull dragondropcloud/cloud-concierge:latest` to pull the latest image.
 
 ### AWS Quickstart
 I) Run `aws configure` on your CLI and ensure that credentials with read-only access to your cloud are configured. If referencing state files stored in an s3 bucket, the credentials specified should be able to read those state files as well.
@@ -66,16 +61,16 @@ See more [here](https://docs.cloudconcierge.io/quick-start#gcp).
 
 ## How does it work?
 1) cloud-concierge creates a representation of your cloud infrastructure as Terraform. Only read-only access should be given to cloud-concierge.
-2) This representation is compared against your state files to detect drift, and identify resources outside of Terraform control
-3) Static security scans and cost estimation is performed on the Terraform representation
-4) Results and code are summarized in a [Pull Request](https://docs.cloudconcierge.io/how-it-works/pull-request-output) within the repository of your choice
+2) This representation is compared against your state files to detect drift, and identify resources outside of Terraform control.
+3) Static security scans and cost estimation is performed on the Terraform representation.
+4) Results and code are summarized in a [Pull Request](https://docs.cloudconcierge.io/how-it-works/pull-request-output) within the repository of your choice.
 
-### Telemetry
-For OSS usage, Cloud Concierge only logs data to the dragondrop API whenever a container execution is started. This method can be viewed [here](main/internal/implementations/dragon_drop/http_dragondrop_oss_methods.go).
- 
-Jobs managed by the [dragondrop platform](https://dragondrop.cloud) log statuses over the course of the job execution and anonymized data for cloud visualizations to the dragondrop API. These methods
-can be viewed [here](https://github.com/dragondrop-cloud/cloud-concierge/blob/dev/main/internal/implementations/dragon_drop/http_dragondrop_managed_execution.go) and
-[here](https://github.com/dragondrop-cloud/cloud-concierge/blob/dev/main/internal/implementations/dragon_drop/http_dragondrop_managed_visualization.go).
+### NLP Engine
+Usage of cloud-concierge is not tracked. To maintain a [slimmer final docker image](https://medium.com/@hello_9187/ripping-out-python-and-reducing-our-docker-image-size-by-87-b61beda90ce4)
+we host the NLP model that recommends new Terraform resources to match with state files in a Python-based Google Cloud Function.
+
+This modelling code does not log any of the anonymized data sent to it,
+and is stored within this repository [here](https://github.com/dragondrop-cloud/cloud-concierge/blob/1c31a98cec6d2c1189c9e4da35c616de100c04bb/nlpengine/main.py).
 
 ## Contributing
 Contributions in any form are highly encouraged. Check out our [contributing guide](CONTRIBUTING.md) to get started.
@@ -83,5 +78,3 @@ Contributions in any form are highly encouraged. Check out our [contributing gui
 ## Resources
 - [Example Output](https://github.com/dragondrop-cloud/cloud-concierge-example/pull/3)
 - [Documentation](https://docs.cloudconcierge.io)
-- [Roadmap](https://github.com/dragondrop-cloud/cloud-concierge/wiki/Roadmap)
-- [Tool Walk Through (low stakes and educational)](https://calendly.com/dragondrop-cloud/cloud-concierge-walk-through)
