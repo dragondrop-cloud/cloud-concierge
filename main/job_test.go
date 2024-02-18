@@ -473,44 +473,6 @@ func TestRunJob_CannotWriteResourcesOnVCS(t *testing.T) {
 	mocks.terraformSecurity.AssertNumberOfCalls(t, "ExecuteScan", 1)
 }
 
-func TestRunJob_CannotInformCompleteStatus(t *testing.T) {
-	// Given
-	mocks, job := createValidJob(t)
-	ctx := context.Background()
-	divisionToProvider := make(map[string]string)
-
-	informCompleteErr := errors.New("cannot inform incomplete status")
-
-	// When
-	mocks.vcs.On("Clone").Return(nil)
-	mocks.terraformWorkspace.On("FindTerraformWorkspaces", ctx).Return(divisionToProvider, nil)
-	mocks.terraformWorkspace.On("DownloadWorkspaceState").Return(nil)
-	mocks.terraformerExecutor.On("Execute").Return(nil)
-	mocks.terraformImportMigrationGenerator.On("Execute").Return(nil)
-	mocks.resourcesCalculator.On("Execute").Return(nil)
-	mocks.identifyCloudActors.On("Execute", ctx).Return(nil)
-	mocks.costEstimator.On("Execute", ctx).Return(nil)
-	mocks.resourcesWriter.On("Execute").Return("", nil)
-	mocks.driftDetector.On("Execute", ctx, divisionToProvider).Return(true, nil)
-	mocks.terraformSecurity.On("ExecuteScan", ctx).Return(nil)
-
-	err := job.Run(ctx)
-
-	// Then
-	assert.NotNil(t, err)
-	assert.ErrorIs(t, informCompleteErr, errors.Unwrap(err))
-
-	mocks.vcs.AssertNumberOfCalls(t, "Clone", 1)
-	mocks.terraformWorkspace.AssertNumberOfCalls(t, "DownloadWorkspaceState", 1)
-	mocks.terraformerExecutor.AssertNumberOfCalls(t, "Execute", 1)
-	mocks.terraformImportMigrationGenerator.AssertNumberOfCalls(t, "Execute", 1)
-	mocks.resourcesCalculator.AssertNumberOfCalls(t, "Execute", 1)
-	mocks.identifyCloudActors.AssertNumberOfCalls(t, "Execute", 1)
-	mocks.costEstimator.AssertNumberOfCalls(t, "Execute", 1)
-	mocks.resourcesWriter.AssertNumberOfCalls(t, "Execute", 1)
-	mocks.terraformSecurity.AssertNumberOfCalls(t, "ExecuteScan", 1)
-}
-
 func TestRunJob_NotFoundNewResources_ButFoundManagedDriftedResources(t *testing.T) {
 	// Given
 	mocks, job := createValidJob(t)

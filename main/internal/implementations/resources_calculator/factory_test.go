@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	nlpenginerequestor "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/nlp_engine_requester"
 	terraformValueObjects "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_value_objects"
 	"github.com/stretchr/testify/assert"
 )
@@ -16,7 +17,8 @@ func TestCreateNotIsolated(t *testing.T) {
 	provider := terraformValueObjects.Provider("provider")
 
 	// When
-	calculator, err := resourcesCalculatorFactory.Instantiate(ctx, environment, provider)
+	nlpEngine, _ := (&nlpenginerequestor.Factory{}).Instantiate(nlpenginerequestor.HTTPNLPEngineClientConfig{})
+	calculator, err := resourcesCalculatorFactory.Instantiate(ctx, environment, provider, nlpEngine)
 
 	// Then
 	assert.Nil(t, err)
@@ -31,7 +33,8 @@ func TestCreateIsolatedResourcesCalculator(t *testing.T) {
 	provider := terraformValueObjects.Provider("")
 
 	// When
-	calculator, err := resourcesCalculatorFactory.Instantiate(ctx, environment, provider)
+	nlpEngine, _ := (&nlpenginerequestor.Factory{}).Instantiate(nlpenginerequestor.HTTPNLPEngineClientConfig{})
+	calculator, err := resourcesCalculatorFactory.Instantiate(ctx, environment, provider, nlpEngine)
 
 	// Then
 	assert.Nil(t, err)
