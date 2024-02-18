@@ -77,12 +77,13 @@ func Test_getInferredData(t *testing.T) {
 	}{
 		{
 			name: "single provider aws",
-			args: args{config: JobConfig{
-				IsManagedDriftOnly: false,
-				Provider:           map[terraformValueObjects.Provider]string{"aws": ""},
-				VCSRepo:            "https://github.com/test-org/test-repo.git",
-				JobID:              "test-pull",
-			},
+			args: args{
+				config: JobConfig{
+					IsManagedDriftOnly: false,
+					Provider:           map[terraformValueObjects.Provider]string{"aws": ""},
+					VCSRepo:            "https://github.com/test-org/test-repo.git",
+					JobID:              "test-pull",
+				},
 			},
 			want: InferredData{
 				Provider:  terraformValueObjects.Provider("aws"),

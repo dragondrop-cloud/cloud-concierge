@@ -81,7 +81,6 @@ func (h *hclCreate) ExtractResourceDefinitions(noNewResources bool, workspaceToD
 	}
 
 	parsedNewResourceToWorkspace, err := gabs.ParseJSON(newResourcesToWorkspace)
-
 	if err != nil {
 		return fmt.Errorf("[gabs.ParseJSON] Error parsing new-resources-to-workspace.json")
 	}
@@ -93,7 +92,6 @@ func (h *hclCreate) ExtractResourceDefinitions(noNewResources bool, workspaceToD
 		parsedNewResourceToWorkspace,
 		workspaceToHCLFile,
 	)
-
 	if err != nil {
 		return fmt.Errorf("[h.placeHCLIntoNewFileDef] %v", err)
 	}
@@ -273,8 +271,7 @@ func (h *hclCreate) writeNewResourceFiles(
 		if string(fileContent) != "" {
 			filePath := fmt.Sprintf("repo%vnew-resources.tf", subDirectory)
 
-			err := os.WriteFile(filePath, fileContent, 0400)
-
+			err := os.WriteFile(filePath, fileContent, 0o400)
 			if err != nil {
 				return fmt.Errorf(
 					"[os.WriteFile] Error for repo%vnew-resources.tf:  %v",

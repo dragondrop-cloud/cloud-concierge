@@ -16,20 +16,15 @@ import (
 // CostEstimatorConfig is configuration for the CostEstimator struct that conforms
 // to envconfig's format expectations.
 type CostEstimatorConfig struct {
-
 	// CloudCredential is a cloud credential with read-only access to a cloud division and, if applicable, access to read Terraform state files.
 	CloudCredential terraformValueObjects.Credential
 
 	// InfracostAPIToken is the token for accessing Infracost's API.
 	InfracostAPIToken string
-
-	// InfracostCloudPricingAPI is the API endpoint for an Infracost cloud pricing API.
-	InfracostCloudPricingAPI string
 }
 
 // CostEstimator is a struct that implements interfaces.CostEstimation.
 type CostEstimator struct {
-
 	// config is a struct of configuration parameters
 	config CostEstimatorConfig
 
@@ -58,17 +53,9 @@ func (ce *CostEstimator) SetInfracostAPIToken(token string) {
 func (ce *CostEstimator) Execute(_ context.Context) error {
 	logrus.Debugf("Executing cost estimation for %s", ce.provider)
 
-	// Setting Infracost Cloud Pricing API Endpoint
-	endpointArgs := []string{"configure", "set", "pricing_api_endpoint", ce.config.InfracostCloudPricingAPI}
-	_, err := executeCommand("infracost", endpointArgs...)
-	if err != nil {
-		return fmt.Errorf("[failed to set infracost pricing_api_endpoint value]%w", err)
-	}
-	fmt.Println("Done setting Infracost pricing API endpoint.")
-
 	// Setting the Infracost API token
 	authArgs := []string{"configure", "set", "api_key", ce.config.InfracostAPIToken}
-	_, err = executeCommand("infracost", authArgs...)
+	_, err := executeCommand("infracost", authArgs...)
 	if err != nil {
 		return fmt.Errorf("[failed to set infracost api_key value]%w", err)
 	}
@@ -101,7 +88,7 @@ func (ce *CostEstimator) WriteCostEstimates() error {
 		return fmt.Errorf("[os.ReadFile]%v", err)
 	}
 
-	err = os.WriteFile("outputs/cost-estimates.json", costs, 0400)
+	err = os.WriteFile("outputs/cost-estimates.json", costs, 0o400)
 	if err != nil {
 		return fmt.Errorf("[os.WriteFile]%v", err)
 	}
@@ -135,7 +122,6 @@ func executeCommand(command string, args ...string) (string, error) {
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
 	err := cmd.Run()
-
 	if err != nil {
 		return "", fmt.Errorf("[error executing command: %s, %s]%w", stderr.String(), out.String(), err)
 	}

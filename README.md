@@ -13,7 +13,7 @@
 </a>
 
 <a href="https://hub.docker.com/r/dragondropcloud/cloud-concierge/tags" alt="Latest Docker Version">
-   <img src="https://img.shields.io/badge/docker-v0.1.11-blue" />
+   <img src="https://img.shields.io/badge/docker-v0.2.0-blue" />
 </a>
 
 <a href="https://hub.docker.com/r/dragondropcloud/cloud-concierge" alt="Total Downloads">

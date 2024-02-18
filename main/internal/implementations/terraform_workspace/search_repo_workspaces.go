@@ -10,8 +10,6 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	log "github.com/sirupsen/logrus"
-
-	"github.com/dragondrop-cloud/cloud-concierge/main/internal/interfaces"
 )
 
 // outFileCloser closes the outFile and returns an error if one occurred.
@@ -24,11 +22,10 @@ func outFileCloser(outFile *os.File) error {
 }
 
 // findTerraformWorkspaces searches a repo for terraform workspaces.
-func findTerraformWorkspaces(ctx context.Context, dragonDrop interfaces.DragonDrop, workspaceDirectories []string, backendType string) (map[string]string, map[string]interface{}, error) {
+func findTerraformWorkspaces(ctx context.Context, workspaceDirectories []string, backendType string) (map[string]string, map[string]interface{}, error) {
 	workspaceToDirectory := make(map[string]string)
 	workspaceToBackendDetails := make(map[string]interface{})
 
-	dragonDrop.PostLog(ctx, "Searching for terraform workspaces names.")
 	for _, directory := range workspaceDirectories {
 		workspace, backendDetails, err := searchDirectoryForWorkspaceName(ctx, directory, backendType)
 		if err != nil {

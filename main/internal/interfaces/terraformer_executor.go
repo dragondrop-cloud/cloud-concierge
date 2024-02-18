@@ -9,7 +9,6 @@ import (
 // TerraformerExecutor is an interface for getting the current state of an external cloud
 // by programmatically running terraformer commands.
 type TerraformerExecutor interface {
-
 	// Execute runs the workflow needed to capture the current state of an
 	// external cloud environment via the terraformer package.
 	Execute(ctx context.Context) error

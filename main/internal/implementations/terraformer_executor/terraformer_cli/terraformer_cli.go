@@ -25,7 +25,6 @@ type TerraformImportMigrationGeneratorParams struct {
 // TerraformerCLI interface is an abstraction on the methods needed within the
 // terraformer package.
 type TerraformerCLI interface {
-
 	// Import runs the `terraformer import` command to import all resources for the specified provider, division,
 	// and specified credentials.
 	Import(params TerraformImportMigrationGeneratorParams) error
@@ -94,7 +93,6 @@ func (tfrCLI *terraformerCLI) Import(params TerraformImportMigrationGeneratorPar
 	args := append(mainArgs, params.AdditionalArgs...)
 	log.Infof("Terraformer ARGS: %s", args)
 	err := executeCommand("terraformer", args...)
-
 	if err != nil {
 		return fmt.Errorf("[Import] Error in running 'terraformer import': %v", err)
 	}
@@ -162,7 +160,6 @@ func executeCommand(command string, args ...string) error {
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
 	err := cmd.Run()
-
 	if err != nil {
 		return fmt.Errorf("%v\n\n%v", err, stderr.String()+out.String())
 	}

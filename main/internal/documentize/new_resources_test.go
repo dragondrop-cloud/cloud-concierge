@@ -34,30 +34,30 @@ func TestSelectNewResources(t *testing.T) {
 	}
 
 	inputDivisionToID := map[ResourceData]bool{
-		ResourceData{
+		{
 			id:     "8675309",
 			tfType: "example_terraform_resource",
 		}: true,
-		ResourceData{
+		{
 			id:     "8675309",
 			tfType: "example_terraform_resource_2",
 		}: true,
-		ResourceData{
+		{
 			id:     "86asd09asd",
 			tfType: "le_terraform_resource",
 		}: true,
-		ResourceData{
+		{
 			id:     "asd1118asd",
 			tfType: "example_terraform_resource_3",
 		}: true,
 	}
 
 	expectedOutput := map[ResourceData]bool{
-		ResourceData{
+		{
 			id:     "86asd09asd",
 			tfType: "le_terraform_resource",
 		}: true,
-		ResourceData{
+		{
 			id:     "asd1118asd",
 			tfType: "example_terraform_resource_3",
 		}: true,
@@ -68,7 +68,6 @@ func TestSelectNewResources(t *testing.T) {
 	if !reflect.DeepEqual(actualOutput, expectedOutput) {
 		t.Errorf("got %v, expected %v", actualOutput, expectedOutput)
 	}
-
 }
 
 func TestCheckIfResourceIsPresent(t *testing.T) {
@@ -140,7 +139,6 @@ func TestConvertNewResourcesToJSON(t *testing.T) {
 
 	d := &documentize{}
 	actualOutput, err := d.ConvertNewResourcesToJSON(inputResourceDocMap)
-
 	if err != nil {
 		t.Errorf("Unexpected error in ConvertNewResourcesToJSON(): %v", err)
 	}
@@ -202,7 +200,6 @@ func TestExtractResourceDocument(t *testing.T) {
       ]
     }]
 }`))
-
 	if err != nil {
 		t.Errorf("Unexpected error in gabs.ParseJSON(): %v", err)
 	}
@@ -280,7 +277,6 @@ func TestExtractResourceIdsFromTerraformerState(t *testing.T) {
       ]
     }]
 }`))
-
 	if err != nil {
 		t.Errorf("Unexpected error in gabs.ParseJSON(): %v", err)
 	}
@@ -288,7 +284,7 @@ func TestExtractResourceIdsFromTerraformerState(t *testing.T) {
 	outputMap, _ := extractResourceIdsFromTerraformerState(tfStateParsed)
 
 	expectedOutputMap := map[ResourceData]bool{
-		ResourceData{
+		{
 			id:     "example_id",
 			name:   "api_compute",
 			tfType: "google_cloud_run_service",
@@ -351,7 +347,6 @@ func TestExtractResourceIdsFromWorkspaceState(t *testing.T) {
       ]
     }]
 }`))
-
 	if err != nil {
 		t.Errorf("Unexpected error in gabs.ParseJSON(): %v", err)
 	}
@@ -359,7 +354,7 @@ func TestExtractResourceIdsFromWorkspaceState(t *testing.T) {
 	outputMap, _ := extractResourceIdsFromWorkspaceState(tfStateParsed)
 
 	expectedOutputMap := map[ResourceData]bool{
-		ResourceData{
+		{
 			id:     "example_id",
 			tfType: "google_cloud_run_service",
 		}: true,
@@ -452,7 +447,6 @@ func TestPullResourceDocumentFromDiv(t *testing.T) {
       ]
     }]
 }`))
-
 	if err != nil {
 		t.Errorf("Unexpected error in gabs.ParseJSON(): %v", err)
 	}
@@ -472,7 +466,6 @@ func TestPullResourceDocumentFromDiv(t *testing.T) {
 	}
 
 	resourceName, doc, err := d.pullResourceDocumentFromDiv(tfStateParsed, inputResourceData)
-
 	if err != nil {
 		t.Errorf("[d.pullResourceDocumentFromDiv] Unexpected error %v", err)
 	}
@@ -489,5 +482,4 @@ func TestPullResourceDocumentFromDiv(t *testing.T) {
 	if doc != expectedDoc {
 		t.Errorf("resource document got %v, expected %v", doc, expectedDoc)
 	}
-
 }

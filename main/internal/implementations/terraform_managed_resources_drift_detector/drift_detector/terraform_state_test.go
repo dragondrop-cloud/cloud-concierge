@@ -18,13 +18,13 @@ func Test_TerraformStateExtractUniqueResourceIdToData(t *testing.T) {
 				Name:     "my_resource",
 				Provider: "google",
 				Instances: []ResourceInstance{
-					ResourceInstance{
+					{
 						SchemaVersion: 1,
 						Attributes: map[string]interface{}{
 							"id": "id_1",
 						},
 					},
-					ResourceInstance{
+					{
 						SchemaVersion: 1,
 						Attributes: map[string]interface{}{
 							"id": "id_2",
@@ -39,7 +39,7 @@ func Test_TerraformStateExtractUniqueResourceIdToData(t *testing.T) {
 				Name:     "my_resource",
 				Provider: "aws",
 				Instances: []ResourceInstance{
-					ResourceInstance{
+					{
 						SchemaVersion: 1,
 						Attributes: map[string]interface{}{
 							"id":  "id_3",

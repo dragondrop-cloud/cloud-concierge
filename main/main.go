@@ -35,12 +35,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	err = job.Authorize(ctx)
-	if err != nil {
-		log.Errorf("Error authorizing job: %s", err.Error())
-		os.Exit(1)
-	}
-
 	err = job.Run(ctx)
 	if err != nil {
 		log.Errorf("Error running job: %s", err.Error())

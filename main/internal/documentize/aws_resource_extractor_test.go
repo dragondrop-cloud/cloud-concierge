@@ -54,7 +54,6 @@ func TestExtractResourceDetailsOne_AWS(t *testing.T) {
     }
   ]
 }`))
-
 	if err != nil {
 		t.Errorf("Unexpected error in gabs.ParseJSON(): %v", err)
 	}
@@ -122,7 +121,6 @@ func TestExtractResourceDetailsTwo_AWS(t *testing.T) {
     }
   ]
 }`))
-
 	if err != nil {
 		t.Errorf("Unexpected error in gabs.ParseJSON(): %v", err)
 	}

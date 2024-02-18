@@ -32,9 +32,6 @@ type GitHub struct {
 	// defaultBranch is the name of the default branch of the repository.
 	defaultBranch string
 
-	// dragonDrop is needed to inform cloned status
-	dragonDrop interfaces.DragonDrop
-
 	// ID is a string which is a random, 10 character unique identifier
 	// for a cloud-concierge built commit/pull request
 	ID string
@@ -55,13 +52,13 @@ type GitHub struct {
 }
 
 // NewGitHub creates a new instance of the GitHub struct.
-func NewGitHub(ctx context.Context, dragonDrop interfaces.DragonDrop, config Config) interfaces.VCS {
-	dragonDrop.PostLog(ctx, "Created VCS client.")
-
-	return &GitHub{
-		config:     config,
-		dragonDrop: dragonDrop,
+func NewGitHub(config Config) interfaces.VCS {
+	githubInstance := &GitHub{
+		config: config,
 	}
+
+	githubInstance.SetToken()
+	return githubInstance
 }
 
 // GetDefaultBranch returns the default branch of the repository.
@@ -125,7 +122,6 @@ func (g *GitHub) AddChanges() error {
 	}
 
 	err := g.workTree.AddWithOptions(addOptions)
-
 	if err != nil {
 		return fmt.Errorf("[vcs][add_changed][error in worktree.AddWithOptions]%w", err)
 	}
@@ -157,13 +153,11 @@ func (g *GitHub) Checkout(jobName string) error {
 	}
 
 	workTree, err := g.repository.Worktree()
-
 	if err != nil {
 		return fmt.Errorf("[vcs][checkout][error in creating worktree]%w", err)
 	}
 
 	err = workTree.Checkout(checkoutOptions)
-
 	if err != nil {
 		return fmt.Errorf("[vcs][checkout][error in checking out a new branch for the suggested changes]%w", err)
 	}
@@ -189,7 +183,6 @@ func (g *GitHub) Commit() error {
 	}
 
 	commitHash, err := g.workTree.Commit("build: cloud-concierge results", commitOptions)
-
 	if err != nil {
 		return fmt.Errorf("[vcs][commit][error in worktree.AddWithOptions]%w", err)
 	}
@@ -209,7 +202,6 @@ func (g *GitHub) Push() error {
 	}
 
 	err := g.repository.Push(pushOptions)
-
 	if err != nil {
 		return fmt.Errorf("[vcs][push][error in repository.Push]%w", err)
 	}
@@ -243,7 +235,6 @@ func (g *GitHub) OpenPullRequest(jobName string) (string, error) {
 	}
 
 	orgName, repoName, err := g.extractOrgAndRepoName(g.config.VCSRepo)
-
 	if err != nil {
 		return "", fmt.Errorf("[extractOrgAndRepoName] %v", err)
 	}
@@ -254,7 +245,6 @@ func (g *GitHub) OpenPullRequest(jobName string) (string, error) {
 		repoName,
 		newPR,
 	)
-
 	if err != nil {
 		return "", fmt.Errorf("error in github.PullRequests.Create(): %v", err)
 	}
@@ -271,7 +261,6 @@ func (g *GitHub) OpenPullRequest(jobName string) (string, error) {
 			pr.GetNumber(),
 			rr,
 		)
-
 		if err != nil {
 			return "", fmt.Errorf("error in github.PullRequests.RequestReviewers(): %v", err)
 		}
@@ -282,16 +271,16 @@ func (g *GitHub) OpenPullRequest(jobName string) (string, error) {
 }
 
 // SetToken sets the github token for the GitHub struct.
-func (g *GitHub) SetToken(token string) {
+func (g *GitHub) SetToken() {
 	g.authBasic = &http.BasicAuth{
 		Username: "x-access-token",
-		Password: token,
+		Password: g.config.VCSPat,
 	}
 
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{
 			TokenType:   "Bearer",
-			AccessToken: token,
+			AccessToken: g.config.VCSPat,
 		},
 	)
 	tc := oauth2.NewClient(context.Background(), ts)
@@ -303,7 +292,6 @@ func (g *GitHub) SetToken(token string) {
 // repositories full path.
 func (g *GitHub) extractOrgAndRepoName(repoFullPath string) (string, string, error) {
 	r, err := regexp.Compile(`github.com/(.*?)/(.*?).git$`)
-
 	if err != nil {
 		return "", "", fmt.Errorf("[extract_org_and_repo_name][error in regexp.Compile]%w", err)
 	}

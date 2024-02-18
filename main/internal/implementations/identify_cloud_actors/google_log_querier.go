@@ -19,7 +19,6 @@ import (
 
 // GoogleLogQuerier implements the LogQuerier interface for Google Cloud.
 type GoogleLogQuerier struct {
-
 	// authToken is an auth token for the Google Cloud REST API for a particular GCP project
 	authToken string
 
@@ -109,7 +108,7 @@ func (glc *GoogleLogQuerier) QueryForAllResources(ctx context.Context) (terrafor
 	}
 	logrus.Debugf("managedAttributeDifferencesBytes: %s", string(managedAttributeDifferencesBytes))
 
-	err = os.WriteFile("outputs/drift-resources-differences.json", managedAttributeDifferencesBytes, 0400)
+	err = os.WriteFile("outputs/drift-resources-differences.json", managedAttributeDifferencesBytes, 0o400)
 	if err != nil {
 		return resourceActions, fmt.Errorf("[os.WriteFile]%v", err)
 	}
@@ -175,7 +174,6 @@ func (glc *GoogleLogQuerier) adminLogSearch(
 // GCPAdminLogPostBody contains the fields needed for the body of a post request to the GCP api
 // for getting admin action log data.
 type GCPAdminLogPostBody struct {
-
 	// ResourceNames are the names of one or more parent resources from which to retrieve log entries.
 	// For our use case, each value will always take the form of "projects/[PROJECT_ID]"
 	ResourceNames []string `json:"resourceNames"`
@@ -200,7 +198,6 @@ func (glc *GoogleLogQuerier) queryGCPAPI(ctx context.Context, resourceID string)
 		OrderBy:       "timestamp desc",
 		PageSize:      1000,
 	})
-
 	if err != nil {
 		return []byte{}, fmt.Errorf("[glc.queryGCPAPI][error in json marshal]%v", err)
 	}

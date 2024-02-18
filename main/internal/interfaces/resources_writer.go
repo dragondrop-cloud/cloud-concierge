@@ -9,7 +9,6 @@ import (
 // ResourcesWriter is an interface for writing Terraform resource information to
 // a version control system.
 type ResourcesWriter interface {
-
 	// Execute writes new resources to the relevant version control system,
 	// and returns a pull request url corresponding to the new changes.
 	Execute(ctx context.Context, jobName string, createDummyFile bool, workspaceToDirectory map[string]string) (string, error)

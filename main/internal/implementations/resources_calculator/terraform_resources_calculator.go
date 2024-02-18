@@ -21,11 +21,13 @@ var ErrNoNewResources = errors.New("[no new resources identified]")
 // TerraformResourcesCalculator is a struct that implements the interfaces.ResourcesCalculator interface for
 // running within a "live" dragondrop job.
 type TerraformResourcesCalculator struct {
-	// documentize implements the Document
+	// documentize provides functionality to process Terraform state files into structured data
+	// that the NLPEngine can handle.
 	documentize *documentize.Documentize
 
-	// dragonDrop interface implementation for sending requests to the dragondrop API.
-	dragonDrop interfaces.DragonDrop
+	// nlpEngine is the implementation of interfaces.NLPEngine for interacting with
+	// the NLP engine endpoint.
+	nlpEngine interfaces.NLPEngine
 }
 
 // ResourceID is a string that represents a resource id for a cloud resource within a terraform state file.
@@ -42,8 +44,8 @@ type NewResourceData struct {
 }
 
 // NewTerraformResourcesCalculator creates and returns an instance of the TerraformResourcesCalculator.
-func NewTerraformResourcesCalculator(documentize *documentize.Documentize, dragonDrop interfaces.DragonDrop) interfaces.ResourcesCalculator {
-	return &TerraformResourcesCalculator{documentize: documentize, dragonDrop: dragonDrop}
+func NewTerraformResourcesCalculator(documentize *documentize.Documentize, nlpEngine interfaces.NLPEngine) interfaces.ResourcesCalculator {
+	return &TerraformResourcesCalculator{documentize: documentize, nlpEngine: nlpEngine}
 }
 
 // Execute calculates the association between resources and a state file.
@@ -52,10 +54,7 @@ func (c *TerraformResourcesCalculator) Execute(ctx context.Context, workspaceToD
 	_, err := c.calculateResourceToWorkspaceMapping(ctx, *c.documentize, workspaceToDirectory)
 	if err != nil {
 		if errors.Unwrap(err) == ErrNoNewResources {
-			err := c.dragonDrop.InformNoResourcesFound(ctx)
-			if err != nil {
-				return fmt.Errorf("[resources_calculator][error informing no new resources identified]%w", err)
-			}
+			fmt.Println("No new resources identified")
 		}
 
 		return fmt.Errorf("[resources_calculator][error calculating resources to workspace]%w", err)
@@ -97,22 +96,17 @@ func (c *TerraformResourcesCalculator) calculateResourceToWorkspaceMapping(ctx c
 
 // getResourceToWorkspaceMapping hits the NLPEngine endpoint to receive a mapping of new resources to suggested workspace.
 func (c *TerraformResourcesCalculator) getResourceToWorkspaceMapping(ctx context.Context) error {
-	c.dragonDrop.PostLog(ctx, "Beginning to calculate recommended placement of resources to workspace.")
-
-	err := c.dragonDrop.PostNLPEngine(ctx)
+	err := c.nlpEngine.PostNLPEngine(ctx)
 	if err != nil {
-		return fmt.Errorf("[c.dragondropDrop.PostNLPEngine]%w", err)
+		return fmt.Errorf("[postNLPEngine]%w", err)
 	}
 
-	c.dragonDrop.PostLog(ctx, "Done making a map of workspaces to documents.")
 	return nil
 }
 
 // createNewResourceDocuments defines documents out of new resources to be used in downstream processing
 // like NLP modeling and cloud actor action querying.
 func (c *TerraformResourcesCalculator) createNewResourceDocuments(ctx context.Context, docu documentize.Documentize, newResources map[documentize.ResourceData]bool) error {
-	c.dragonDrop.PostLog(ctx, "Beginning to create new resource documents.")
-
 	newResourceDocs, err := docu.NewResourceDocuments(newResources)
 	if err != nil {
 		return fmt.Errorf("[create_new_resource_documents][docu.NewResourceDocuments]%w", err)
@@ -125,7 +119,7 @@ func (c *TerraformResourcesCalculator) createNewResourceDocuments(ctx context.Co
 	}
 	logrus.Debugf("[resources_calculator][createNewResourceDocuments] Created new resource documents JSON.")
 
-	err = os.WriteFile("outputs/new-resources-to-documents.json", resourceDocsJSONBytes, 0400)
+	err = os.WriteFile("outputs/new-resources-to-documents.json", resourceDocsJSONBytes, 0o400)
 	if err != nil {
 		return fmt.Errorf("[create_new_resource_documents][write outputs/new-resources-to-documents.json] Error: %v", err)
 	}
@@ -145,12 +139,11 @@ func (c *TerraformResourcesCalculator) createNewResourceDocuments(ctx context.Co
 		return fmt.Errorf("[json.MarshalIndent]%v", err)
 	}
 
-	err = os.WriteFile("outputs/new-resources.json", newResourceDataJSON, 0400)
+	err = os.WriteFile("outputs/new-resources.json", newResourceDataJSON, 0o400)
 	if err != nil {
 		return fmt.Errorf("[create_new_resource_documents][write outputs/new-resources.json] Error: %v", err)
 	}
 
-	c.dragonDrop.PostLog(ctx, "Done creating new resource documents.")
 	return nil
 }
 
@@ -227,25 +220,19 @@ func (c *TerraformResourcesCalculator) createNewResourceData(
 // identifyNewResources compares Terraformer output with workspace state files to determine which
 // cloud resources will be new to Terraform control.
 func (c *TerraformResourcesCalculator) identifyNewResources(ctx context.Context, docu documentize.Documentize, workspaceToDirectory map[string]string) (
-	map[documentize.ResourceData]bool, error) {
-	c.dragonDrop.PostLog(ctx, "Beginning to identify new Resources.")
-
+	map[documentize.ResourceData]bool, error,
+) {
 	newResources, err := docu.IdentifyNewResources(workspaceToDirectory)
-
 	if err != nil {
 		return nil, fmt.Errorf("[identify_new_resources][docu.IdentifyNewResources]%w", err)
 	}
 
-	c.dragonDrop.PostLog(ctx, "Done identifying new Resources.")
 	return newResources, nil
 }
 
 // createWorkspaceDocuments defines documents out of remote workspace state to be used in NLP modeling.
 func (c *TerraformResourcesCalculator) createWorkspaceDocuments(ctx context.Context, docu documentize.Documentize, workspaceToDirectory map[string]string) (string, error) {
-	c.dragonDrop.PostLog(ctx, "Beginning to make map of workspaces to documents.")
-
 	workspaceToDocument, err := docu.AllWorkspaceStatesToDocuments(workspaceToDirectory)
-
 	if err != nil {
 		return "[createWorkspacesToDocuments] %v", err
 	}
@@ -256,12 +243,10 @@ func (c *TerraformResourcesCalculator) createWorkspaceDocuments(ctx context.Cont
 	}
 	logrus.Debugf("[resources_calculator][createWorkspaceDocuments] Created workspace documents JSON.")
 
-	err = os.WriteFile("outputs/workspace-to-documents.json", outputBytes, 0400)
-
+	err = os.WriteFile("outputs/workspace-to-documents.json", outputBytes, 0o400)
 	if err != nil {
 		return "[createWorkspacesToDocuments] %v", err
 	}
 
-	c.dragonDrop.PostLog(ctx, "Done with map between workspaces to documents.")
 	return "", nil
 }

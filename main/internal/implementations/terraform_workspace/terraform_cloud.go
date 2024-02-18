@@ -57,22 +57,16 @@ type TerraformCloud struct {
 
 	// config contains the variables that determine the specific behavior of the TerraformCloud struct
 	config TfStackConfig
-
-	// dragonDrop is an implementation of the interfaces.dragonDrop interface for communicating with the
-	// dragondrop API.
-	dragonDrop interfaces.DragonDrop
 }
 
 // NewTerraformCloud creates a new instance of the TerraformCloud struct.
-func NewTerraformCloud(ctx context.Context, config TfStackConfig, dragonDrop interfaces.DragonDrop) interfaces.TerraformWorkspace {
-	dragonDrop.PostLog(ctx, "Created TFWorkspace client.")
-	return &TerraformCloud{config: config, dragonDrop: dragonDrop}
+func NewTerraformCloud(ctx context.Context, config TfStackConfig) interfaces.TerraformWorkspace {
+	return &TerraformCloud{config: config}
 }
 
 func (c *TerraformCloud) FindTerraformWorkspaces(ctx context.Context) (map[string]string, error) {
 	workspaceToDirectory := make(map[string]string)
 
-	c.dragonDrop.PostLog(ctx, "Searching for terraform workspaces names.")
 	for _, directory := range c.config.WorkspaceDirectories {
 		workspace, err := c.searchDirectoryForWorkspaceName(ctx, directory)
 		if err != nil {
@@ -104,17 +98,13 @@ func (c *TerraformCloud) searchDirectoryForWorkspaceName(ctx context.Context, di
 // DownloadWorkspaceState downloads from the remote TerraformCloudFile backend the latest state file
 // for each "workspace".
 func (c *TerraformCloud) DownloadWorkspaceState(ctx context.Context, WorkspaceToDirectory map[string]string) error {
-	c.dragonDrop.PostLog(ctx, "Beginning download of state files to local memory.")
-
 	for workspaceName := range WorkspaceToDirectory {
 		err := c.getWorkspaceState(ctx, workspaceName)
-
 		if err != nil {
 			return fmt.Errorf("[download_workspace_state][error getting state for %s]%w", workspaceName, err)
 		}
 	}
 
-	c.dragonDrop.PostLog(ctx, "Done with download of state files to local memory.")
 	return nil
 }
 
@@ -130,33 +120,29 @@ func (c *TerraformCloud) getWorkspaceState(ctx context.Context, workspaceName st
 	requestPath := fmt.Sprintf("https://app.terraform.io/api/v2/workspaces/%v/current-state-version", workspaceID)
 
 	request, err := c.buildTFCloudHTTPRequest(ctx, requestName, "GET", requestPath)
-
 	if err != nil {
 		return fmt.Errorf("[get_workspace_state][error creating request %s]%w", requestName, err)
 	}
 
 	jsonResponseBytes, err := c.terraformCloudRequest(request, requestName)
-
 	if err != nil {
 		return fmt.Errorf("[get_workspace_state][error executing terraform cloud request]%w", err)
 	}
 
 	rawStateURL, err := c.extractRawStateURL(jsonResponseBytes)
-
 	if err != nil {
 		return fmt.Errorf("[get_workspace_state][error extracting raw state url]%w", err)
 	}
 
 	jsonResponseBytes, err = c.getRawTerraformStateFile(ctx, rawStateURL)
-
 	if err != nil {
 		return fmt.Errorf("[get_workspace_state][error getting raw terraform state file]%w", err)
 	}
 
-	_ = os.MkdirAll("state_files", 0660)
+	_ = os.MkdirAll("state_files", 0o660)
 	fileOutPath := fmt.Sprintf("state_files/%v.json", workspaceName)
 
-	err = os.WriteFile(fileOutPath, jsonResponseBytes, 0400)
+	err = os.WriteFile(fileOutPath, jsonResponseBytes, 0o400)
 	if err != nil {
 		return fmt.Errorf("[get_workspace_state][error saving state file to memory]%w", err)
 	}
@@ -171,13 +157,11 @@ func (c *TerraformCloud) getWorkspaceID(ctx context.Context, workspaceName strin
 	requestPath := fmt.Sprintf("https://app.terraform.io/api/v2/organizations/%v/workspaces/%v", c.config.TerraformCloudOrganization, workspaceName)
 
 	request, err := c.buildTFCloudHTTPRequest(ctx, requestName, "GET", requestPath)
-
 	if err != nil {
 		return "", fmt.Errorf("[get_workspace_id][error building terraform cloud request %s]%w", requestName, err)
 	}
 
 	jsonResponseBytes, err := c.terraformCloudRequest(request, requestName)
-
 	if err != nil {
 		return "", err
 	}
@@ -202,9 +186,7 @@ func (c *TerraformCloud) buildTFCloudHTTPRequest(ctx context.Context, requestNam
 
 // terraformCloudRequest build, executes, and processes an API call to the TerraformCloudFile Cloud API.
 func (c *TerraformCloud) terraformCloudRequest(request *http.Request, requestName string) ([]byte, error) {
-
 	response, err := c.httpClient.Do(request)
-
 	if err != nil {
 		return nil, fmt.Errorf("[terraform_cloud_request][error in http GET request to TerraformCloudFile cloud: %s]%w", requestName, err)
 	}
@@ -216,7 +198,6 @@ func (c *TerraformCloud) terraformCloudRequest(request *http.Request, requestNam
 
 	// Read in response body to bytes array.
 	outputBytes, err := io.ReadAll(response.Body)
-
 	if err != nil {
 		return nil, fmt.Errorf("[error in reading response into bytes array in request: %s]%w", requestName, err)
 	}
@@ -260,13 +241,11 @@ func (c *TerraformCloud) extractWorkspaceID(jsonBytes []byte) (string, error) {
 func (c *TerraformCloud) getRawTerraformStateFile(ctx context.Context, rawStateURL string) ([]byte, error) {
 	requestName := "getRawStateFromTFC"
 	request, err := c.buildTFCloudHTTPRequest(ctx, requestName, "GET", rawStateURL)
-
 	if err != nil {
 		return nil, fmt.Errorf("[get_workspace_state][error creating request %s]%w", requestName, err)
 	}
 
 	respBytes, err := c.terraformCloudRequest(request, requestName)
-
 	if err != nil {
 		return nil, fmt.Errorf("[get_raw_terraform_state_file][error executing http get request]%w", err)
 	}

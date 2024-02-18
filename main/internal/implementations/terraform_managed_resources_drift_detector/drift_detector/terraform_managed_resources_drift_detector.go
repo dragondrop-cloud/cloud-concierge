@@ -100,7 +100,7 @@ func (m *ManagedResourcesDriftDetector) writeDeletedResources(deleted []DeletedR
 		return fmt.Errorf("[json.MarshalIndent]%w", err)
 	}
 
-	return os.WriteFile("outputs/drift-resources-deleted.json", differencesJSON, 0400)
+	return os.WriteFile("outputs/drift-resources-deleted.json", differencesJSON, 0o400)
 }
 
 // writeDifferences writes within a json file the differences between all the drifted resources to render within the PR
@@ -110,5 +110,5 @@ func (m *ManagedResourcesDriftDetector) writeDifferences(differences []Attribute
 		return fmt.Errorf("[json.MarshalIndent]%w", err)
 	}
 
-	return os.WriteFile("outputs/drift-resources-differences.json", differencesJSON, 0400)
+	return os.WriteFile("outputs/drift-resources-differences.json", differencesJSON, 0o400)
 }

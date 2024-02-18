@@ -9,8 +9,7 @@ import (
 
 // IsolatedResourcesCalculator is a struct that implements the ResourcesCalculator interface
 // for the purpose of running end to end unit tests.
-type IsolatedResourcesCalculator struct {
-}
+type IsolatedResourcesCalculator struct{}
 
 // NewIsolatedResourcesCalculator returns an instance of IsolatedResourcesCalculator
 func NewIsolatedResourcesCalculator() interfaces.ResourcesCalculator {

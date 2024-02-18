@@ -8,22 +8,21 @@ import (
 )
 
 // Factory is a struct that generates implementations of interfaces.IdentifyCloudActors.
-type Factory struct {
-}
+type Factory struct{}
 
 // Instantiate returns an implementation of interfaces.IdentifyCloudActors depending on the passed
 // environment specification.
-func (f *Factory) Instantiate(_ context.Context, environment string, dragonDrop interfaces.DragonDrop, provider terraformValueObjects.Provider, config Config) (interfaces.IdentifyCloudActors, error) {
+func (f *Factory) Instantiate(_ context.Context, environment string, provider terraformValueObjects.Provider, config Config) (interfaces.IdentifyCloudActors, error) {
 	switch environment {
 	case "isolated":
 		return new(IsolatedIdentifyCloudActors), nil
 	default:
-		return f.bootstrappedResourceCalculator(dragonDrop, provider, config)
+		return f.bootstrappedResourceCalculator(provider, config)
 	}
 }
 
 // bootstrappedResourceCalculator creates a complete implementation of the interfaces.IdentifyCloudActors interface with
 // configuration specified via environment variables.
-func (f *Factory) bootstrappedResourceCalculator(dragonDrop interfaces.DragonDrop, provider terraformValueObjects.Provider, config Config) (interfaces.IdentifyCloudActors, error) {
-	return NewIdentifyCloudActors(config, dragonDrop, provider)
+func (f *Factory) bootstrappedResourceCalculator(provider terraformValueObjects.Provider, config Config) (interfaces.IdentifyCloudActors, error) {
+	return NewIdentifyCloudActors(config, provider)
 }

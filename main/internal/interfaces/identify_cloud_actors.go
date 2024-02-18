@@ -9,7 +9,6 @@ import (
 // IdentifyCloudActors is an interface for identifying the cloud actors that have made changes
 // to identified drifted resources.
 type IdentifyCloudActors interface {
-
 	// Execute creates structured query_param_data mapping new or drifted resources to the cloud actor (service principal or user)
 	// responsible for the latest changes for that resource.
 	Execute(ctx context.Context) error

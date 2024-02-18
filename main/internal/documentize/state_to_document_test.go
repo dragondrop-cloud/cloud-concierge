@@ -17,7 +17,6 @@ func TestConvertWorkspaceDocumentsToJSON(t *testing.T) {
 	}
 
 	output, err := d.ConvertWorkspaceDocumentsToJSON(inputMap)
-
 	if err != nil {
 		t.Errorf("Unexpected error in d.ConvertWorkspaceDocumentsToJSON: %v", err)
 	}
@@ -27,7 +26,6 @@ func TestConvertWorkspaceDocumentsToJSON(t *testing.T) {
 	if string(output) != expectedOutput {
 		t.Errorf("got %v, expected %v", output, expectedOutput)
 	}
-
 }
 
 func TestRegexProviderName(t *testing.T) {
@@ -36,7 +34,6 @@ func TestRegexProviderName(t *testing.T) {
 	expectedOutput := "provider[\"registry.terraform.io/hashicorp/google\"]"
 
 	actualOutput, err := regexProviderName(inputProvider)
-
 	if err != nil {
 		t.Errorf("Unexpected error in regexProviderName: %v", err)
 	}
@@ -50,7 +47,6 @@ func TestRegexProviderName(t *testing.T) {
 	expectedOutput = "provider[\"registry.terraform.io/hashicorp/google-beta\"]"
 
 	actualOutput, err = regexProviderName(inputProvider)
-
 	if err != nil {
 		t.Errorf("Unexpected error in regexProviderName: %v", err)
 	}
@@ -64,7 +60,6 @@ func TestRegexProviderName(t *testing.T) {
 	expectedOutput = "provider[\"registry.terraform.io/hashicorp/aws\"]"
 
 	actualOutput, err = regexProviderName(inputProvider)
-
 	if err != nil {
 		t.Errorf("Unexpected error in regexProviderName: %v", err)
 	}
@@ -135,13 +130,11 @@ func TestWorkspaceDocFromTFState(t *testing.T) {
       ]
     }]
 }`))
-
 	if err != nil {
 		t.Errorf("Error parsing input state with gabs.ParseJSON(): %v", err)
 	}
 
 	outputResourceDetails, err := d.workspaceDocFromTFState(tfStateParsed)
-
 	if err != nil {
 		t.Errorf("Unexpected error from d.workspaceDocFromTFState: %v", outputResourceDetails)
 	}

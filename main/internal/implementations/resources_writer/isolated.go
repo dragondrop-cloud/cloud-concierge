@@ -8,8 +8,7 @@ import (
 
 // IsolatedResourcesWriter is a struct that implements the interfaces.ResourcesWriter interface for
 // the purpose of end-to-end testing.
-type IsolatedResourcesWriter struct {
-}
+type IsolatedResourcesWriter struct{}
 
 // NewIsolatedResourcesWriter returns a new instance of IsolatedResourcesWriter.
 func NewIsolatedResourcesWriter() interfaces.ResourcesWriter {

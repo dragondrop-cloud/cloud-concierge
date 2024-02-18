@@ -24,9 +24,6 @@ type Config struct {
 
 // TerraformImportMigrationGenerator is a struct that implements the interfaces.TerraformImportMigrationGenerator interface.
 type TerraformImportMigrationGenerator struct {
-	// dragonDrop is needed to inform cloud resources mapped to state file
-	dragonDrop interfaces.DragonDrop
-
 	// provider is the name of a cloud provider
 	provider terraformValueObjects.Provider `required:"true"`
 
@@ -35,25 +32,17 @@ type TerraformImportMigrationGenerator struct {
 }
 
 // NewTerraformImportMigrationGenerator creates and returns a new instance of TerraformImportMigrationGenerator
-func NewTerraformImportMigrationGenerator(ctx context.Context, config Config, dragonDrop interfaces.DragonDrop, provider terraformValueObjects.Provider) interfaces.TerraformImportMigrationGenerator {
-	dragonDrop.PostLog(ctx, "Created TFImport client.")
-
-	return &TerraformImportMigrationGenerator{config: config, dragonDrop: dragonDrop, provider: provider}
+func NewTerraformImportMigrationGenerator(ctx context.Context, config Config, provider terraformValueObjects.Provider) interfaces.TerraformImportMigrationGenerator {
+	return &TerraformImportMigrationGenerator{config: config, provider: provider}
 }
 
 // Execute generates terraform state migration statements for identified resources.
 func (i *TerraformImportMigrationGenerator) Execute(ctx context.Context) error {
 	logrus.Debugf("[terraform_import_migration_generator][Execute]")
-	i.dragonDrop.PostLog(ctx, "Beginning to map resources to import location.")
 
 	resourceImports, err := i.GenericResourcesToImportLocation(i.provider)
 	if err != nil {
 		return fmt.Errorf("[terraform_import_migration_generator][error in GenericResourcesToImportLocation]%w", err)
-	}
-
-	err = i.dragonDrop.InformCloudResourcesMappedToStateFile(ctx)
-	if err != nil {
-		return fmt.Errorf("[terraform_import_migration_generator][error informing resources mapped to import location]%w", err)
 	}
 
 	resourceImportMapJSON, err := i.convertProviderToResourceImportMapToJSON(resourceImports)
@@ -66,7 +55,6 @@ func (i *TerraformImportMigrationGenerator) Execute(ctx context.Context) error {
 		return fmt.Errorf("[terraform_import_migration_generator][error mapping resources]%w", err)
 	}
 
-	i.dragonDrop.PostLog(ctx, "Generated map of remote resources to import location.")
 	return nil
 }
 
@@ -94,8 +82,8 @@ func (i *TerraformImportMigrationGenerator) writeResourcesMap(resourceImportMapJ
 		}
 	}
 
-	_ = os.MkdirAll("outputs", 0660)
-	err = os.WriteFile("outputs/resources-to-import-location.json", []byte(resourceImportMapJSON), 0400)
+	_ = os.MkdirAll("outputs", 0o660)
+	err = os.WriteFile("outputs/resources-to-import-location.json", []byte(resourceImportMapJSON), 0o400)
 	if err != nil {
 		return fmt.Errorf("[map_resources][os.WriteFile(resources-to-import-location.json]%w", err)
 	}

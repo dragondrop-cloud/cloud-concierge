@@ -28,9 +28,6 @@ type IdentifyCloudActors struct {
 	// Config is a collection of query_param_data that parameterizes a IdentifyCloudActors instance.
 	config Config
 
-	// dragonDrop is a client for interacting with the dragondrop API.
-	dragonDrop interfaces.DragonDrop
-
 	// logQuerier is an instantiation of the provider's logQuerier.
 	logQuerier LogQuerier
 
@@ -41,7 +38,7 @@ type IdentifyCloudActors struct {
 }
 
 // NewIdentifyCloudActors returns a new instance of IdentifyCloudActors.
-func NewIdentifyCloudActors(config Config, dragonDrop interfaces.DragonDrop, provider terraformValueObjects.Provider) (interfaces.IdentifyCloudActors, error) {
+func NewIdentifyCloudActors(config Config, provider terraformValueObjects.Provider) (interfaces.IdentifyCloudActors, error) {
 	logQuerier, err := NewLogQuerier(config, provider)
 	if err != nil {
 		return nil, fmt.Errorf("[NewLogQuerier]%w", err)
@@ -50,7 +47,6 @@ func NewIdentifyCloudActors(config Config, dragonDrop interfaces.DragonDrop, pro
 	return &IdentifyCloudActors{
 		config:     config,
 		logQuerier: logQuerier,
-		dragonDrop: dragonDrop,
 		provider:   provider,
 	}, nil
 }
@@ -75,7 +71,7 @@ func (ica *IdentifyCloudActors) Execute(ctx context.Context) error {
 		}
 		logrus.Debugf("jsonBytes: %v", string(jsonBytes))
 	}
-	err := os.WriteFile("outputs/resources-to-cloud-actions.json", jsonBytes, 0400)
+	err := os.WriteFile("outputs/resources-to-cloud-actions.json", jsonBytes, 0o400)
 	if err != nil {
 		return fmt.Errorf("[os.WriteFile outputs/resources-to-cloud-actions.json]%v", err)
 	}
@@ -111,7 +107,6 @@ func executeCommand(command string, args ...string) (string, error) {
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
 	err := cmd.Run()
-
 	if err != nil {
 		return "", fmt.Errorf("[error executing command: %s, %s]%w", stderr.String(), out.String(), err)
 	}

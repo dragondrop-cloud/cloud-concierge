@@ -23,7 +23,6 @@ func TestCreateMainTF(t *testing.T) {
 		"",
 	)
 	f, err := hclCreate.CreateMainTF(inputProvidersMap)
-
 	if err != nil {
 		t.Errorf("unexpected error in createMainTF: %v", err)
 	}

@@ -229,7 +229,6 @@ func TestConvertNestedMapToFlatAttributes(t *testing.T) {
 	// Then
 	require.NoError(t, err)
 	assert.Equal(t, expectedOutput, output)
-
 }
 
 func TestConvertNestedMapToFlatAttributes_Two(t *testing.T) {
@@ -338,7 +337,6 @@ func TestConvertNestedMapToFlatAttributes_Two(t *testing.T) {
   ],
   "check_results": null
 }`))
-
 	if err != nil {
 		t.Errorf("unexpected error parsing remote state file: %s", err)
 	}

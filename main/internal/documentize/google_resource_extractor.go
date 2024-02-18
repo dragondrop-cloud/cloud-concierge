@@ -10,7 +10,6 @@ import (
 
 // googleResourceDetails is a struct for packaging all relevant information for a GCP cloud resource.
 type googleResourceDetails struct {
-
 	// terraformName is the name of the google resource within Terraform configuration.
 	terraformName string
 
@@ -33,7 +32,6 @@ type googleResourceDetails struct {
 // googleResourceExtractor implements the ResourceExtractor interface for
 // google cloud resources.
 type googleResourceExtractor struct {
-
 	// currentResourceDetails is a struct containing information about a resource necessary
 	// for generating a document about it.
 	currentResourceDetails *googleResourceDetails
@@ -57,7 +55,6 @@ func (gre *googleResourceExtractor) GetCurrentResourceDetails() *googleResourceD
 
 // ExtractResourceDetails extracts relevant data points from a terraform state resource.
 func (gre *googleResourceExtractor) ExtractResourceDetails(tfStateParsed *gabs.Container, isAttributesFlat bool, resourceIndex int, instanceIndex int) error {
-
 	attribute := "attributes"
 	if isAttributesFlat {
 		attribute += "_flat"
@@ -146,7 +143,6 @@ func (gre *googleResourceExtractor) ResourceDetailsToSentence() string {
 // to extract and format as a sentence a resource's details from within a state file.
 func (gre *googleResourceExtractor) OutputResourceDetailsSentence(tfStateParsed *gabs.Container, isAttributesFlat bool, resourceIndex int, instanceIndex int) (string, error) {
 	err := gre.ExtractResourceDetails(tfStateParsed, isAttributesFlat, resourceIndex, instanceIndex)
-
 	if err != nil {
 		return "", fmt.Errorf("[gre.ExtractResourceDetails] %v", err)
 	}

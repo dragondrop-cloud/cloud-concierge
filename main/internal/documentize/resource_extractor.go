@@ -5,7 +5,6 @@ import "github.com/Jeffail/gabs/v2"
 // ResourceExtractor defines an interface for extracting relevant details from
 // a cloud resource.
 type ResourceExtractor interface {
-
 	// ExtractResourceDetails extracts relevant data points from a terraform state resource.
 	ExtractResourceDetails(tfStateParsed *gabs.Container, isAttributesFlat bool, resourceIndex int, instanceIndex int) error
 

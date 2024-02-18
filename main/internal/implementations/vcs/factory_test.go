@@ -5,8 +5,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
-	"github.com/dragondrop-cloud/cloud-concierge/main/internal/interfaces"
 )
 
 func TestCreateNotSupported(t *testing.T) {
@@ -15,10 +13,9 @@ func TestCreateNotSupported(t *testing.T) {
 	config := Config{}
 	vcsProvider := "not_supported"
 	vcsFactory := new(Factory)
-	dragonDrop := new(interfaces.DragonDropMock)
 
 	// When
-	vcs, err := vcsFactory.Instantiate(ctx, vcsProvider, dragonDrop, config, "")
+	vcs, err := vcsFactory.Instantiate(ctx, vcsProvider, config, "")
 
 	// Then
 	assert.NotNil(t, err)
@@ -31,10 +28,9 @@ func TestCreateIsolatedVCS(t *testing.T) {
 	config := Config{}
 	vcsProvider := "isolated"
 	vcsFactory := new(Factory)
-	dragonDrop := new(interfaces.DragonDropMock)
 
 	// When
-	vcs, err := vcsFactory.Instantiate(ctx, vcsProvider, dragonDrop, config, "github")
+	vcs, err := vcsFactory.Instantiate(ctx, vcsProvider, config, "github")
 
 	// Then
 	assert.Nil(t, err)

@@ -10,8 +10,7 @@ import (
 
 // IsolatedTerraformResourcesManagedDriftDetector is a struct that implements the TerraformManagedResourcesDriftDetector interface
 // for the purpose of running end to end unit tests.
-type IsolatedTerraformResourcesManagedDriftDetector struct {
-}
+type IsolatedTerraformResourcesManagedDriftDetector struct{}
 
 // NewIsolatedDriftDetector returns an instance of IsolatedTerraformResourcesManagedDriftDetector
 func NewIsolatedDriftDetector() interfaces.TerraformManagedResourcesDriftDetector {

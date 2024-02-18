@@ -47,7 +47,6 @@ func TestCreateDivisionUniqueDriftedResources(t *testing.T) {
 			InstanceID:    "dragondrop",
 		},
 		"state-3.type-3.name-3.dragondrop": {
-
 			ResourceType:  "type-3",
 			ResourceName:  "name-3",
 			StateFileName: "state-3",
