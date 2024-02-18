@@ -23,7 +23,6 @@ var ErrNoCloudTrailEvents = errors.New("no events found")
 
 // AWSLogQuerier implements the LogQuerier interface for AWS.
 type AWSLogQuerier struct {
-
 	// cloudCredential is a map between a division and request cloud credentials.
 	cloudCredential terraformValueObjects.Credential `required:"true"`
 
@@ -129,7 +128,7 @@ func (alc *AWSLogQuerier) QueryForAllResources(ctx context.Context) (terraformVa
 		return resourceActions, fmt.Errorf("[json.MarshalIndent]%v", err)
 	}
 
-	err = os.WriteFile("outputs/drift-resources-differences.json", managedAttributeDifferencesBytes, 0400)
+	err = os.WriteFile("outputs/drift-resources-differences.json", managedAttributeDifferencesBytes, 0o400)
 	if err != nil {
 		return resourceActions, fmt.Errorf("[os.WriteFile]%v", err)
 	}

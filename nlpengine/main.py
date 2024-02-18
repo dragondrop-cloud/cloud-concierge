@@ -29,7 +29,6 @@ def train_and_predict(request):
     {
         "workspace_docs": {...},
         "new_resource_docs": {...},
-        "token": "cco-<token>"
     }
     """
     try:
@@ -37,9 +36,6 @@ def train_and_predict(request):
         json_body = request.get_json()
         category_docs = literal_eval(json_body["workspace_docs"])
         new_resource_docs = literal_eval(json_body["new_resource_docs"])
-
-        # Authenticating invocation
-        authenticate_invocation(token=json_body["token"])
 
         spacy.util.fix_random_seed(42)
         # Loading spacy model
@@ -84,27 +80,6 @@ def train_and_predict(request):
         stack_trace = traceback.format_exc()
         print(f"{e}:\n{stack_trace}")
         return "Internal Server Error", 500
-
-
-def authenticate_invocation(token: str):
-    """
-    Authenticates the invocation of the function by checking the organization
-    token. On failure, raises an exception, halting the execution.
-    """
-    url = os.getenv("DRAGONDROP_API_URL")
-
-    response = requests.get(
-        url=f"{url}/job/authorize/nlp-engine/",
-        headers={
-            "Authorization": "Bearer " + token,
-            "Content-Type": "application/json",
-        },
-    )
-
-    if response.status_code != 200:
-        raise Exception(
-            f"Failed to authenticate invocation against dragondrop API with status code {response.status_code}."
-        )
 
 
 def preprocess_training_data(nlp: spacy.Language, category_docs: dict) -> List[Example]:

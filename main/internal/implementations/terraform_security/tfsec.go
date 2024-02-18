@@ -132,7 +132,7 @@ func (s *TFSec) writeResultsToMappingFile(results TFSecFile) error {
 		return err
 	}
 
-	return os.WriteFile("outputs/security-scan.json", differencesJSON, 0400)
+	return os.WriteFile("outputs/security-scan.json", differencesJSON, 0o400)
 }
 
 // addIDToResources takes the results grouped by division and adds the id of the resource

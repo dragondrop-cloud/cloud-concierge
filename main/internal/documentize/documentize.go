@@ -7,7 +7,6 @@ type Directory string
 
 // ResourceCategory is a struct containing information on a resource category
 type ResourceCategory struct {
-
 	// primaryCat is the resource's primary category.
 	primaryCat string
 
@@ -33,7 +32,6 @@ type Workspace string
 // Documentize interface for making "documents" out of Terraform state files and
 // performing light comparisons between state files
 type Documentize interface {
-
 	// AllWorkspaceStatesToDocuments converts all workspace states to documents of non-sensitive strings.
 	AllWorkspaceStatesToDocuments(workspaceToDirectory map[string]string) (map[Workspace][]byte, error)
 
@@ -68,7 +66,6 @@ type documentize struct {
 
 // NewDocumentize creates a new instance that implements the Documentize interface.
 func NewDocumentize(provider terraformValueObjects.Provider) (Documentize, error) {
-
 	resourceExtractors := map[terraformValueObjects.Provider]ResourceExtractor{
 		"aws":     NewAWSResourceExtractor(),
 		"google":  NewGoogleResourceExtractor(),

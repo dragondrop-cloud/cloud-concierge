@@ -9,7 +9,6 @@ import (
 // TerraformImportMigrationGenerator is an interface for generating terraform state migration import
 // statements.
 type TerraformImportMigrationGenerator interface {
-
 	// Execute generates terraform state migration statements for identified resources.
 	Execute(ctx context.Context) error
 }

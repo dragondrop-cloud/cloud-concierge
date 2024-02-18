@@ -87,7 +87,7 @@ func (m *MarkdownCreator) CreateMarkdownFile(jobName string) error {
 	m.setRootCausesOfDriftData(report)
 	m.setFooter(report)
 
-	err = os.Mkdir(OutputPath, 0755)
+	err = os.Mkdir(OutputPath, 0o755)
 	if err != nil {
 		return fmt.Errorf("[markdown_creator][create_markdown_file] error creating output directory: %w", err)
 	}
@@ -104,7 +104,6 @@ func (m *MarkdownCreator) CreateMarkdownFile(jobName string) error {
 func (m *MarkdownCreator) initData() error {
 	filePathRoot := "outputs/"
 	newResourcesBytes, err := readFile(filePathRoot + "new-resources-to-documents.json")
-
 	if err != nil {
 		return fmt.Errorf("[markdown_creator][init_data] error reading new resources file: %w", err)
 	}
@@ -115,7 +114,6 @@ func (m *MarkdownCreator) initData() error {
 	}
 
 	resourcesToCloudActionsBytes, err := readFile(filePathRoot + "resources-to-cloud-actions.json")
-
 	if err != nil {
 		return fmt.Errorf("[markdown_creator][init_data] error reading resources to cloud actions file: %w", err)
 	}
@@ -126,7 +124,6 @@ func (m *MarkdownCreator) initData() error {
 	}
 
 	costEstimatesBytes, err := readFile(filePathRoot + "cost-estimates.json")
-
 	if err != nil {
 		return fmt.Errorf("[markdown_creator][init_data] error reading cost estimates file: %w", err)
 	}
@@ -137,7 +134,6 @@ func (m *MarkdownCreator) initData() error {
 	}
 
 	securityScanBytes, err := readFile(filePathRoot + "security-scan.json")
-
 	if err != nil {
 		return fmt.Errorf("[markdown_creator][init_data] error reading security scan file: %w", err)
 	}
@@ -148,7 +144,6 @@ func (m *MarkdownCreator) initData() error {
 	}
 
 	managedDriftBytes, err := readFile(filePathRoot + "drift-resources-differences.json")
-
 	if err != nil {
 		return fmt.Errorf("[markdown_creator][init_data] error reading drift resources differences file: %w", err)
 	}
@@ -159,7 +154,6 @@ func (m *MarkdownCreator) initData() error {
 	}
 
 	deletedResourcesBytes, err := readFile(filePathRoot + "drift-resources-deleted.json")
-
 	if err != nil {
 		return fmt.Errorf("[markdown_creator][init_data] error reading drift resources deleted file: %w", err)
 	}

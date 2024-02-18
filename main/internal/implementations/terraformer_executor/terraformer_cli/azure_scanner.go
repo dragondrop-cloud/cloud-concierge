@@ -67,13 +67,11 @@ func (azureScanner *AzureScanner) Scan(_ terraformValueObjects.Division, credent
 		Regions:        getValidRegions(azureScanner.CloudRegions, terraformValueObjects.AzureRegions, defaultAzureRegions),
 		IsCompact:      true,
 	})
-
 	if err != nil {
 		return fmt.Errorf("[Scan] Error in terraformer.Import(): %v", err)
 	}
 
 	err = azureScanner.terraformer.UpdateState("azurerm")
-
 	if err != nil {
 		return fmt.Errorf("[Scan] Error in terraformer.UpdateState(): %v", err)
 	}

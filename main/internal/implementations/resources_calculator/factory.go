@@ -9,32 +9,31 @@ import (
 )
 
 // Factory is a struct that generates implementations of interfaces.ResourcesCalculator.
-type Factory struct {
-}
+type Factory struct{}
 
 // Instantiate returns an implementation of interfaces.ResourcesCalculator depending on the passed
 // environment specification.
 func (f *Factory) Instantiate(
-	ctx context.Context, environment string, dragonDrop interfaces.DragonDrop,
+	ctx context.Context, environment string,
 	provider terraformValueObjects.Provider,
+	nlpEngine interfaces.NLPEngine,
 ) (interfaces.ResourcesCalculator, error) {
 	switch environment {
 	case "isolated":
 		return new(IsolatedResourcesCalculator), nil
 	default:
-		return f.bootstrappedResourceCalculator(ctx, dragonDrop, provider)
+		return f.bootstrappedResourceCalculator(ctx, provider, nlpEngine)
 	}
 }
 
 // bootstrappedResourceCalculator creates a complete implementation of the interfaces.ResourcesCalculator interface with
 // configuration specified via environment variables.
 func (f *Factory) bootstrappedResourceCalculator(
-	ctx context.Context, dragonDrop interfaces.DragonDrop,
+	ctx context.Context,
 	provider terraformValueObjects.Provider,
+	nlpEngine interfaces.NLPEngine,
 ) (interfaces.ResourcesCalculator, error) {
 	doc, _ := documentize.NewDocumentize(provider)
 
-	dragonDrop.PostLog(ctx, "Created Documentize client.")
-
-	return NewTerraformResourcesCalculator(&doc, dragonDrop), nil
+	return NewTerraformResourcesCalculator(&doc, nlpEngine), nil
 }

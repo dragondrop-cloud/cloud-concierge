@@ -68,7 +68,6 @@ resource "google_storage_bucket_acl" "tfer--the-one" {
 		ConvertTerraformerResourceName("the-one"),
 		ResourceIdentifier{resourceType: "google_storage_bucket_acl", resourceName: "tfer--the-one"},
 	)
-
 	if err != nil {
 		t.Errorf("[h.extractResourceBlockDefinition] Unexpected error: %v", err)
 	}

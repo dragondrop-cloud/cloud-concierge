@@ -20,10 +20,6 @@ type S3Backend struct {
 	// config contains the variables that determine the specific behavior of the ContainerBackendConfig struct
 	config TfStackConfig
 
-	// dragonDrop is an implementation of the interfaces.dragonDrop interface for communicating with the
-	// dragondrop API.
-	dragonDrop interfaces.DragonDrop
-
 	// s3Client is the client used to send s3 requests
 	s3Client *s3.S3
 
@@ -32,21 +28,19 @@ type S3Backend struct {
 }
 
 // NewS3Backend creates a new instance of the TerraformCloud struct.
-func NewS3Backend(ctx context.Context, config TfStackConfig, dragonDrop interfaces.DragonDrop) interfaces.TerraformWorkspace {
-	dragonDrop.PostLog(ctx, "Created TFWorkspace client.")
-
+func NewS3Backend(ctx context.Context, config TfStackConfig) interfaces.TerraformWorkspace {
 	sess := session.Must(session.NewSession(&aws.Config{
 		Region: aws.String(config.Region),
 	}))
 	s3Client := s3.New(sess)
 
-	return &S3Backend{config: config, dragonDrop: dragonDrop, s3Client: s3Client}
+	return &S3Backend{config: config, s3Client: s3Client}
 }
 
 // FindTerraformWorkspaces returns a map of TerraformCloudFile workspace names to their respective directories.
 func (s *S3Backend) FindTerraformWorkspaces(ctx context.Context) (map[string]string, error) {
 	logrus.Debugf("[S3 Terraform workspace] Finding Terraform workspaces in %v", s.config.WorkspaceDirectories)
-	workspaces, workspaceToBackendDetails, err := findTerraformWorkspaces(ctx, s.dragonDrop, s.config.WorkspaceDirectories, "s3")
+	workspaces, workspaceToBackendDetails, err := findTerraformWorkspaces(ctx, s.config.WorkspaceDirectories, "s3")
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +53,6 @@ func (s *S3Backend) FindTerraformWorkspaces(ctx context.Context) (map[string]str
 // for each "workspace".
 func (s *S3Backend) DownloadWorkspaceState(ctx context.Context, workspaceToDirectory map[string]string) error {
 	logrus.Debugf("[S3 Terraform workspace] Downloading workspace state files for %v", workspaceToDirectory)
-	s.dragonDrop.PostLog(ctx, "Beginning download of state files to local memory.")
 
 	for workspaceName := range workspaceToDirectory {
 		err := s.getWorkspaceStateByTestingAllS3Credentials(ctx, workspaceName)
@@ -68,7 +61,6 @@ func (s *S3Backend) DownloadWorkspaceState(ctx context.Context, workspaceToDirec
 		}
 	}
 
-	s.dragonDrop.PostLog(ctx, "Done with download of state files to local memory.")
 	return nil
 }
 

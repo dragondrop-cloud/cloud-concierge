@@ -49,7 +49,7 @@ func TestMarkdownCreator_initData(t *testing.T) {
 }
 
 func initializeTestFiles() error {
-	err := os.Mkdir("outputs", 0755)
+	err := os.Mkdir("outputs", 0o755)
 	if err != nil {
 		return err
 	}
@@ -59,7 +59,7 @@ func initializeTestFiles() error {
 	  "aws_db_subnet_group.tfer--ResourceID2": "terraform name of tfer ResourceID2 and type aws db subnet group.",
 	  "aws_s3_bucket.tfer--ResourceID3": "terraform name of tfer ResourceID3 and type aws s3 bucket."
 	}`
-	err = os.WriteFile("outputs/new-resources-to-documents.json", []byte(newResources), 0600)
+	err = os.WriteFile("outputs/new-resources-to-documents.json", []byte(newResources), 0o600)
 	if err != nil {
 		return err
 	}
@@ -84,7 +84,7 @@ func initializeTestFiles() error {
 			}
 		}
 	}`
-	err = os.WriteFile("outputs/resources-to-cloud-actions.json", []byte(resourcesToCloudActions), 0600)
+	err = os.WriteFile("outputs/resources-to-cloud-actions.json", []byte(resourcesToCloudActions), 0o600)
 	if err != nil {
 		return err
 	}
@@ -121,7 +121,7 @@ func initializeTestFiles() error {
 			"unit": "LCU"
 		}
 	]`
-	err = os.WriteFile("outputs/cost-estimates.json", []byte(costEstimates), 0600)
+	err = os.WriteFile("outputs/cost-estimates.json", []byte(costEstimates), 0o600)
 	if err != nil {
 		return err
 	}
@@ -202,7 +202,7 @@ func initializeTestFiles() error {
 		}
 	  ]
 	}`
-	err = os.WriteFile("outputs/security-scan.json", []byte(securityScan), 0600)
+	err = os.WriteFile("outputs/security-scan.json", []byte(securityScan), 0o600)
 	if err != nil {
 		return err
 	}
@@ -222,7 +222,7 @@ func initializeTestFiles() error {
 		"ResourceName": "example_lb"
 	  }
 	]`
-	err = os.WriteFile("outputs/drift-resources-differences.json", []byte(resourcesDifferences), 0600)
+	err = os.WriteFile("outputs/drift-resources-differences.json", []byte(resourcesDifferences), 0o600)
 	if err != nil {
 		return err
 	}
@@ -250,7 +250,7 @@ func initializeTestFiles() error {
 		"ResourceName": "secret"
 	  }
 	]`
-	err = os.WriteFile("outputs/drift-resources-deleted.json", []byte(resourcesDeleted), 0600)
+	err = os.WriteFile("outputs/drift-resources-deleted.json", []byte(resourcesDeleted), 0o600)
 	if err != nil {
 		return err
 	}

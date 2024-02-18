@@ -44,7 +44,6 @@ func Test_GenerateImportBlockFile(t *testing.T) {
 		inputResourceToImportLoc,
 		inputResourceToWorkspace,
 	)
-
 	if err != nil {
 		t.Errorf("unexpected error in h.generateImportBlockFile: %v", err)
 	}
@@ -74,5 +73,4 @@ func Test_SetOfWorkspacesWithMigrationsStruct(t *testing.T) {
 	if !reflect.DeepEqual(output, expectedOutput) {
 		t.Errorf("expected:\n%v\ngot:\n%v", expectedOutput, output)
 	}
-
 }

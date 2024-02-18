@@ -7,7 +7,6 @@ import (
 
 	"github.com/dragondrop-cloud/cloud-concierge/main/internal/hclcreate"
 	costEstimation "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/cost_estimation"
-	dragonDrop "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/dragon_drop"
 	identifyCloudActors "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/identify_cloud_actors"
 	terraformImportMigrationGenerator "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_import_migration_generator"
 	terraformValueObjects "github.com/dragondrop-cloud/cloud-concierge/main/internal/implementations/terraform_value_objects"
@@ -19,11 +18,9 @@ import (
 func validJobConfig() *JobConfig {
 	return &JobConfig{
 		IsManagedDriftOnly: false,
-		APIPath:            "https://api.dragondrop.cloud",
 		CloudRegions:       terraformValueObjects.CloudRegionsDecoder{"us-east1"},
 		CloudCredential:    "{}",
 		JobID:              "JobID",
-		OrgToken:           "OrgToken",
 		MigrationHistoryStorage: hclcreate.MigrationHistory{
 			StorageType: "S3",
 			Bucket:      "Bucket",
@@ -38,34 +35,12 @@ func validJobConfig() *JobConfig {
 			"aws": "~>4.57.0",
 		},
 		VCSRepo:            "VCSRepo",
+		VCSPat:             "xyz",
+		InfracostToken:     "ico-mytoken",
 		PullReviewers:      []string{"PullReviewer1", "PullReviewer2"},
 		ResourcesWhiteList: terraformValueObjects.ResourceNameList{"Resource1", "Resource2"},
 		ResourcesBlackList: terraformValueObjects.ResourceNameList{"Resource3", "Resource4"},
 	}
-}
-
-func TestGetDragonDropConfig(t *testing.T) {
-	// Given
-	jobConfig := validJobConfig()
-
-	// When
-	dragonDropConfig := jobConfig.getDragonDropConfig()
-
-	// Then
-	assert.Equal(t, jobConfig.APIPath, dragonDropConfig.APIPath, "APIPath should be equal")
-	assert.Equal(t, jobConfig.JobID, dragonDropConfig.JobID, "JobID should be equal")
-	assert.Equal(t, jobConfig.OrgToken, dragonDropConfig.OrgToken, "OrgToken should be equal")
-	assert.Equal(t, jobConfig.WorkspaceDirectories, dragonDropConfig.WorkspaceDirectories, "OrgToken should be equal")
-
-	want := dragonDrop.HTTPDragonDropClientConfig{
-		APIPath:              jobConfig.APIPath,
-		JobID:                jobConfig.JobID,
-		OrgToken:             jobConfig.OrgToken,
-		VCSRepo:              jobConfig.VCSRepo,
-		WorkspaceDirectories: jobConfig.WorkspaceDirectories,
-	}
-
-	assert.Equal(t, want, dragonDropConfig, "HTTPDragonDropClientConfig should be equal")
 }
 
 func TestGetVCSConfig(t *testing.T) {
@@ -78,6 +53,7 @@ func TestGetVCSConfig(t *testing.T) {
 	// Then
 	want := vcs.Config{
 		VCSRepo:       jobConfig.VCSRepo,
+		VCSPat:        jobConfig.VCSPat,
 		PullReviewers: jobConfig.PullReviewers,
 	}
 
@@ -178,8 +154,8 @@ func TestGetCostEstimationConfig(t *testing.T) {
 
 	// Then
 	want := costEstimation.CostEstimatorConfig{
-		CloudCredential:          "{}",
-		InfracostCloudPricingAPI: jobConfig.InfracostCloudPricingAPI,
+		CloudCredential:   "{}",
+		InfracostAPIToken: jobConfig.InfracostToken,
 	}
 
 	assert.Equal(t, want, got, "CostEstimationConfig should be equal")

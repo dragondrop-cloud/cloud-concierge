@@ -41,22 +41,18 @@ type TerraformerExecutor struct {
 	// scanner is an instantiation of the current provider's scanner.
 	scanner Scanner
 
-	// dragonDrop is needed to inform scanned
-	dragonDrop interfaces.DragonDrop
-
 	// config contains the variables that determine the specific behavior of the TerraformerExecutor
 	config TerraformerExecutorConfig
 }
 
 // NewTerraformerExecutor creates and returns a new instance of TerraformerExecutor.
-func NewTerraformerExecutor(ctx context.Context, hclCreate hclcreate.HCLCreate, dragonDrop interfaces.DragonDrop, config TerraformerExecutorConfig, cliConfig Config, provider terraformValueObjects.Provider) (interfaces.TerraformerExecutor, error) {
+func NewTerraformerExecutor(ctx context.Context, hclCreate hclcreate.HCLCreate, config TerraformerExecutorConfig, cliConfig Config, provider terraformValueObjects.Provider) (interfaces.TerraformerExecutor, error) {
 	scanner, err := getScanner(config, cliConfig, provider)
 	if err != nil {
 		return nil, err
 	}
 
-	dragonDrop.PostLog(ctx, "Created TFExec.")
-	return &TerraformerExecutor{hclCreate: hclCreate, scanner: scanner, config: config, dragonDrop: dragonDrop}, nil
+	return &TerraformerExecutor{hclCreate: hclCreate, scanner: scanner, config: config}, nil
 }
 
 // getScanner provisions the cloud environment scanner for the specified provider.
@@ -66,7 +62,6 @@ func getScanner(config TerraformerExecutorConfig, cliConfig Config, provider ter
 	switch provider {
 	case "google":
 		googleScanner, err := NewGoogleScanner(config.CloudCredential, cliConfig, config.CloudRegions)
-
 		if err != nil {
 			log.Errorf("[NewTerraformerExec] Error in NewGoogleScanner(): %s", err.Error())
 			return nil, fmt.Errorf("[NewTerraformerExec] Error in NewGoogleScanner(): %w", err)
@@ -75,7 +70,6 @@ func getScanner(config TerraformerExecutorConfig, cliConfig Config, provider ter
 		return googleScanner, nil
 	case "aws":
 		awsScanner, err := NewAWSScanner(config.CloudCredential, cliConfig, config.CloudRegions)
-
 		if err != nil {
 			log.Errorf("[NewTerraformerExec] Error in NewAWSScanner(): %s", err.Error())
 			return nil, fmt.Errorf("[NewTerraformerExec] Error in NewAWSScanner(): %w", err)
@@ -84,7 +78,6 @@ func getScanner(config TerraformerExecutorConfig, cliConfig Config, provider ter
 		return awsScanner, nil
 	case "azurerm":
 		azureScanner, err := NewAzureScanner(config.CloudCredential, cliConfig, config.CloudRegions)
-
 		if err != nil {
 			log.Errorf("[NewTerraformerExec] Error in NewAzureScanner(): %s", err.Error())
 			return nil, fmt.Errorf("[NewTerraformerExec] Error in NewAzureScanner(): %w", err)
@@ -99,40 +92,25 @@ func getScanner(config TerraformerExecutorConfig, cliConfig Config, provider ter
 
 // Execute runs the workflow needed to capture the current state of an
 // external cloud environment via the terraformer package.
-func (e *TerraformerExecutor) Execute(ctx context.Context) error {
-	e.dragonDrop.PostLog(ctx, "Beginning to make main.tf file.")
-
+func (e *TerraformerExecutor) Execute(_ context.Context) error {
 	err := e.makeProviderVersionFile()
 	if err != nil {
 		return fmt.Errorf("[terraformer_executor][set_up][error making provider version file]%w", err)
 	}
-
-	e.dragonDrop.PostLog(ctx, "Done with main.tf file. Running `tfswitch`.")
 
 	err = e.setTerraformVersion()
 	if err != nil {
 		return fmt.Errorf("[terraformer_executor][set_up][error setting terraform version]%w", err)
 	}
 
-	e.dragonDrop.PostLog(ctx, "Done with `tfswitch`. Running `terraform init`.")
-
 	err = e.initializeTerraform()
 	if err != nil {
 		return fmt.Errorf("[terraformer_executor][set_up][error initializing terraform]%w", err)
 	}
 
-	e.dragonDrop.PostLog(ctx, "Done with running `terraform init`.\n Beginning to scan existing cloud environment.")
-
 	err = e.scanner.Scan(e.config.Division, e.config.CloudCredential)
 	if err != nil {
 		return fmt.Errorf("[terraformer_executor][set_up][error scanning all providers]%w", err)
-	}
-
-	e.dragonDrop.PostLog(ctx, "Executed terraformer scan.")
-
-	err = e.dragonDrop.InformCloudEnvironmentScanned(ctx)
-	if err != nil {
-		return fmt.Errorf("[terraformer_executor][set_up][error informing cloud environment scanned]%w", err)
 	}
 
 	return nil
@@ -186,17 +164,16 @@ func (e *TerraformerExecutor) makeProviderVersionFile() error {
 	}
 
 	mainTF, err := e.hclCreate.CreateMainTF(genericProviders)
-
 	if err != nil {
 		return fmt.Errorf("[make_provider_version_file][error in creating main terraform file]%w", err)
 	}
 
-	err = os.MkdirAll("current_cloud", 0660)
+	err = os.MkdirAll("current_cloud", 0o660)
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile("current_cloud/main.tf", mainTF, 0400)
+	err = os.WriteFile("current_cloud/main.tf", mainTF, 0o400)
 	if err != nil {
 		return fmt.Errorf("[make_provider_version_file][error saving file]%w", err)
 	}

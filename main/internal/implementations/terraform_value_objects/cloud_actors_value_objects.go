@@ -9,7 +9,6 @@ type CloudActor string
 // CloudActorTimeStamp is a struct containing a cloud actor and a timestamp
 // for one of their actions.
 type CloudActorTimeStamp struct {
-
 	// Actor is an entity that make changes to a cloud environment.
 	Actor CloudActor `json:"actor"`
 
@@ -20,7 +19,6 @@ type CloudActorTimeStamp struct {
 // ResourceActions is a struct containing the cloud actor and timestamp of the most recent (if any)
 // resource modification.
 type ResourceActions struct {
-
 	// Creator is the cloud actor and timestamp of the resource creation.
 	Creator *CloudActorTimeStamp `json:"creation,omitempty"`
 

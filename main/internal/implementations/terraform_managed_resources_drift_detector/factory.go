@@ -8,8 +8,7 @@ import (
 )
 
 // Factory is a struct that generates implementations of interfaces.TerraformManagedResourcesDriftDetector.
-type Factory struct {
-}
+type Factory struct{}
 
 // Instantiate returns an implementation of interfaces.TerraformManagedResourcesDriftDetector depending on the passed
 // environment specification.

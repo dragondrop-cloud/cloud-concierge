@@ -9,7 +9,6 @@ import (
 // ResourcesCalculator is the interface for determining the workspace/state file
 // where different cloud resources should live.
 type ResourcesCalculator interface {
-
 	// Execute calculates the association between resources and a state file.
 	Execute(ctx context.Context, workspaceToDirectory map[string]string) error
 }

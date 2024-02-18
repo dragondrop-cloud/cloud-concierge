@@ -17,7 +17,6 @@ type WorkspaceToHCL map[string]*hclwrite.File
 // ResourceIdentifier is a struct comprised of the fields necessary to uniquely identify a
 // terraformer-generated resource.
 type ResourceIdentifier struct {
-
 	// resourceType is the Terraform resource-type.
 	resourceType string
 
@@ -41,7 +40,6 @@ type MigrationHistory struct {
 
 // Config is a struct comprising the configuration needed for hclCreate
 type Config struct {
-
 	// MigrationHistoryStorage is a map containing information needed for specifying tfmigrate
 	//// history storage appropriately.
 	MigrationHistoryStorage MigrationHistory `required:"true"`

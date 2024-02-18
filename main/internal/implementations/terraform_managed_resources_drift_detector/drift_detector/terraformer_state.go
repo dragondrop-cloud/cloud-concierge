@@ -42,7 +42,6 @@ type TerraformerInstance struct {
 
 // loadAllTerraformerStateFiles loads from memory the terraformer state files
 func (m *ManagedResourcesDriftDetector) loadAllTerraformerStateFiles() (TerraformerResourceIDToData, error) {
-
 	resources := TerraformerResourceIDToData{}
 
 	fileContent, err := os.ReadFile("current_cloud/terraform.tfstate")
