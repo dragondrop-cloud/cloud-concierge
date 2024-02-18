@@ -13,7 +13,7 @@ import (
 )
 
 // TerraformResourceWriter is a struct that implements the ResourcesWriter interface for usage within
-// "live" dragondrop Jobs.
+// Jobs.
 type TerraformResourceWriter struct {
 	// hclCreate needed to manage terraform resources
 	hclCreate hclcreate.HCLCreate
@@ -29,15 +29,14 @@ type TerraformResourceWriter struct {
 }
 
 // NewTerraformResourceWriter instantiates and returns a new instance of the TerraformResourceWriter.
-func NewTerraformResourceWriter(hclCreate hclcreate.HCLCreate, vcs interfaces.VCS, markdownCreator *markdowncreation.MarkdownCreator) interfaces.ResourcesWriter {
-	return &TerraformResourceWriter{hclCreate: hclCreate, vcs: vcs, markdownCreator: markdownCreator}
+func NewTerraformResourceWriter(hclCreate hclcreate.HCLCreate, vcs interfaces.VCS, markdownCreator *markdowncreation.MarkdownCreator, jobName string) interfaces.ResourcesWriter {
+	return &TerraformResourceWriter{hclCreate: hclCreate, vcs: vcs, jobName: jobName, markdownCreator: markdownCreator}
 }
 
 // Execute writes new resources to the relevant version control system,
 // and returns a pull request url corresponding to the new changes.
-func (w *TerraformResourceWriter) Execute(ctx context.Context, jobName string, createDummyFile bool, workspaceToDirectory map[string]string) (string, error) {
-	w.jobName = jobName
-	logrus.Debugf("[terraform_resource_writer] Executing with jobName: %v, createDummyFile: %v, workspaceToDirectory: %v", jobName, createDummyFile, workspaceToDirectory)
+func (w *TerraformResourceWriter) Execute(ctx context.Context, createDummyFile bool, workspaceToDirectory map[string]string) (string, error) {
+	logrus.Debugf("[terraform_resource_writer] Executing with jobName: %v, createDummyFile: %v, workspaceToDirectory: %v", w.jobName, createDummyFile, workspaceToDirectory)
 
 	err := w.checkoutNewBranch(ctx)
 	if err != nil {

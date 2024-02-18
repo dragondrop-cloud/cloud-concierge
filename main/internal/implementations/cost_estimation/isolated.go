@@ -1,8 +1,6 @@
 package costestimation
 
 import (
-	"context"
-
 	"github.com/dragondrop-cloud/cloud-concierge/main/internal/interfaces"
 )
 
@@ -17,7 +15,7 @@ func NewIsolatedCostEstimator() interfaces.CostEstimation {
 
 // Execute creates structured cost estimation data for the current identified/scanned
 // cloud resources.
-func (ice *IsolatedCostEstimator) Execute(_ context.Context) error {
+func (ice *IsolatedCostEstimator) Execute() error {
 	return nil
 }
 

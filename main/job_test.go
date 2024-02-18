@@ -25,7 +25,7 @@ type JobDependenciesMock struct {
 	terraformSecurity                 *TerraformSecurityMock
 }
 
-func createValidJob(t *testing.T) (*JobDependenciesMock, *Job) {
+func createValidJob(_ *testing.T) (*JobDependenciesMock, *Job) {
 	vcs := new(VCSMock)
 	terraformWorkspace := new(TerraformWorkspaceMock)
 	terraformerExecutor := new(TerraformerExecutorMock)
@@ -80,7 +80,7 @@ func TestRunJob_Success(t *testing.T) {
 	mocks.terraformImportMigrationGenerator.On("Execute").Return(nil)
 	mocks.resourcesCalculator.On("Execute").Return(nil)
 	mocks.identifyCloudActors.On("Execute", ctx).Return(nil)
-	mocks.costEstimator.On("Execute", ctx).Return(nil)
+	mocks.costEstimator.On("Execute").Return(nil)
 	mocks.resourcesWriter.On("Execute").Return("", nil)
 	mocks.driftDetector.On("Execute", ctx, divisionToProvider).Return(true, nil)
 	mocks.terraformSecurity.On("ExecuteScan", ctx).Return(nil)
@@ -114,7 +114,7 @@ func TestRunJob_CannotCloneRepo(t *testing.T) {
 	mocks.terraformImportMigrationGenerator.On("Execute").Return(nil)
 	mocks.resourcesCalculator.On("Execute").Return(nil)
 	mocks.identifyCloudActors.On("Execute", ctx).Return(nil)
-	mocks.costEstimator.On("Execute", ctx).Return(nil)
+	mocks.costEstimator.On("Execute").Return(nil)
 	mocks.resourcesWriter.On("Execute").Return("", nil)
 
 	err := job.Run(ctx)
@@ -150,7 +150,7 @@ func TestRunJob_CannotDownloadWorkspaceState(t *testing.T) {
 	mocks.terraformImportMigrationGenerator.On("Execute").Return(nil)
 	mocks.resourcesCalculator.On("Execute").Return(nil)
 	mocks.identifyCloudActors.On("Execute", ctx).Return(nil)
-	mocks.costEstimator.On("Execute", ctx).Return(nil)
+	mocks.costEstimator.On("Execute").Return(nil)
 	mocks.resourcesWriter.On("Execute").Return("", nil)
 	mocks.driftDetector.On("Execute", ctx, divisionToProvider).Return(true, nil)
 
@@ -187,7 +187,7 @@ func TestRunJob_CannotExecuteTerraformerExecutor(t *testing.T) {
 	mocks.terraformImportMigrationGenerator.On("Execute").Return(nil)
 	mocks.resourcesCalculator.On("Execute").Return(nil)
 	mocks.identifyCloudActors.On("Execute", ctx).Return(nil)
-	mocks.costEstimator.On("Execute", ctx).Return(nil)
+	mocks.costEstimator.On("Execute").Return(nil)
 	mocks.resourcesWriter.On("Execute").Return("", nil)
 
 	err := job.Run(ctx)
@@ -223,7 +223,7 @@ func TestRunJob_CannotExecuteTerraformImportMigrationGenerator(t *testing.T) {
 	mocks.terraformImportMigrationGenerator.On("Execute").Return(terraformImportMigrationGeneratorErr)
 	mocks.resourcesCalculator.On("Execute").Return(nil)
 	mocks.identifyCloudActors.On("Execute", ctx).Return(nil)
-	mocks.costEstimator.On("Execute", ctx).Return(nil)
+	mocks.costEstimator.On("Execute").Return(nil)
 	mocks.resourcesWriter.On("Execute").Return("", nil)
 
 	err := job.Run(ctx)
@@ -259,7 +259,7 @@ func TestRunJob_CannotCalculateResources(t *testing.T) {
 	mocks.terraformImportMigrationGenerator.On("Execute").Return(nil)
 	mocks.resourcesCalculator.On("Execute").Return(calculateResourcesErr)
 	mocks.identifyCloudActors.On("Execute", ctx).Return(nil)
-	mocks.costEstimator.On("Execute", ctx).Return(nil)
+	mocks.costEstimator.On("Execute").Return(nil)
 	mocks.resourcesWriter.On("Execute").Return("", nil)
 
 	err := job.Run(ctx)
@@ -297,7 +297,7 @@ func TestRunJob_CannotDriftDetect(t *testing.T) {
 	mocks.resourcesCalculator.On("Execute").Return(nil)
 	mocks.driftDetector.On("Execute", ctx, divisionToProvider).Return(false, managedDriftDetectErr)
 	mocks.identifyCloudActors.On("Execute", ctx).Return(nil)
-	mocks.costEstimator.On("Execute", ctx).Return(nil)
+	mocks.costEstimator.On("Execute").Return(nil)
 	mocks.resourcesWriter.On("Execute", ctx).Return("", nil)
 
 	err := job.Run(ctx)
@@ -335,7 +335,7 @@ func TestRunJob_CannotIdentifyCloudActors(t *testing.T) {
 	mocks.resourcesCalculator.On("Execute").Return(nil)
 	mocks.driftDetector.On("Execute", ctx, divisionToProvider).Return(true, nil)
 	mocks.identifyCloudActors.On("Execute", ctx).Return(identifyCloudActorsErr)
-	mocks.costEstimator.On("Execute", ctx).Return(nil)
+	mocks.costEstimator.On("Execute").Return(nil)
 	mocks.resourcesWriter.On("Execute", ctx).Return("", nil)
 
 	err := job.Run(ctx)
@@ -373,7 +373,7 @@ func TestRunJob_CannotCostEstimate(t *testing.T) {
 	mocks.resourcesCalculator.On("Execute").Return(nil)
 	mocks.driftDetector.On("Execute", ctx, divisionToProvider).Return(true, nil)
 	mocks.identifyCloudActors.On("Execute", ctx).Return(nil)
-	mocks.costEstimator.On("Execute", ctx).Return(costEstimationErr)
+	mocks.costEstimator.On("Execute").Return(costEstimationErr)
 	mocks.resourcesWriter.On("Execute", ctx).Return("", nil)
 
 	err := job.Run(ctx)
@@ -411,7 +411,7 @@ func TestRunJob_CannotSecurityScan(t *testing.T) {
 	mocks.resourcesCalculator.On("Execute").Return(nil)
 	mocks.driftDetector.On("Execute", ctx, divisionToProvider).Return(true, nil)
 	mocks.identifyCloudActors.On("Execute", ctx).Return(nil)
-	mocks.costEstimator.On("Execute", ctx).Return(nil)
+	mocks.costEstimator.On("Execute").Return(nil)
 	mocks.terraformSecurity.On("ExecuteScan", ctx).Return(securityScanErr)
 	mocks.resourcesWriter.On("Execute", ctx).Return("", nil)
 
@@ -450,7 +450,7 @@ func TestRunJob_CannotWriteResourcesOnVCS(t *testing.T) {
 	mocks.resourcesCalculator.On("Execute").Return(nil)
 	mocks.driftDetector.On("Execute", ctx, divisionToProvider).Return(true, nil)
 	mocks.identifyCloudActors.On("Execute", ctx).Return(nil)
-	mocks.costEstimator.On("Execute", ctx).Return(nil)
+	mocks.costEstimator.On("Execute").Return(nil)
 	mocks.resourcesWriter.On("Execute").Return("", writeResourcesErr)
 	mocks.driftDetector.On("Execute", ctx).Return(true, nil)
 	mocks.terraformSecurity.On("ExecuteScan", ctx).Return(nil)
@@ -490,7 +490,7 @@ func TestRunJob_NotFoundNewResources_ButFoundManagedDriftedResources(t *testing.
 	mocks.terraformImportMigrationGenerator.On("Execute").Return(nil)
 	mocks.resourcesCalculator.On("Execute").Return(calculateResourcesErr)
 	mocks.identifyCloudActors.On("Execute", ctx).Return(nil)
-	mocks.costEstimator.On("Execute", ctx).Return(nil)
+	mocks.costEstimator.On("Execute").Return(nil)
 	mocks.resourcesWriter.On("Execute").Return("", nil)
 	mocks.driftDetector.On("Execute", ctx, divisionToProvider).Return(true, nil)
 	mocks.terraformSecurity.On("ExecuteScan", ctx).Return(nil)

@@ -2,7 +2,6 @@ package costestimation
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"os"
 	"os/exec"
@@ -50,7 +49,7 @@ func (ce *CostEstimator) SetInfracostAPIToken(token string) {
 
 // Execute creates structured cost estimation data for the current identified/scanned
 // cloud resources.
-func (ce *CostEstimator) Execute(_ context.Context) error {
+func (ce *CostEstimator) Execute() error {
 	logrus.Debugf("Executing cost estimation for %s", ce.provider)
 
 	// Setting the Infracost API token

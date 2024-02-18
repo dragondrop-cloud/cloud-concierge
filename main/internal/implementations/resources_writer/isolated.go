@@ -17,6 +17,6 @@ func NewIsolatedResourcesWriter() interfaces.ResourcesWriter {
 
 // Execute writes new resources to the relevant version control system,
 // and returns a pull request url corresponding to the new changes.
-func (w *IsolatedResourcesWriter) Execute(_ context.Context, _ string, _ bool, _ map[string]string) (string, error) {
+func (w *IsolatedResourcesWriter) Execute(_ context.Context, _ bool, _ map[string]string) (string, error) {
 	return "", nil
 }

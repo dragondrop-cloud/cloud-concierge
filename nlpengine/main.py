@@ -29,7 +29,6 @@ def train_and_predict(request):
     {
         "workspace_docs": {...},
         "new_resource_docs": {...},
-        "token": "cco-<token>"
     }
     """
     try:
