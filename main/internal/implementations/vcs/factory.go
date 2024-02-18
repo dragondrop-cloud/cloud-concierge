@@ -28,7 +28,7 @@ func (f *Factory) Instantiate(ctx context.Context, environment string, config Co
 func (f *Factory) bootstrappedVCS(ctx context.Context, config Config, vcsSystem string) (interfaces.VCS, error) {
 	switch vcsSystem {
 	case "github":
-		return NewGitHub(ctx, config), nil
+		return NewGitHub(config), nil
 	default:
 		log.Errorf("currently only GitHub is supported as a VCS option. %v was specified", vcsSystem)
 		return nil, fmt.Errorf("currently only GitHub is supported as a VCS option. %v was specified", vcsSystem)

@@ -103,6 +103,7 @@ func validateJobConfig(config JobConfig) error {
 func (c JobConfig) getVCSConfig() vcs.Config {
 	return vcs.Config{
 		VCSRepo:       c.VCSRepo,
+		VCSPat:        c.VCSPat,
 		PullReviewers: c.PullReviewers,
 	}
 }

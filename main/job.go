@@ -81,7 +81,7 @@ type Job struct {
 func (j *Job) Run(ctx context.Context) error {
 	err := j.vcs.Clone()
 	if err != nil {
-		return fmt.Errorf("[run_job][error clonning repo][%w]", err)
+		return fmt.Errorf("[run_job][error clonnng repo][%w]", err)
 	}
 
 	workspaceToDirectory, err := j.terraformWorkspace.FindTerraformWorkspaces(ctx)
@@ -194,7 +194,7 @@ func InitializeJobDependencies(ctx context.Context, env string) (*Job, error) {
 	if err != nil {
 		return nil, err
 	}
-	calculator, err := (&resourcesCalculator.Factory{}).Instantiate(ctx, env, inferredData.Provider)
+	calculator, err := (&resourcesCalculator.Factory{}).Instantiate(ctx, env, inferredData.Provider, nlpEngineRequestor)
 	if err != nil {
 		return nil, err
 	}

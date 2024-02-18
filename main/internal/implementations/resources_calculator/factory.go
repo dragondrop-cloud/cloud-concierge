@@ -16,12 +16,13 @@ type Factory struct{}
 func (f *Factory) Instantiate(
 	ctx context.Context, environment string,
 	provider terraformValueObjects.Provider,
+	nlpEngine interfaces.NLPEngine,
 ) (interfaces.ResourcesCalculator, error) {
 	switch environment {
 	case "isolated":
 		return new(IsolatedResourcesCalculator), nil
 	default:
-		return f.bootstrappedResourceCalculator(ctx, provider)
+		return f.bootstrappedResourceCalculator(ctx, provider, nlpEngine)
 	}
 }
 
@@ -30,8 +31,9 @@ func (f *Factory) Instantiate(
 func (f *Factory) bootstrappedResourceCalculator(
 	ctx context.Context,
 	provider terraformValueObjects.Provider,
+	nlpEngine interfaces.NLPEngine,
 ) (interfaces.ResourcesCalculator, error) {
 	doc, _ := documentize.NewDocumentize(provider)
 
-	return NewTerraformResourcesCalculator(&doc), nil
+	return NewTerraformResourcesCalculator(&doc, nlpEngine), nil
 }

@@ -28,7 +28,7 @@ type VCS interface {
 	// for a dragondrop built commit/pull request
 	GetID() (string, error)
 
-	SetToken(token string)
+	SetToken()
 }
 
 // VCSMock implements the VCS interface solely for testing purposes.
@@ -81,6 +81,6 @@ func (m *VCSMock) GetID() (string, error) {
 }
 
 // SetToken sets the token for the VCS
-func (m *VCSMock) SetToken(token string) {
-	m.Called(token)
+func (m *VCSMock) SetToken() {
+	m.Called()
 }

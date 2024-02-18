@@ -21,8 +21,13 @@ var ErrNoNewResources = errors.New("[no new resources identified]")
 // TerraformResourcesCalculator is a struct that implements the interfaces.ResourcesCalculator interface for
 // running within a "live" dragondrop job.
 type TerraformResourcesCalculator struct {
-	// documentize implements the Document
+	// documentize provides functionality to process Terraform state files into structured data
+	// that the NLPEngine can handle.
 	documentize *documentize.Documentize
+
+	// nlpEngine is the implementation of interfaces.NLPEngine for interacting with
+	// the NLP engine endpoint.
+	nlpEngine interfaces.NLPEngine
 }
 
 // ResourceID is a string that represents a resource id for a cloud resource within a terraform state file.
@@ -39,8 +44,8 @@ type NewResourceData struct {
 }
 
 // NewTerraformResourcesCalculator creates and returns an instance of the TerraformResourcesCalculator.
-func NewTerraformResourcesCalculator(documentize *documentize.Documentize) interfaces.ResourcesCalculator {
-	return &TerraformResourcesCalculator{documentize: documentize}
+func NewTerraformResourcesCalculator(documentize *documentize.Documentize, nlpEngine interfaces.NLPEngine) interfaces.ResourcesCalculator {
+	return &TerraformResourcesCalculator{documentize: documentize, nlpEngine: nlpEngine}
 }
 
 // Execute calculates the association between resources and a state file.
@@ -91,8 +96,7 @@ func (c *TerraformResourcesCalculator) calculateResourceToWorkspaceMapping(ctx c
 
 // getResourceToWorkspaceMapping hits the NLPEngine endpoint to receive a mapping of new resources to suggested workspace.
 func (c *TerraformResourcesCalculator) getResourceToWorkspaceMapping(ctx context.Context) error {
-	// TODO: Changes needed here to reflect the new nature of the refactored NLPEngine
-	err := c.dragonDrop.PostNLPEngine(ctx)
+	err := c.nlpEngine.PostNLPEngine(ctx)
 	if err != nil {
 		return fmt.Errorf("[postNLPEngine]%w", err)
 	}

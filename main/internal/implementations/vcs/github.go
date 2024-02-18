@@ -52,10 +52,13 @@ type GitHub struct {
 }
 
 // NewGitHub creates a new instance of the GitHub struct.
-func NewGitHub(ctx context.Context, config Config) interfaces.VCS {
-	return &GitHub{
+func NewGitHub(config Config) interfaces.VCS {
+	githubInstance := &GitHub{
 		config: config,
 	}
+
+	githubInstance.SetToken()
+	return githubInstance
 }
 
 // GetDefaultBranch returns the default branch of the repository.
@@ -268,16 +271,16 @@ func (g *GitHub) OpenPullRequest(jobName string) (string, error) {
 }
 
 // SetToken sets the github token for the GitHub struct.
-func (g *GitHub) SetToken(token string) {
+func (g *GitHub) SetToken() {
 	g.authBasic = &http.BasicAuth{
 		Username: "x-access-token",
-		Password: token,
+		Password: g.config.VCSPat,
 	}
 
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{
 			TokenType:   "Bearer",
-			AccessToken: token,
+			AccessToken: g.config.VCSPat,
 		},
 	)
 	tc := oauth2.NewClient(context.Background(), ts)
