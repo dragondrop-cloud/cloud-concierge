@@ -154,7 +154,8 @@ func TestGetCostEstimationConfig(t *testing.T) {
 
 	// Then
 	want := costEstimation.CostEstimatorConfig{
-		CloudCredential: "{}",
+		CloudCredential:   "{}",
+		InfracostAPIToken: jobConfig.InfracostToken,
 	}
 
 	assert.Equal(t, want, got, "CostEstimationConfig should be equal")
