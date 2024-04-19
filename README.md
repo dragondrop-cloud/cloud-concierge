@@ -78,3 +78,7 @@ Contributions in any form are highly encouraged. Check out our [contributing gui
 ## Resources
 - [Example Output](https://github.com/dragondrop-cloud/cloud-concierge-example/pull/3)
 - [Documentation](https://docs.cloudconcierge.io)
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=dragondrop-cloud/cloud-concierge&type=Date)](https://star-history.com/#dragondrop-cloud/cloud-concierge&Date)
