@@ -13,11 +13,11 @@
 </a>
 
 <a href="https://hub.docker.com/r/dragondropcloud/cloud-concierge/tags" alt="Latest Docker Version">
-   <img src="https://img.shields.io/badge/docker-v0.2.1-blue" />
+   <img src="https://img.shields.io/badge/docker-v0.2.2-blue" />
 </a>
 
 <a href="https://hub.docker.com/r/dragondropcloud/cloud-concierge" alt="Total Downloads">
-   <img src="https://img.shields.io/badge/downloads-15.7k-maroon" />
+   <img src="https://img.shields.io/badge/downloads-17.8k-maroon" />
 </a>
 
 <h3 align="center">
@@ -78,3 +78,7 @@ Contributions in any form are highly encouraged. Check out our [contributing gui
 ## Resources
 - [Example Output](https://github.com/dragondrop-cloud/cloud-concierge-example/pull/3)
 - [Documentation](https://docs.cloudconcierge.io)
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=dragondrop-cloud/cloud-concierge&type=Date)](https://star-history.com/#dragondrop-cloud/cloud-concierge&Date)
