@@ -28,3 +28,5 @@ local.env
 main/internal/implementations/dragon_drop/current_cloud/
 main/internal/implementations/dragon_drop/outputs/
 main/internal/implementations/dragon_drop/repo/
+
+.DS_Store
