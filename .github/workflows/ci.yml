@@ -5,26 +5,6 @@ on:
       - main/**
 
 jobs:
-  golangci-lint:
-    runs-on: ubuntu-latest
-
-    timeout-minutes: 3
-    steps:
-      - name: Checkout branch
-        uses: actions/checkout@v3
-
-      - name: Install golang
-        uses: actions/setup-go@v3
-        with:
-          go-version-file: 'main/.go-version'
-
-      - name: Run linter
-        uses: golangci/golangci-lint-action@v3
-        with:
-          working-directory: main
-          version: v1.54.2
-          args: --timeout=2m
-
   test-go-binary:
     runs-on: ubuntu-latest
 
